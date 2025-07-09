@@ -19,9 +19,6 @@ import { cilLockLocked, cilUser } from '@coreui/icons'
 const Login = () => {
   return (
     <div className="bg-body-tertiary min-vh-100 d-flex flex-row align-items-center">
-      <video>
-        <source src="assests/videos/aditya.webm.mp4" type="video/mp4"/>
-      </video>
       <CContainer>
         <CRow className="justify-content-center">
           <CCol md={8}>
@@ -35,7 +32,10 @@ const Login = () => {
                       <CInputGroupText>
                         <CIcon icon={cilUser} />
                       </CInputGroupText>
-                      <CFormInput placeholder="Username" autoComplete="username" />
+                      <CFormInput
+                        placeholder="Username"
+                        autoComplete="username"
+                      />
                     </CInputGroup>
                     <CInputGroup className="mb-4">
                       <CInputGroupText>

@@ -15,10 +15,11 @@ import {
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilLockLocked, cilUser } from '@coreui/icons'
+import video from 'assests/videos/aditya.webm.mp4'
 
 const Login = () => {
   return (
-    <div className="bg-body-tertiary min-vh-100 d-flex flex-row align-items-center">
+    <div className="bg-body-tertiary min-vh-100 d-flex flex-row align-items-center" style={{ position:'relative', overflow: 'hidden'}}>
       <video>
         <source src="assests/videos/aditya.webm.mp4" type="video/mp4"/>
       </video>
