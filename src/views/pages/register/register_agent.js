@@ -46,7 +46,18 @@ const Register_agent = () => {
                   </CInputGroup>
                   <CInputGroup className="mb-3">
                     <CFormInput placeholder='Confirm Password' autoComplete='Confirm Password' />
-                  </CInputGroup>        
+                  </CInputGroup>
+                  <CDropdown className='d-flex gap-3 mb-2'>
+                    <CDropdownToggle color="primary">
+                      Desgination
+                    </CDropdownToggle>
+                    <CDropdownMenu >
+                      <CDropdownItem>Team lead</CDropdownItem>
+                      <CDropdownItem>director</CDropdownItem>
+                      <CDropdownItem>Agent</CDropdownItem>
+                      <CDropdownItem>junior</CDropdownItem>
+                    </CDropdownMenu>
+                  </CDropdown>        
                   <CDropdown className='d-flex gap-3 mb-2'>
                     <CDropdownToggle color="primary">
                       Agent Team
@@ -69,6 +80,7 @@ const Register_agent = () => {
                       <CDropdownItem>director 4</CDropdownItem>
                     </CDropdownMenu>
                   </CDropdown>
+                  
                 </CForm>
               </CCardBody>
             </CCard>
