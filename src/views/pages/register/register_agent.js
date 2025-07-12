@@ -33,6 +33,7 @@ const Register_agent = () => {
     pan: '',
     aadharFile: null,
     panFile: null,
+    dob: '', // Added dob field
   })
   const [errors, setErrors] = useState({})
 
@@ -72,6 +73,7 @@ const Register_agent = () => {
     if (form.password !== form.confirmPassword) newErrors.confirmPassword = 'Passwords do not match'
     if (!form.aadharFile) newErrors.aadharFile = 'Aadhar file required'
     if (!form.panFile) newErrors.panFile = 'PAN file required'
+    if (!form.dob) newErrors.dob = 'Date of Birth is required'
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -215,6 +217,18 @@ const Register_agent = () => {
                       onChange={handleChange}
                       required
                       invalid={!!errors.pan}
+                    />
+                  </CInputGroup>
+
+                  <CInputGroup className="mb-3">
+                    <CFormInput
+                      name="dob"
+                      type="date"
+                      placeholder="Date of Birth"
+                      value={form.dob}
+                      onChange={handleChange}
+                      required
+                      invalid={!!errors.dob}
                     />
                   </CInputGroup>
 
