@@ -438,6 +438,11 @@ const _nav = [
         name: 'Error 500',
         to: '/500',
       },
+      {
+        component:CNavItem,
+        name: 'Register Agent',
+        to: '/register_agent',
+      },
     ],
   },
   {
