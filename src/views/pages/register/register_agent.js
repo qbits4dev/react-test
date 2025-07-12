@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import {
   CButton,
   CCard,
@@ -10,15 +10,23 @@ import {
   CForm,
   CFormInput,
   CInputGroup,
-  CInputGroupText,
-  CRow,
   CDropdownToggle,
   CDropdownItem,
+  CRow,
 } from '@coreui/react'
-import CIcon from '@coreui/icons-react'
-import { cilLockLocked, cilUser } from '@coreui/icons'
 
 const Register_agent = () => {
+  // State for dropdowns
+  const [designation, setDesignation] = useState('Designation')
+  const [team, setTeam] = useState('Agent Team')
+  const [reference, setReference] = useState('Reference of Director')
+
+  // Submit handler
+  const handleSubmit = () => {
+    alert('Account Created Successfully!')
+    // You can add form validation or API calls here
+  }
+
   return (
     <div className="bg-body-tertiary min-vh-100 d-flex flex-row align-items-center">
       <CContainer>
@@ -29,6 +37,8 @@ const Register_agent = () => {
                 <CForm>
                   <h1>Agent Registration</h1>
                   <p className="text-body-secondary">Enter Agent details</p>
+
+                  {/* Inputs */}
                   <CInputGroup className="mb-3">
                     <CFormInput placeholder='Firstname' autoComplete='Firstname' />
                   </CInputGroup>
@@ -42,45 +52,60 @@ const Register_agent = () => {
                     <CFormInput placeholder='Phone Number' autoComplete='Phone Number' />
                   </CInputGroup>
                   <CInputGroup className="mb-3">
-                    <CFormInput placeholder='Password' autoComplete='Password' />
+                    <CFormInput placeholder='Password' type="password" autoComplete='Password' />
                   </CInputGroup>
                   <CInputGroup className="mb-3">
-                    <CFormInput placeholder='Confirm Password' autoComplete='Confirm Password' />
+                    <CFormInput placeholder='Confirm Password' type="password" autoComplete='Confirm Password' />
                   </CInputGroup>
-                  <CDropdown className='d-flex gap-3 mb-2'>
+
+                  {/* Designation Dropdown */}
+                  <CDropdown className="d-flex mb-2">
                     <CDropdownToggle color="primary">
-                      Desgination
-                    </CDropdownToggle>
-                    <CDropdownMenu >
-                      <CDropdownItem>Team lead</CDropdownItem>
-                      <CDropdownItem>director</CDropdownItem>
-                      <CDropdownItem>Agent</CDropdownItem>
-                      <CDropdownItem>junior</CDropdownItem>
-                    </CDropdownMenu>
-                  </CDropdown>        
-                  <CDropdown className='d-flex gap-3 mb-2'>
-                    <CDropdownToggle color="primary">
-                      Agent Team
+                      {designation}
                     </CDropdownToggle>
                     <CDropdownMenu>
-                      <CDropdownItem>Team 1</CDropdownItem>
-                      <CDropdownItem>Team 2</CDropdownItem>
-                      <CDropdownItem>Team 3</CDropdownItem>
-                      <CDropdownItem>Team 4</CDropdownItem>
+                      {['Team lead', 'Director', 'Agent', 'Junior'].map((item, index) => (
+                        <CDropdownItem key={index} onClick={() => setDesignation(item)}>
+                          {item}
+                        </CDropdownItem>
+                      ))}
                     </CDropdownMenu>
                   </CDropdown>
-                  <CDropdown className=' d-flex gap-3 mb-2'>
+
+                  {/* Agent Team Dropdown */}
+                  <CDropdown className="d-flex mb-2">
                     <CDropdownToggle color="primary">
-                      Reference of Director
+                      {team}
                     </CDropdownToggle>
                     <CDropdownMenu>
-                      <CDropdownItem>director 1</CDropdownItem>
-                      <CDropdownItem>director 2</CDropdownItem>
-                      <CDropdownItem>director 3</CDropdownItem>
-                      <CDropdownItem>director 4</CDropdownItem>
+                      {['Team 1', 'Team 2', 'Team 3', 'Team 4'].map((item, index) => (
+                        <CDropdownItem key={index} onClick={() => setTeam(item)}>
+                          {item}
+                        </CDropdownItem>
+                      ))}
                     </CDropdownMenu>
                   </CDropdown>
-                  
+
+                  {/* Reference Dropdown */}
+                  <CDropdown className="d-flex mb-4">
+                    <CDropdownToggle color="primary">
+                      {reference}
+                    </CDropdownToggle>
+                    <CDropdownMenu>
+                      {['Director 1', 'Director 2', 'Director 3', 'Director 4'].map((item, index) => (
+                        <CDropdownItem key={index} onClick={() => setReference(item)}>
+                          {item}
+                        </CDropdownItem>
+                      ))}
+                    </CDropdownMenu>
+                  </CDropdown>
+
+                  {/* Submit Button */}
+                  <div className="d-grid">
+                    <CButton color="info" onClick={handleSubmit}>
+                      Create Account
+                    </CButton>
+                  </div>
                 </CForm>
               </CCardBody>
             </CCard>
