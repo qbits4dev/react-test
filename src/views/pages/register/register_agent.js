@@ -44,7 +44,7 @@ const Register_agent = () => {
 
   useEffect(() => {
     // Updated designation fetch URL
-    fetch('http://con.qbits4dev.com/test?key=Designation')
+    fetch('http://127.0.0.1:5000/test?key=Designation')
       .then((res) => res.json())
       .then((data) => {
         // Expecting Designation to be an array of objects with id and name
@@ -58,7 +58,7 @@ const Register_agent = () => {
       })
 
     // Fetch agent list from updated URL
-    fetch('http://con.qbits4dev.com/test?key=agents')
+    fetch('http://127.0.0.1:5000/test?key=agents')
       .then((res) => res.json())
       .then((data) => {
         if (data && Array.isArray(data.agents)) {
