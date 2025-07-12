@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   CButton,
   CCard,
@@ -20,6 +20,7 @@ const Register_agent = () => {
   const navigate = useNavigate()
 
   const [designation, setDesignation] = useState('Designation')
+  const [designationList, setDesignationList] = useState([])
   const [team, setTeam] = useState('Agent Team')
   const [reference, setReference] = useState('Reference of Director')
   const [form, setForm] = useState({
@@ -37,6 +38,39 @@ const Register_agent = () => {
   })
   const [errors, setErrors] = useState({})
 
+  // Add agent state
+  const [agent, setAgent] = useState('Select Agent')
+  const [agentList, setAgentList] = useState([])
+
+  useEffect(() => {
+    // Updated designation fetch URL
+    fetch('http://con.qbits4dev.com/test?key=Designation')
+      .then((res) => res.json())
+      .then((data) => {
+        // Expecting Designation to be an array of objects with id and name
+        if (data && Array.isArray(data.Designation)) {
+          setDesignationList(data.Designation)
+        }
+      })
+      .catch(() => {
+        alert('Failed to fetch designations. Please try again later.')
+        setDesignationList([])
+      })
+
+    // Fetch agent list from updated URL
+    fetch('http://con.qbits4dev.com/test?key=agents')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && Array.isArray(data.agents)) {
+          setAgentList(data.agents)
+        }
+      })
+      .catch(() => {
+        alert('Failed to fetch agents. Please try again later.')
+        setAgentList([])
+      })
+  }, [])
+
   const handleChange = (e) => {
     const { name, value, files } = e.target
 
@@ -51,6 +85,13 @@ const Register_agent = () => {
     } else {
       setForm({ ...form, [name]: value })
     }
+  }
+
+  // Calculate max date for DOB (today - 18 years)
+  const getMaxDob = () => {
+    const today = new Date()
+    today.setFullYear(today.getFullYear() - 18)
+    return today.toISOString().split('T')[0]
   }
 
   const validate = () => {
@@ -74,6 +115,14 @@ const Register_agent = () => {
     if (!form.aadharFile) newErrors.aadharFile = 'Aadhar file required'
     if (!form.panFile) newErrors.panFile = 'PAN file required'
     if (!form.dob) newErrors.dob = 'Date of Birth is required'
+    else {
+      const dobDate = new Date(form.dob)
+      const today = new Date()
+      today.setFullYear(today.getFullYear() - 18)
+      if (dobDate > today) {
+        newErrors.dob = 'You must be at least 18 years old'
+      }
+    }
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -168,9 +217,12 @@ const Register_agent = () => {
                   <CDropdown className="d-flex mb-2">
                     <CDropdownToggle color="primary">{designation}</CDropdownToggle>
                     <CDropdownMenu>
-                      {['Team lead', 'Director', 'Agent', 'Junior'].map((item, index) => (
-                        <CDropdownItem key={index} onClick={() => setDesignation(item)}>
-                          {item}
+                      {designationList.map((item, index) => (
+                        <CDropdownItem
+                          key={item.id || index}
+                          onClick={() => setDesignation(item.name)}
+                        >
+                          {item.name}
                         </CDropdownItem>
                       ))}
                     </CDropdownMenu>
@@ -179,13 +231,15 @@ const Register_agent = () => {
                   <CDropdown className="d-flex mb-2">
                     <CDropdownToggle color="primary">{team}</CDropdownToggle>
                     <CDropdownMenu>
-                      {['Team 1', 'Team 2', 'Team 3', 'Team 4'].map((item, index) => (
-                        <CDropdownItem key={index} onClick={() => setTeam(item)}>
-                          {item}
+                      {agentList.map((item) => (
+                        <CDropdownItem key={item.id} onClick={() => setTeam(item.name)}>
+                          {item.name}
                         </CDropdownItem>
                       ))}
                     </CDropdownMenu>
                   </CDropdown>
+
+
 
                   <CDropdown className="d-flex mb-4">
                     <CDropdownToggle color="primary">{reference}</CDropdownToggle>
@@ -229,6 +283,7 @@ const Register_agent = () => {
                       onChange={handleChange}
                       required
                       invalid={!!errors.dob}
+                      max={getMaxDob()}
                     />
                   </CInputGroup>
 
