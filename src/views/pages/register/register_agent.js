@@ -105,8 +105,8 @@ const Register_agent = () => {
 
     if (!nameRegex.test(form.firstname)) newErrors.firstname = 'Only letters allowed in Firstname'
     if (!nameRegex.test(form.lastname)) newErrors.lastname = 'Only letters allowed in Lastname'
-    if (!emailRegex.test(form.email)) newErrors.email = 'Invalid Email'
-    if (!phoneRegex.test(form.phone)) newErrors.phone = 'Phone must be 10 digits'
+    if (!emailRegex.test(form.email)) newErrors.email = 'Invalid Email' //TODO: Add proper email validation
+    if (!phoneRegex.test(form.phone)) newErrors.phone = 'Phone must be 10 digits'//TODO : Add proper phone validation
     if (!aadharRegex.test(form.aadhar)) newErrors.aadhar = 'Aadhar must be 12 digits with spaces'
     if (!panRegex.test(form.pan)) newErrors.pan = 'PAN format invalid'
     if (!passwordRegex.test(form.password)) newErrors.password = 'Password must be between 8 and 24 characters'

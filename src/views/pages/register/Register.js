@@ -29,11 +29,20 @@ const Register = () => {
                     <CInputGroupText>
                       <CIcon icon={cilUser} />
                     </CInputGroupText>
-                    <CFormInput placeholder="Username" autoComplete="username" />
+                    <CFormInput placeholder="firstname" autoComplete="firstname" />
+                  </CInputGroup>
+                  <CInputGroup className="mb-3">
+                    <CInputGroupText>
+                      <CIcon icon={cilUser} />
+                    </CInputGroupText>
+                    <CFormInput placeholder="lastname" autoComplete="lastname" />
                   </CInputGroup>
                   <CInputGroup className="mb-3">
                     <CInputGroupText>@</CInputGroupText>
                     <CFormInput placeholder="Email" autoComplete="email" />
+                  </CInputGroup>
+                  <CInputGroup className='mb-3'>
+                    <CFormInput placeholder="Phone Number" autoComplete="Phone Number" />
                   </CInputGroup>
                   <CInputGroup className="mb-3">
                     <CInputGroupText>
@@ -54,6 +63,9 @@ const Register = () => {
                       placeholder="Repeat password"
                       autoComplete="new-password"
                     />
+                    <CInputGroup className='mb-3'>
+                      <CFormInput name='Date of Visit'type='date' placeholder='Date of visit' required />
+                    </CInputGroup>
                   </CInputGroup>
                   <div className="d-grid">
                     <CButton color="success">Create Account</CButton>
