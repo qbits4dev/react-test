@@ -53,6 +53,7 @@ const Toasts = React.lazy(() => import('./views/notifications/toasts/Toasts'))
 const Widgets = React.lazy(() => import('./views/widgets/Widgets'))
 
 const AgentRegistration = React.lazy(() => import('./views/pages/register/register_agent'))
+const ClientRegister = React.lazy(() => import('./views/pages/register/cilent_register'))
 const routes = [
   { path: '/', exact: true, name: 'Home' },
   { path: '/dashboard', name: 'Dashboard', element: Dashboard },
@@ -100,6 +101,7 @@ const routes = [
   { path: '/notifications/toasts', name: 'Toasts', element: Toasts },
   { path: '/widgets', name: 'Widgets', element: Widgets },
   { path:'/register_agent', name: 'Agent Registration', element: AgentRegistration},
+  { path:'/client_register', name: 'Client Registration', element: ClientRegister},
 ]
 
 export default routes

@@ -443,6 +443,11 @@ const _nav = [
         name: 'Register Agent',
         to: '/register_agent',
       },
+      {
+        component: CNavItem,
+        name: 'Client Register',
+        to: '/client_register',
+      },
     ],
   },
   {
