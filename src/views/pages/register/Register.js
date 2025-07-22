@@ -5,14 +5,18 @@ import {
   CCardBody,
   CCol,
   CContainer,
+  CDropdown,
   CForm,
   CFormInput,
   CInputGroup,
   CInputGroupText,
   CRow,
+  CDropdownToggle,
+  CDropdownMenu,
+  CDropdownItem,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilLockLocked, cilUser } from '@coreui/icons'
+import { cilLockLocked, cilUser, cilPhone } from '@coreui/icons'
 
 const Register = () => {
   return (
@@ -24,7 +28,7 @@ const Register = () => {
               <CCardBody className="p-4">
                 <CForm>
                   <h1>Register</h1>
-                  <p className="text-body-secondary">Create your account</p>
+                  <p className="text-body-secondary">Customer Registration</p>
                   <CInputGroup className="mb-3">
                     <CInputGroupText>
                       <CIcon icon={cilUser} />
@@ -42,6 +46,9 @@ const Register = () => {
                     <CFormInput placeholder="Email" autoComplete="email" />
                   </CInputGroup>
                   <CInputGroup className='mb-3'>
+                    <CInputGroupText>
+                      <CIcon icon={cilPhone} />
+                    </CInputGroupText>
                     <CFormInput placeholder="Phone Number" autoComplete="Phone Number" />
                   </CInputGroup>
                   <CInputGroup className="mb-3">
@@ -63,12 +70,22 @@ const Register = () => {
                       placeholder="Repeat password"
                       autoComplete="new-password"
                     />
-                    <CInputGroup className='mb-3'>
-                      <CFormInput name='Date of Visit'type='date' placeholder='Date of visit' required />
                     </CInputGroup>
-                  </CInputGroup>
+                    <CDropdown className=" d-flex mb-2">
+                      <CDropdownToggle color="primary">Instrested In</CDropdownToggle>
+                      <CDropdownMenu>
+                        {['Nanda Gokulam', 'Panasapadu', 'Aditya Enclave', 'Aditya Heights'].map((item, index) => (
+                          <CDropdownItem key={index} onClick={() => setReference(item)}>
+                            {item}
+                          </CDropdownItem>
+                        ))}
+                      </CDropdownMenu>
+                    </CDropdown>
+                    <CInputGroup className='mb-4'>
+                      <CFormInput name='Date of Visit' type='date' placeholder='Date of visit' required />
+                    </CInputGroup>
                   <div className="d-grid">
-                    <CButton color="success">Create Account</CButton>
+                    <CButton color="success">Submit Registration</CButton>
                   </div>
                 </CForm>
               </CCardBody>
