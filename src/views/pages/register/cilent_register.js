@@ -16,9 +16,16 @@ import {
     CDropdownItem,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilLockLocked, cilUser, cilPhone } from '@coreui/icons'
+import { cilLockLocked, cilUser, cilPhone, cilCalendar } from '@coreui/icons'
 
 const Client_Register = () => {
+    const handleSubmit = () => {
+        if (validate()) {
+            if (window.confirm('Account Created Successfully! Click OK to go to homepage.')) {
+                navigate('/')
+            }
+        }
+    }
     return (
         <div className="bg-body-tertiary min-vh-100 d-flex flex-row align-items-center">
             <CContainer>
@@ -33,23 +40,23 @@ const Client_Register = () => {
                                         <CInputGroupText>
                                             <CIcon icon={cilUser} />
                                         </CInputGroupText>
-                                        <CFormInput placeholder="firstname" autoComplete="firstname" />
+                                        <CFormInput placeholder="firstname" autoComplete="firstname" required />
                                     </CInputGroup>
                                     <CInputGroup className="mb-3">
                                         <CInputGroupText>
                                             <CIcon icon={cilUser} />
                                         </CInputGroupText>
-                                        <CFormInput placeholder="lastname" autoComplete="lastname" />
+                                        <CFormInput placeholder="lastname" autoComplete="lastname" required />
                                     </CInputGroup>
                                     <CInputGroup className="mb-3">
                                         <CInputGroupText>@</CInputGroupText>
-                                        <CFormInput placeholder="Email" autoComplete="email" />
+                                        <CFormInput placeholder="Email" autoComplete="email" required />
                                     </CInputGroup>
                                     <CInputGroup className='mb-3'>
                                         <CInputGroupText>
                                             <CIcon icon={cilPhone} />
                                         </CInputGroupText>
-                                        <CFormInput placeholder="Phone Number" autoComplete="Phone Number" />
+                                        <CFormInput placeholder="Phone Number" autoComplete="Phone Number" required />
                                     </CInputGroup>
                                     <CInputGroup className="mb-3">
                                         <CInputGroupText>
@@ -59,6 +66,7 @@ const Client_Register = () => {
                                             type="password"
                                             placeholder="Password"
                                             autoComplete="new-password"
+                                            required
                                         />
                                     </CInputGroup>
                                     <CInputGroup className="mb-4">
@@ -69,23 +77,67 @@ const Client_Register = () => {
                                             type="password"
                                             placeholder="Repeat password"
                                             autoComplete="new-password"
+                                            required
                                         />
                                     </CInputGroup>
-                                    <CDropdown className=" d-flex mb-2">
-                                        <CDropdownToggle color="primary">Instrested In</CDropdownToggle>
+                                    <CInputGroup className='mb-4'>
+                                        <CInputGroupText>
+                                            <CIcon icon={cilCalendar} />
+                                        </CInputGroupText>
+                                        <CFormInput
+                                            name='Date of Birth'
+                                            type='text'
+                                            placeholder='Date of Birth'
+                                            required
+                                            onFocus={e => e.target.type = 'date'}
+                                            onBlur={e => e.target.type = 'text'}
+                                        />
+                                    </CInputGroup>
+                                    <CDropdown className="d-flex mb-4">
+                                        <CDropdownToggle color="primary">Select Gender</CDropdownToggle>
                                         <CDropdownMenu>
-                                            {['Nanda Gokulam', 'Panasapadu', 'Aditya Enclave', 'Aditya Heights'].map((item, index) => (
+                                            {['Male', 'Female'].map((item, index) => (
                                                 <CDropdownItem key={index} onClick={() => setReference(item)}>
                                                     {item}
+
                                                 </CDropdownItem>
                                             ))}
                                         </CDropdownMenu>
                                     </CDropdown>
-                                    <CInputGroup className='mb-4'>
-                                        <CFormInput name='Date of Visit' type='date' placeholder='Date of visit' required />
+                                    <CInputGroup className="mb-3">
+                                        <CFormInput
+                                            name="aadhar"
+                                            placeholder="Aadhar Number"
+                                            required
+                                        />
                                     </CInputGroup>
+                                    <CInputGroup className="mb-3">
+                                        <CFormInput
+                                            name="pan"
+                                            placeholder="PAN Number"
+                                            required
+                                        />
+                                    </CInputGroup>
+                                    <div className="mb-3">
+                                        <p>Aadhar Card PDF</p>
+                                        <CFormInput
+                                            type="file"
+                                            name="aadharFile"
+                                            placeholder="Aadhar Card PDF"
+                                            required
+                                        />
+                                    </div>
+                                    <div className="mb-3">
+                                        <p>PAN Card PDF</p>
+                                        <CFormInput
+                                            type="file"
+                                            name="panFile"
+                                            placeholder="PAN Card PDF"
+                                            required
+                                        />
+                                    </div>
                                     <div className="d-grid">
-                                        <CButton color="success">Submit Registration</CButton>
+                                        <CButton color="info" onClick={handleSubmit}>Submit Registration</CButton>
                                     </div>
                                 </CForm>
                             </CCardBody>
