@@ -17,8 +17,26 @@ import {
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilLockLocked, cilUser, cilPhone } from '@coreui/icons'
+import { data } from 'react-router-dom'
+import { set } from 'core-js/core/dict'
 
 const Register = () => {
+  useEffect(() => {
+    fetch('http://127.0.0.1:5000/test?key=InterstedIn')
+      .then((res) => res.join())
+      .then((data) => {
+        if (data && Array.isArray(data.InterstedIn)) {
+          setInterstedInList(data.InterstedIn)
+        }
+      })
+      .catch(() => {
+        alert('Failed to Fetch InterstedIn. Please try again.')
+        setInterstedInList([])
+      })
+  }, [])
+
+  //const handelsubmit(() =>{if(Validate)})//TODO:submit form data to backend
+  
   return (
     <div className="bg-body-tertiary min-vh-100 d-flex flex-row align-items-center">
       <CContainer>
@@ -70,20 +88,20 @@ const Register = () => {
                       placeholder="Repeat password"
                       autoComplete="new-password"
                     />
-                    </CInputGroup>
-                    <CDropdown className=" d-flex mb-2">
-                      <CDropdownToggle color="primary">Instrested In</CDropdownToggle>
-                      <CDropdownMenu>
-                        {['Nanda Gokulam', 'Panasapadu', 'Aditya Enclave', 'Aditya Heights'].map((item, index) => (
-                          <CDropdownItem key={index} onClick={() => setReference(item)}>
-                            {item}
-                          </CDropdownItem>
-                        ))}
-                      </CDropdownMenu>
-                    </CDropdown>
-                    <CInputGroup className='mb-4'>
-                      <CFormInput name='Date of Visit' type='date' placeholder='Date of visit' required />
-                    </CInputGroup>
+                  </CInputGroup>
+                  <CDropdown className=" d-flex mb-2">
+                    <CDropdownToggle color="primary">Instrested In</CDropdownToggle>
+                    <CDropdownMenu>
+                      {['Nanda Gokulam', 'Panasapadu', 'Aditya Enclave', 'Aditya Heights'].map((item, index) => (
+                        <CDropdownItem key={index} onClick={() => setReference(item)}>
+                          {item}
+                        </CDropdownItem>
+                      ))}
+                    </CDropdownMenu>
+                  </CDropdown>
+                  <CInputGroup className='mb-4'>
+                    <CFormInput name='Date of Visit' type='date' placeholder='Date of visit' required />
+                  </CInputGroup>
                   <div className="d-grid">
                     <CButton color="success">Submit Registration</CButton>
                   </div>
