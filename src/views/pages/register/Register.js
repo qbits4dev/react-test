@@ -1,4 +1,5 @@
 import React from 'react'
+import { useState, useEffect } from 'react'
 import {
   CButton,
   CCard,
@@ -17,10 +18,15 @@ import {
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilLockLocked, cilUser, cilPhone } from '@coreui/icons'
-import { data } from 'react-router-dom'
-import { set } from 'core-js/core/dict'
+import { useNavigate } from 'react-router-dom'
 
 const Register = () => {
+  const navigate = useNavigate()
+
+
+  const [InterstedIn, setInterstedIn] = useState(['IntrestedIn'])
+  const [InterstedInList, setInterstedInList] = useState([])
+
   useEffect(() => {
     fetch('http://127.0.0.1:5000/test?key=InterstedIn')
       .then((res) => res.join())
@@ -36,7 +42,7 @@ const Register = () => {
   }, [])
 
   //const handelsubmit(() =>{if(Validate)})//TODO:submit form data to backend
-  
+
   return (
     <div className="bg-body-tertiary min-vh-100 d-flex flex-row align-items-center">
       <CContainer>
@@ -90,11 +96,13 @@ const Register = () => {
                     />
                   </CInputGroup>
                   <CDropdown className=" d-flex mb-2">
-                    <CDropdownToggle color="primary">Instrested In</CDropdownToggle>
+                    <CDropdownToggle color="primary">{InterstedIn}</CDropdownToggle>
                     <CDropdownMenu>
-                      {['Nanda Gokulam', 'Panasapadu', 'Aditya Enclave', 'Aditya Heights'].map((item, index) => (
-                        <CDropdownItem key={index} onClick={() => setReference(item)}>
-                          {item}
+                      {InterstedIn.map((item, index) => (
+                        <CDropdownItem
+                          key={item.id || index}
+                          onClick={() => setInterstedIn(item.name)}>
+                          {item.name}
                         </CDropdownItem>
                       ))}
                     </CDropdownMenu>
