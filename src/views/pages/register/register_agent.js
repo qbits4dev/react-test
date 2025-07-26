@@ -13,12 +13,19 @@ import {
   CDropdownToggle,
   CDropdownItem,
   CRow,
+  CInputGroupText,
 } from '@coreui/react'
 import { useNavigate } from 'react-router-dom'
+import { faIdCard } from '@fortawesome/free-solid-svg-icons'
+import { cilLockLocked, cilUser, cilPhone, cilCalendar } from '@coreui/icons'
+import CIcon from '@coreui/icons-react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 const Register_agent = () => {
   const navigate = useNavigate()
 
+  const [Directors, setDirectors] = useState(['directors'])
+  const [DirectorsList, setDirectorsList] = useState([])
   const [designation, setDesignation] = useState('Designation')
   const [designationList, setDesignationList] = useState([])
   const [team, setTeam] = useState('Agent Team')
@@ -34,42 +41,67 @@ const Register_agent = () => {
     pan: '',
     aadharFile: null,
     panFile: null,
-    dob: '', // Added dob field
+    dob: '',
+    directors: Directors,
   })
   const [errors, setErrors] = useState({})
 
   // Add agent state
   const [agent, setAgent] = useState('Select Agent')
   const [agentList, setAgentList] = useState([])
-
   useEffect(() => {
-    // Updated designation fetch URL
     fetch('http://127.0.0.1:5000/test?key=Designation')
       .then((res) => res.json())
       .then((data) => {
-        // Expecting Designation to be an array of objects with id and name
+        console.log('Designation data:', data)
         if (data && Array.isArray(data.Designation)) {
           setDesignationList(data.Designation)
         }
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error('Designation fetch error:', err)
         alert('Failed to fetch designations. Please try again later.')
         setDesignationList([])
       })
 
-    // Fetch agent list from updated URL
     fetch('http://127.0.0.1:5000/test?key=agents')
       .then((res) => res.json())
       .then((data) => {
+        console.log('Agents data:', data)
         if (data && Array.isArray(data.agents)) {
           setAgentList(data.agents)
         }
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error('Agents fetch error:', err)
         alert('Failed to fetch agents. Please try again later.')
         setAgentList([])
       })
   }, [])
+
+  useEffect(() => {
+    fetch('http://127.0.0.1:5000/test?key=directors')
+      .then((res) => res.json())
+      .then((data) => {
+        console.log('directors data:', data)
+        if (data && Array.isArray(data.Directors)) {
+          setDirectorsList(data.Directors)
+        }
+      })
+      .catch(() => {
+        console.error('Error fetching directors:', error)
+        alert('Failed to fetch directors. Please try again later.')
+        setDirectorsList([])
+      })
+  }, [])
+
+  const handleDropdown = (value) => {
+    setDirectors(value)
+    setFormData((prev) => ({
+      ...prev,
+      directors: value,
+    }))
+  }
 
   const handleChange = (e) => {
     const { name, value, files } = e.target
@@ -148,6 +180,9 @@ const Register_agent = () => {
                   <p className="text-body-secondary">Enter Agent details</p>
 
                   <CInputGroup className="mb-3">
+                    <CInputGroupText>
+                      <CIcon icon={cilUser} />
+                    </CInputGroupText>
                     <CFormInput
                       name="firstname"
                       placeholder="Firstname"
@@ -158,6 +193,9 @@ const Register_agent = () => {
                     />
                   </CInputGroup>
                   <CInputGroup className="mb-3">
+                    <CInputGroupText>
+                      <CIcon icon={cilUser} />
+                    </CInputGroupText>
                     <CFormInput
                       name="lastname"
                       placeholder="Lastname"
@@ -168,6 +206,9 @@ const Register_agent = () => {
                     />
                   </CInputGroup>
                   <CInputGroup className="mb-3">
+                    <CInputGroupText>
+                      @
+                    </CInputGroupText>
                     <CFormInput
                       name="email"
                       type="email"
@@ -179,6 +220,9 @@ const Register_agent = () => {
                     />
                   </CInputGroup>
                   <CInputGroup className="mb-3">
+                    <CInputGroupText>
+                      <CIcon icon={cilPhone} />
+                    </CInputGroupText>
                     <CFormInput
                       name="phone"
                       placeholder="Phone Number"
@@ -192,6 +236,9 @@ const Register_agent = () => {
                     />
                   </CInputGroup>
                   <CInputGroup className="mb-3">
+                    <CInputGroupText>
+                      <CIcon icon={cilLockLocked} />
+                    </CInputGroupText>
                     <CFormInput
                       name="password"
                       type="password"
@@ -203,6 +250,9 @@ const Register_agent = () => {
                     />
                   </CInputGroup>
                   <CInputGroup className="mb-3">
+                    <CInputGroupText>
+                      <CIcon icon={cilLockLocked} />
+                    </CInputGroupText>
                     <CFormInput
                       name="confirmPassword"
                       type="password"
@@ -242,17 +292,22 @@ const Register_agent = () => {
 
 
                   <CDropdown className="d-flex mb-4">
-                    <CDropdownToggle color="primary">{reference}</CDropdownToggle>
+                    <CDropdownToggle color="primary">{Directors}</CDropdownToggle>
                     <CDropdownMenu>
-                      {['Director 1', 'Director 2', 'Director 3', 'Director 4'].map((item, index) => (
-                        <CDropdownItem key={index} onClick={() => setReference(item)}>
-                          {item}
+                      {DirectorsList.map((item, index) => (
+                        <CDropdownItem
+                          key={item.id || index}
+                          onClick={() => handleDropdown(item.name)}>
+                          {item.name}
                         </CDropdownItem>
                       ))}
                     </CDropdownMenu>
                   </CDropdown>
 
                   <CInputGroup className="mb-3">
+                    <CInputGroupText>
+                      <FontAwesomeIcon icon={faIdCard} />
+                    </CInputGroupText>
                     <CFormInput
                       name="aadhar"
                       placeholder="Aadhar Number"
@@ -264,6 +319,9 @@ const Register_agent = () => {
                   </CInputGroup>
 
                   <CInputGroup className="mb-3">
+                    <CInputGroupText>
+                      <FontAwesomeIcon icon={faIdCard} />
+                    </CInputGroupText>
                     <CFormInput
                       name="pan"
                       placeholder="PAN Number"
@@ -275,6 +333,9 @@ const Register_agent = () => {
                   </CInputGroup>
 
                   <CInputGroup className="mb-3">
+                    <CInputGroupText>
+                      <CIcon icon={cilCalendar} />
+                    </CInputGroupText>
                     <CFormInput
                       name="dob"
                       type="date"
