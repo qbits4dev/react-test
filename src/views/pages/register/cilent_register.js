@@ -1,4 +1,4 @@
-import { React } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
     CButton,
     CCard,
@@ -19,6 +19,24 @@ import CIcon from '@coreui/icons-react'
 import { cilLockLocked, cilUser, cilPhone, cilCalendar } from '@coreui/icons'
 
 const Client_Register = () => {
+
+    const [Gender, setGender] = React.useState('Gender')
+    const [GenderList, setGenderList] = useState([])
+
+    useEffect(() => {
+        fetch('http://127.0.0.1:5000/test?key=Gender')
+            .then((res) => res.json())
+            .then((data) => {
+                if (data && Array.isArray(data.Gender)) {
+                    setGenderList(data.Gender)
+                }
+            })
+            .catch(() => {
+                alert('Failed to Fetch Gender. Please try again.')
+                setGenderList([])
+            })
+    }, [])
+
     const handleSubmit = () => {
         if (validate()) {
             if (window.confirm('Account Created Successfully! Click OK to go to homepage.')) {
@@ -94,11 +112,13 @@ const Client_Register = () => {
                                         />
                                     </CInputGroup>
                                     <CDropdown className="d-flex mb-4">
-                                        <CDropdownToggle color="primary">Select Gender</CDropdownToggle>
+                                        <CDropdownToggle color="primary">{Gender}</CDropdownToggle>
                                         <CDropdownMenu>
-                                            {['Male', 'Female'].map((item, index) => (
-                                                <CDropdownItem key={index} onClick={() => setReference(item)}>
-                                                    {item}
+                                            {GenderList.map((item, index) => (
+                                                <CDropdownItem
+                                                    key={item.id || index}
+                                                    onClick={() => setGender(item.name)}>
+                                                    {item.name}
 
                                                 </CDropdownItem>
                                             ))}
