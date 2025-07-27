@@ -30,11 +30,13 @@ const Register = () => {
     fetch('http://127.0.0.1:5000/test?key=InterstedIn')
       .then((res) => res.json())
       .then((data) => {
+        console.log('InterstedIn Data:', data)
         if (data && Array.isArray(data.InterstedIn)) {
           setInterstedInList(data.InterstedIn)
         }
       })
       .catch(() => {
+        console.error('Failed to fetch InterstedIn')
         alert('Failed to Fetch InterstedIn. Please try again.')
         setInterstedInList([])
       })
