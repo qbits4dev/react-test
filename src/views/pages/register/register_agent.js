@@ -24,7 +24,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 const Register_agent = () => {
   const navigate = useNavigate()
 
-  const [Directors, setDirectors] = useState(['directors'])
+  const [Directors, setDirectors] = useState('Directors')
   const [DirectorsList, setDirectorsList] = useState([])
   const [designation, setDesignation] = useState('Designation')
   const [designationList, setDesignationList] = useState([])
@@ -45,10 +45,9 @@ const Register_agent = () => {
     directors: Directors,
   })
   const [errors, setErrors] = useState({})
-
-  // Add agent state
   const [agent, setAgent] = useState('Select Agent')
   const [agentList, setAgentList] = useState([])
+
   useEffect(() => {
     fetch('http://127.0.0.1:5000/test?key=Designation')
       .then((res) => res.json())
@@ -77,21 +76,20 @@ const Register_agent = () => {
         alert('Failed to fetch agents. Please try again later.')
         setAgentList([])
       })
-  }, [])
 
-  useEffect(() => {
     fetch('http://127.0.0.1:5000/test?key=directors')
       .then((res) => res.json())
       .then((data) => {
-        console.log('directors data:', data)
-        if (data && Array.isArray(data.Directors)) {
-          setDirectorsList(data.Directors)
+        console.log('directors data:', data) // 🧪 Add this to debug
+        if (data && Array.isArray(data.directors)) {
+          setDirectorsList(data.directors)
+        } else {
+          console.warn('Directors key missing or not an array')
         }
       })
-      .catch(() => {
+      .catch((error) => {
         console.error('Error fetching directors:', error)
         alert('Failed to fetch directors. Please try again later.')
-        setDirectorsList([])
       })
   }, [])
 
@@ -138,11 +136,13 @@ const Register_agent = () => {
     if (!nameRegex.test(form.firstname)) newErrors.firstname = 'Only letters allowed in Firstname'
     if (!nameRegex.test(form.lastname)) newErrors.lastname = 'Only letters allowed in Lastname'
     if (!emailRegex.test(form.email)) newErrors.email = 'Invalid Email' //TODO: Add proper email validation
-    if (!phoneRegex.test(form.phone)) newErrors.phone = 'Phone must be 10 digits'//TODO : Add proper phone validation
+    if (!phoneRegex.test(form.phone)) newErrors.phone = 'Phone must be 10 digits' //TODO : Add proper phone validation
     if (!aadharRegex.test(form.aadhar)) newErrors.aadhar = 'Aadhar must be 12 digits with spaces'
     if (!panRegex.test(form.pan)) newErrors.pan = 'PAN format invalid'
-    if (!passwordRegex.test(form.password)) newErrors.password = 'Password must be between 8 and 24 characters'
-    if (!passwordRegex.test(form.confirmPassword)) newErrors.confirmPassword = 'Password must be between 8 and 24 characters'
+    if (!passwordRegex.test(form.password))
+      newErrors.password = 'Password must be between 8 and 24 characters'
+    if (!passwordRegex.test(form.confirmPassword))
+      newErrors.confirmPassword = 'Password must be between 8 and 24 characters'
     if (form.password !== form.confirmPassword) newErrors.confirmPassword = 'Passwords do not match'
     if (!form.aadharFile) newErrors.aadharFile = 'Aadhar file required'
     if (!form.panFile) newErrors.panFile = 'PAN file required'
@@ -206,9 +206,7 @@ const Register_agent = () => {
                     />
                   </CInputGroup>
                   <CInputGroup className="mb-3">
-                    <CInputGroupText>
-                      @
-                    </CInputGroupText>
+                    <CInputGroupText>@</CInputGroupText>
                     <CFormInput
                       name="email"
                       type="email"
@@ -289,15 +287,14 @@ const Register_agent = () => {
                     </CDropdownMenu>
                   </CDropdown>
 
-
-
                   <CDropdown className="d-flex mb-4">
                     <CDropdownToggle color="primary">{Directors}</CDropdownToggle>
                     <CDropdownMenu>
                       {DirectorsList.map((item, index) => (
                         <CDropdownItem
                           key={item.id || index}
-                          onClick={() => handleDropdown(item.name)}>
+                          onClick={() => handleDropdown(item.name)}
+                        >
                           {item.name}
                         </CDropdownItem>
                       ))}
