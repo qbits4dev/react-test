@@ -58,10 +58,7 @@ const Register_agent = () => {
           setDesignationList(data.Designation)
         }
       })
-      .catch((err) => {
-        console.error('Designation fetch error:', err)
-        setDesignationList([])
-      })
+      .catch(() => setDesignationList([]))
 
     fetch('http://127.0.0.1:5000/test?key=agents')
       .then((res) => res.json())
@@ -70,54 +67,35 @@ const Register_agent = () => {
           setAgentList(data.agents)
         }
       })
-      .catch((err) => {
-        console.error('Agents fetch error:', err)
-        setAgentList([])
-      })
+      .catch(() => setAgentList([]))
 
     fetch('http://127.0.0.1:5000/test?key=directors')
       .then((res) => res.json())
       .then((data) => {
-        console.log('✅ Fetched directors:', data)
         if (data && Array.isArray(data.directors)) {
           setDirectorsList(data.directors)
-        } else {
-          console.warn('Directors not found or invalid format')
         }
       })
-      .catch((error) => {
-        console.error('Error fetching directors:', error)
-        setDirectorsList([])
-      })
+      .catch(() => setDirectorsList([]))
   }, [])
 
   const handleDropdown = (value) => {
     setDirectors(value)
-    setForm((prev) => ({
-      ...prev,
-      directors: value,
-    }))
+    setForm((prev) => ({ ...prev, directors: value }))
   }
 
   const handleDesignationSelect = (value) => {
     setDesignation(value)
-    setForm((prev) => ({
-      ...prev,
-      designation: value,
-    }))
+    setForm((prev) => ({ ...prev, designation: value }))
   }
 
   const handleTeamSelect = (value) => {
     setTeam(value)
-    setForm((prev) => ({
-      ...prev,
-      team: value,
-    }))
+    setForm((prev) => ({ ...prev, team: value }))
   }
 
   const handleChange = (e) => {
     const { name, value, files } = e.target
-
     if (name === 'aadhar') {
       let val = value.replace(/\D/g, '').substring(0, 12)
       val = val.replace(/(.{4})/g, '$1 ').trim()
@@ -152,7 +130,7 @@ const Register_agent = () => {
     if (!phoneRegex.test(form.phone)) newErrors.phone = 'Phone must be 10 digits'
     if (!aadharRegex.test(form.aadhar)) newErrors.aadhar = 'Aadhar must be 12 digits with spaces'
     if (!panRegex.test(form.pan)) newErrors.pan = 'PAN format invalid'
-    if (!passwordRegex.test(form.password)) newErrors.password = 'Password must be between 8 and 24 characters'
+    if (!passwordRegex.test(form.password)) newErrors.password = 'Password must be 8–24 characters'
     if (form.password !== form.confirmPassword) newErrors.confirmPassword = 'Passwords do not match'
     if (!form.aadharFile) newErrors.aadharFile = 'Aadhar file required'
     if (!form.panFile) newErrors.panFile = 'PAN file required'
@@ -161,18 +139,38 @@ const Register_agent = () => {
       const dobDate = new Date(form.dob)
       const today = new Date()
       today.setFullYear(today.getFullYear() - 18)
-      if (dobDate > today) newErrors.dob = 'You must be at least 18 years old'
+      if (dobDate > today) newErrors.dob = 'Must be at least 18 years old'
     }
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = () => {
-    if (validate()) {
-      console.log('Submitting form:', form)
-      alert('Account Created Successfully!')
-      navigate('/')
+  const handleSubmit = async () => {
+    if (!validate()) return
+
+    try {
+      const formData = new FormData()
+      Object.entries(form).forEach(([key, value]) => {
+        formData.append(key, value)
+      })
+
+      const res = await fetch('http://127.0.0.1:5000/test', {
+        method: 'POST',
+        body: formData,
+      })
+
+      const result = await res.json()
+
+      if (res.ok) {
+        alert('Agent registered successfully!')
+        navigate('/')
+      } else {
+        alert(result.message || 'Registration failed.')
+      }
+    } catch (err) {
+      console.error('Registration error:', err)
+      alert('Something went wrong. Please try again.')
     }
   }
 
@@ -187,111 +185,99 @@ const Register_agent = () => {
                   <h1>Agent Registration</h1>
                   <p className="text-body-secondary">Enter Agent details</p>
 
-                  {/* Name, Email, Phone, Password */}
+                  {/* Firstname, Lastname, Email, Phone, Password */}
                   <CInputGroup className="mb-3">
                     <CInputGroupText><CIcon icon={cilUser} /></CInputGroupText>
-                    <CFormInput name="firstname" placeholder="Firstname" value={form.firstname} onChange={handleChange} invalid={!!errors.firstname} />
+                    <CFormInput name="firstname" placeholder="Firstname" value={form.firstname} onChange={handleChange} />
                   </CInputGroup>
 
                   <CInputGroup className="mb-3">
                     <CInputGroupText><CIcon icon={cilUser} /></CInputGroupText>
-                    <CFormInput name="lastname" placeholder="Lastname" value={form.lastname} onChange={handleChange} invalid={!!errors.lastname} />
+                    <CFormInput name="lastname" placeholder="Lastname" value={form.lastname} onChange={handleChange} />
                   </CInputGroup>
 
                   <CInputGroup className="mb-3">
                     <CInputGroupText>@</CInputGroupText>
-                    <CFormInput name="email" type="email" placeholder="Email" value={form.email} onChange={handleChange} invalid={!!errors.email} />
+                    <CFormInput name="email" type="email" placeholder="Email" value={form.email} onChange={handleChange} />
                   </CInputGroup>
 
                   <CInputGroup className="mb-3">
                     <CInputGroupText><CIcon icon={cilPhone} /></CInputGroupText>
-                    <CFormInput name="phone" placeholder="Phone Number" value={form.phone} onChange={handleChange} invalid={!!errors.phone} />
+                    <CFormInput name="phone" placeholder="Phone Number" value={form.phone} onChange={handleChange} />
                   </CInputGroup>
 
                   <CInputGroup className="mb-3">
                     <CInputGroupText><CIcon icon={cilLockLocked} /></CInputGroupText>
-                    <CFormInput name="password" type="password" placeholder="Password" value={form.password} onChange={handleChange} invalid={!!errors.password} />
+                    <CFormInput name="password" type="password" placeholder="Password" value={form.password} onChange={handleChange} />
                   </CInputGroup>
 
                   <CInputGroup className="mb-3">
                     <CInputGroupText><CIcon icon={cilLockLocked} /></CInputGroupText>
-                    <CFormInput name="confirmPassword" type="password" placeholder="Confirm Password" value={form.confirmPassword} onChange={handleChange} invalid={!!errors.confirmPassword} />
+                    <CFormInput name="confirmPassword" type="password" placeholder="Confirm Password" value={form.confirmPassword} onChange={handleChange} />
                   </CInputGroup>
 
-                  {/* Designation Dropdown */}
+                  {/* Dropdowns */}
                   <CDropdown className="d-flex mb-2">
                     <CDropdownToggle color="primary">{designation}</CDropdownToggle>
                     <CDropdownMenu>
-                      {designationList.length === 0 ? (
-                        <CDropdownItem disabled>No designations available</CDropdownItem>
-                      ) : (
-                        designationList.map((item, index) => (
-                          <CDropdownItem key={index} onClick={() => handleDesignationSelect(item.name)}>
-                            {item.name}
-                          </CDropdownItem>
-                        ))
-                      )}
+                      {designationList.map((item, index) => (
+                        <CDropdownItem key={index} onClick={() => handleDesignationSelect(item.name)}>
+                          {item.name}
+                        </CDropdownItem>
+                      ))}
                     </CDropdownMenu>
                   </CDropdown>
 
-                  {/* Agent Dropdown */}
                   <CDropdown className="d-flex mb-2">
                     <CDropdownToggle color="primary">{team}</CDropdownToggle>
                     <CDropdownMenu>
-                      {agentList.length === 0 ? (
-                        <CDropdownItem disabled>No agents found</CDropdownItem>
-                      ) : (
-                        agentList.map((item, index) => (
-                          <CDropdownItem key={index} onClick={() => handleTeamSelect(item.name)}>
-                            {item.name}
-                          </CDropdownItem>
-                        ))
-                      )}
+                      {agentList.map((item, index) => (
+                        <CDropdownItem key={index} onClick={() => handleTeamSelect(item.name)}>
+                          {item.name}
+                        </CDropdownItem>
+                      ))}
                     </CDropdownMenu>
                   </CDropdown>
 
-                  {/* Directors Dropdown */}
                   <CDropdown className="d-flex mb-4">
                     <CDropdownToggle color="primary">{Directors}</CDropdownToggle>
                     <CDropdownMenu>
-                      {DirectorsList.length === 0 ? (
-                        <CDropdownItem disabled>No directors found</CDropdownItem>
-                      ) : (
-                        DirectorsList.map((item, index) => (
-                          <CDropdownItem key={index} onClick={() => handleDropdown(item.name)}>
-                            {item.name}
-                          </CDropdownItem>
-                        ))
-                      )}
+                      {DirectorsList.map((item, index) => (
+                        <CDropdownItem key={index} onClick={() => handleDropdown(item.name)}>
+                          {item.name}
+                        </CDropdownItem>
+                      ))}
                     </CDropdownMenu>
                   </CDropdown>
 
-                  {/* Aadhar, PAN, DOB, File Uploads */}
+                  {/* Aadhar, PAN, DOB */}
                   <CInputGroup className="mb-3">
                     <CInputGroupText><FontAwesomeIcon icon={faIdCard} /></CInputGroupText>
-                    <CFormInput name="aadhar" placeholder="Aadhar Number" value={form.aadhar} onChange={handleChange} invalid={!!errors.aadhar} />
+                    <CFormInput name="aadhar" placeholder="Aadhar Number" value={form.aadhar} onChange={handleChange} />
                   </CInputGroup>
 
                   <CInputGroup className="mb-3">
                     <CInputGroupText><FontAwesomeIcon icon={faIdCard} /></CInputGroupText>
-                    <CFormInput name="pan" placeholder="PAN Number" value={form.pan} onChange={handleChange} invalid={!!errors.pan} />
+                    <CFormInput name="pan" placeholder="PAN Number" value={form.pan} onChange={handleChange} />
                   </CInputGroup>
 
                   <CInputGroup className="mb-3">
                     <CInputGroupText><CIcon icon={cilCalendar} /></CInputGroupText>
-                    <CFormInput name="dob" type="date" max={getMaxDob()} value={form.dob} onChange={handleChange} invalid={!!errors.dob} />
+                    <CFormInput name="dob" type="date" value={form.dob} max={getMaxDob()} onChange={handleChange} />
                   </CInputGroup>
 
+                  {/* Files */}
                   <div className="mb-3">
                     <p>Aadhar Card PDF</p>
-                    <CFormInput type="file" name="aadharFile" onChange={handleChange} invalid={!!errors.aadharFile} />
+                    <CFormInput type="file" name="aadharFile" onChange={handleChange} />
                   </div>
 
                   <div className="mb-3">
                     <p>PAN Card PDF</p>
-                    <CFormInput type="file" name="panFile" onChange={handleChange} invalid={!!errors.panFile} />
+                    <CFormInput type="file" name="panFile" onChange={handleChange} />
                   </div>
 
+                  {/* Submit */}
                   <div className="d-grid">
                     <CButton color="info" onClick={handleSubmit}>Create Account</CButton>
                   </div>
