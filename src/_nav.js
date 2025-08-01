@@ -451,6 +451,33 @@ const _nav = [
     ],
   },
   {
+    component: CNavGroup,
+    name: 'Dashboards',
+    icon: <CIcon icon={cilSpeedometer} customClassName="nav-icon" />,
+    items: [
+      {
+        component:CNavItem,
+        name: 'Dashboard',
+        to: '/dashboard',
+      },
+      {
+        component:CNavItem,
+        name:'Agent Dashboard',
+        to:'/agent_dashboard',
+      },
+      {
+        component:CNavItem,
+        name:'Customer Dashboard',
+        to:'/customer_dashboard',
+      },
+      {
+        component:CNavItem,
+        name:'Admin Dashboard',
+        to:'/admin_dashboard',
+      },
+    ],
+  },
+  {
     component: CNavItem,
     name: 'Docs',
     href: 'https://coreui.io/react/docs/templates/installation/',

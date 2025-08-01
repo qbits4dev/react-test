@@ -44,12 +44,9 @@ const Register = () => {
 
   //POST
   const [formData, setFormData] = useState({
-    firstname: '',
-    lastname: '',
+    name: '',
     email: '',
     phone: '',
-    password: '',
-    repeatPassword: '',
     interestedIn: InterstedIn,
     dateOfVisit: '',
   })
@@ -105,22 +102,10 @@ const Register = () => {
                       <CIcon icon={cilUser} />
                     </CInputGroupText>
                     <CFormInput
-                      name="firstname"
-                      placeholder="firstname"
-                      autoComplete="firstname"
-                      value={formData.firstname}
-                      onChange={handleChange}
-                    />
-                  </CInputGroup>
-                  <CInputGroup className="mb-3">
-                    <CInputGroupText>
-                      <CIcon icon={cilUser} />
-                    </CInputGroupText>
-                    <CFormInput
-                      name="lastname"
-                      placeholder="lastname"
-                      autoComplete="lastname"
-                      value={formData.lastname}
+                      name="name"
+                      placeholder="Name"
+                      autoComplete="Name"
+                      value={formData.name}
                       onChange={handleChange}
                     />
                   </CInputGroup>
@@ -144,32 +129,7 @@ const Register = () => {
                       autoComplete="Phone Number"
                       value={formData.phone}
                       onChange={handleChange}
-                    />
-                  </CInputGroup>
-                  <CInputGroup className="mb-3">
-                    <CInputGroupText>
-                      <CIcon icon={cilLockLocked} />
-                    </CInputGroupText>
-                    <CFormInput
-                      name="password"
-                      type="password"
-                      placeholder="Password"
-                      autoComplete="new-password"
-                      value={formData.password}
-                      onChange={handleChange}
-                    />
-                  </CInputGroup>
-                  <CInputGroup className="mb-4">
-                    <CInputGroupText>
-                      <CIcon icon={cilLockLocked} />
-                    </CInputGroupText>
-                    <CFormInput
-                      name="repeatPassword"
-                      type="password"
-                      placeholder="Repeat password"
-                      autoComplete="new-password"
-                      value={formData.repeatPassword}
-                      onChange={handleChange}
+                      required
                     />
                   </CInputGroup>
                   <CDropdown className=" d-flex mb-2">

@@ -1,7 +1,13 @@
 import React from 'react'
 
-
+//Dashboard
 const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
+const Agentdashboard=React.lazy(() => import('./views/dashboard/agent_dashboard'))
+const Customerdashboard=React.lazy(() => import('./views/dashboard/customer_dashboard'))
+const Admindashboard=React.lazy(() => import('./views/dashboard/admin_dashboard'))
+
+
+
 const Colors = React.lazy(() => import('./views/theme/colors/Colors'))
 const Typography = React.lazy(() => import('./views/theme/typography/Typography'))
 
@@ -57,6 +63,9 @@ const ClientRegister = React.lazy(() => import('./views/pages/register/cilent_re
 const routes = [
   { path: '/', exact: true, name: 'Home' },
   { path: '/dashboard', name: 'Dashboard', element: Dashboard },
+  { path:'/agent_dashboard', name: 'Agent Dashboard', element: Agentdashboard},
+  { path:'/customer_dashboard', name: 'Customer Dashboard', element: Customerdashboard},
+  { path:'/admin_dashboard', name: 'Admin Dashboard', element: Admindashboard},
   { path: '/theme', name: 'Theme', element: Colors, exact: true },
   { path: '/theme/colors', name: 'Colors', element: Colors },
   { path: '/theme/typography', name: 'Typography', element: Typography },

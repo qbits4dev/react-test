@@ -62,12 +62,18 @@ const Login = () => {
               <CCard className="text-white bg-primary py-5" style={{ width: '44%' }}>
                 <CCardBody className="text-center">
                   <div>
-                    <h2>Sign up</h2>
-                    <Link to="/register">
-                      <CButton color="primary" className="mt-3" active tabIndex={-1}>
-                        Register Now!
+                    <h2 className='mb-5'>Sign up</h2>
+                    <p className="text-white">If you don't have an account, you can register here.</p>
+                    <Link to="/register_agent">
+                      <CButton color="info" className="mt-3 ms-2" active tabIndex={-1}>
+                        Agent Register 
                       </CButton>
-                    </Link>
+                      </Link>
+                      <Link to='/register'>
+                      <CButton color='danger' className="mt-3 ms-2" active tabIndex={-1}>
+                        Customer Register
+                      </CButton>
+                      </Link>
                   </div>
                 </CCardBody>
               </CCard>
