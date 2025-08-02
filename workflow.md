@@ -23,3 +23,6 @@ LandingPage:
     - Assign a new variable Navigate to useNavigate
     - new Method 'handleLogin' is defined. In the definition, place the path of the page to be redirected when the buttton is pressed
     - use Navigate('path') for navigation
+
+ Task 4:
+    - Added a new page BookVisit
