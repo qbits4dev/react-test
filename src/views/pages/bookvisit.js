@@ -1,18 +1,55 @@
-import react from 'react';
+import React, { useState, useEffect } from 'react';
 
 import {
-    Ccontainer,
+    CContainer,
     CRow,
     CCol,
     CButton,
     CCardBody,
     CForm,
+    CCard,
+    CInputGroup,
+    CInputGroupText,
+    CFormInput,
+    CDropdown,
+    CDropdownToggle,
+    CDropdownMenu,
+    CDropdownItem,
 } from '@coreui/react';
 
 const bookvisit = () => {
+
+    //formdata for booking visit
+    const [form, setForm] = useState({
+        lead: '',
+    })
+
+    //Dropdown for selecting leads
+    const [lead, setlead] = useState('Lead')
+    const [leadsList, setleadsList] = useState([])
+
+    useEffect(() => {
+        fetch('http://127.0.0.1:5000/test?key=Lead')
+            .then(res => res.json())
+            .then((data) => {
+                if (data && Array.isArray(data.Lead)) {
+                    setleadsList(data.Lead)
+                }
+            })
+            .catch(() => setleadsList([]))
+    }, [])
+
+    const handleLead = (Value) => {
+        setlead(Value)
+        setForm((prev) => ({ ...prev, lead: Value }))
+        console.log('Selected Lead:', Value)
+
+    }
+
+
     return (
         <div className="bg-body-tertiary min-vh-100 d-flex flex-row align-items-center">
-            <Ccontainer>
+            <CContainer>
                 <CRow className="justify-content-center">
                     <CCol md={9} lg={7} xl={6}>
                         <CCard className='p-4'>
@@ -20,34 +57,23 @@ const bookvisit = () => {
                                 <CForm>
                                     <h1>Book a Visit</h1>
                                     <p className="text-body-secondary">Schedule your visit with us</p>
-                                    <CInputGroup className='mb-3'>
-                                        <CFormInput
-                                            placeholder="Enter your name"
-                                            autoComplete="name"
-                                        />
-                                    </CInputGroup>
-                                    <CInputGroup className='mb-3'>
-                                        <CFormInput
-                                            type="email"
-                                            placeholder="Enter your email"
-                                            autoComplete="email"
-                                        />
-                                    </CInputGroup>
-                                    <CInputGroup className='mb-3'>
-                                        <CFormInput
-                                            type="tel"
-                                            placeholder="Enter your phone number"
-                                            autoComplete="phone"
-                                        />
-                                        
-                                    </CInputGroup>
+                                    <CDropdown className=" d-flex mb-2">
+                                        <CDropdownToggle color="primary">{lead}</CDropdownToggle>
+                                        <CDropdownMenu>
+                                            {leadsList.map((item, index) => (
+                                                <CDropdownItem key={index} onClick={() => handleLead(item.name)}>
+                                                    {item.name}
+                                                </CDropdownItem>
+                                            ))}
+                                        </CDropdownMenu>
+                                    </CDropdown>
                                     <CButton color="primary" type="submit">Book Visit</CButton>
                                 </CForm>
                             </CCardBody>
                         </CCard>
                     </CCol>
                 </CRow>
-            </Ccontainer>
+            </CContainer>
         </div>
     )
 }

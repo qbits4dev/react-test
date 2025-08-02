@@ -448,6 +448,11 @@ const _nav = [
         name: 'Client Register',
         to: '/client_register',
       },
+      {
+        component: CNavItem,
+        name: 'Book Visit',
+        to: '/bookvisit',
+      },
     ],
   },
   {
