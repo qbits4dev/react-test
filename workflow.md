@@ -16,6 +16,7 @@ LandingPage:
         -The pages which are included in the routes.js are displayed under the DefaultLayout includes Header, Footer, NavBar.
         -To Display the page without header and other components, place the path in Routes element
         - The Login Page, Register Page are excluded from the other components
+        
  Task 3:
     Login Redirect to Dashboard:
     - In Login.js, import useNavigate from react-Navigate-dom 
