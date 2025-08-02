@@ -9,7 +9,7 @@ import {
   CContainer,
   CForm,
   CFormInput,
-  CFormText, // Use CFormText for helper/error text
+  CFormText,
   CInputGroup,
   CInputGroupText,
   CRow,
