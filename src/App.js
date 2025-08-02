@@ -55,7 +55,7 @@ const App = () => {
           <Route exact path="/500" name="Page 500" element={<Page500 />} />
           <Route path="*" name="Home" element={<DefaultLayout />} />
           <Route path="/register_agent" name="Agent Registration" element={<AgentRegistration />} />
-          <Route path="/client_register" name="Client Registration" element={<ClientRegister />} />
+          <Route path="/cilent_register" name="Client Registration" element={<ClientRegister />} />
         </Routes>
       </Suspense>
     </HashRouter>

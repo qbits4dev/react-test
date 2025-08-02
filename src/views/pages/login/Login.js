@@ -15,17 +15,31 @@ import {
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilLockLocked, cilUser } from '@coreui/icons'
+import { useNavigate } from 'react-router-dom'
 
 const Login = () => {
+
+  const Navigate = useNavigate()
+
+  const handleLogin = (e) => {
+    e.preventDefault()
+
+    if (true) {
+      alert('Login Successful')
+      Navigate('/Dashboard')
+    }
+    
+  }
+
   return (
     <div className="bg-body-tertiary min-vh-100 d-flex flex-row align-items-center">
       <CContainer>
-        <CRow className="justify-content-center">
+        <CRow className="justify-content-center">s
           <CCol md={8}>
             <CCardGroup>
               <CCard className="p-4">
                 <CCardBody>
-                  <CForm>
+                  <CForm >
                     <h1>Login</h1>
                     <p className="text-body-secondary">Sign In to your account</p>
                     <CInputGroup className="mb-3">
@@ -46,7 +60,7 @@ const Login = () => {
                     </CInputGroup>
                     <CRow>
                       <CCol xs={6}>
-                        <CButton color="primary" className="px-4">
+                        <CButton color="primary" className="px-4" onClick={handleLogin}>
                           Login
                         </CButton>
                       </CCol>
@@ -69,9 +83,9 @@ const Login = () => {
                         Agent Register 
                       </CButton>
                       </Link>
-                      <Link to='/register'>
+                      <Link to='/cilent_register'>
                       <CButton color='danger' className="mt-3 ms-2" active tabIndex={-1}>
-                        Customer Register
+                        Client Register
                       </CButton>
                       </Link>
                   </div>
