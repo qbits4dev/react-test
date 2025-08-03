@@ -27,6 +27,8 @@ const bookvisit = () => {
     //Dropdown for selecting leads
     const [lead, setlead] = useState('Lead')
     const [leadsList, setleadsList] = useState([])
+    const [InterstedIn, setInterstedIn] = useState('IntrestedIn')
+    const [InterstedInList, setInterstedInList] = useState([])
 
     useEffect(() => {
         fetch('http://127.0.0.1:5000/test?key=Lead')
@@ -36,15 +38,115 @@ const bookvisit = () => {
                     setleadsList(data.Lead)
                 }
             })
-            .catch(() => setleadsList([]))
+            .catch(() => {
+                alert('Failed to Fetch Lead. Please try again.')
+                setleadsList([])
+            })
+
+        fetch('http://127.0.0.1:5000/test?key=InterstedIn')
+            .then((res) => res.json())
+            .then((data) => {
+                if (data && Array.isArray(data.InterstedIn)) {
+                    setInterstedInList(data.InterstedIn)
+                }
+            })
+            .catch(() => {
+                alert('Failed to Fetch InterstedIn. Please try again.')
+                setInterstedInList([])
+            })
+
     }, [])
 
     const handleLead = (Value) => {
         setlead(Value)
         setForm((prev) => ({ ...prev, lead: Value }))
-        console.log('Selected Lead:', Value)
-
     }
+    const handleDropdown = (value) => {
+        setInterstedIn(value)
+        setFormData((prev) => ({
+            ...prev,
+            interestedIn: value,
+        }))
+    }
+
+    const LeadForm = () => {
+        switch (lead) {
+            case 'New Lead':
+                return (
+                    <CForm>
+                        <CInputGroup className="mb-3">
+                            <CFormInput name="firstname" placeholder="Firstname" />
+                        </CInputGroup>
+                        <CInputGroup className="mb-3">
+                            <CFormInput name="lastname" placeholder="lastname" />
+                        </CInputGroup>
+                        <CInputGroup className="mb-3">
+                            <CFormInput name="phone" placeholder="Phone Number" />
+                        </CInputGroup>
+                        <CDropdown className='d-flex mb-2'>
+                            <CDropdownToggle color='primary'>{InterstedIn}</CDropdownToggle>
+                            <CDropdownMenu>
+                                {InterstedInList.map((item, index) => (
+                                    <CDropdownItem key={item.id || index}
+                                        onClick={() => handleDropdown(item.name)}>
+                                        {item.name}
+                                    </CDropdownItem>
+                                ))}
+
+                            </CDropdownMenu>
+                        </CDropdown>
+                        <p className='ml-2'>Date of Visit</p>
+                        <CInputGroup className='mb-4'>
+                            <CFormInput
+                                name='dateOfVisit'
+                                type='date'
+                                placeholder='Date of visit'
+                                required
+                            />
+                        </CInputGroup>
+                    </CForm>
+                )
+            case 'Existing Lead':
+                return (
+                    <CForm>
+                        <CInputGroup className="mb-3">
+                            <CFormInput name="firstname" placeholder="Firstname" />
+                        </CInputGroup>
+                        <CInputGroup className="mb-3">
+                            <CFormInput name="lastname" placeholder="lastname" />
+                        </CInputGroup>
+                        <CInputGroup className="mb-3">
+                            <CFormInput name="phone" placeholder="Phone Number" />
+                        </CInputGroup>
+                        <CDropdown className='d-flex mb-2'>
+                            <CDropdownToggle color='primary'>{InterstedIn}</CDropdownToggle>
+                            <CDropdownMenu>
+                                {InterstedInList.map((item, index) => (
+                                    <CDropdownItem key={item.id || index}
+                                        onClick={() => handleDropdown(item.name)}>
+                                        {item.name}
+                                    </CDropdownItem>
+                                ))}
+
+                            </CDropdownMenu>
+                        </CDropdown>
+                        <p className='ml-2'>Date of Visit</p>
+                        <CInputGroup className='mb-4'>
+                            <CFormInput
+                                name='dateOfVisit'
+                                type='date'
+                                placeholder='Date of visit'
+                                required
+                            />
+                        </CInputGroup>
+                    </CForm>
+
+                )
+            default:
+                return null
+        }
+    }
+
 
 
     return (
@@ -67,7 +169,10 @@ const bookvisit = () => {
                                             ))}
                                         </CDropdownMenu>
                                     </CDropdown>
-                                    <CButton color="primary" type="submit">Book Visit</CButton>
+                                    {LeadForm()}
+                                    <div className="d-grid mb-4" >
+                                        <CButton color="primary" type="submit">Book Visit</CButton>
+                                    </div>
                                 </CForm>
                             </CCardBody>
                         </CCard>
