@@ -20,8 +20,15 @@ import {
 const bookvisit = () => {
 
     //formdata for booking visit
-    const [form, setForm] = useState({
-        lead: '',
+    const [formData, setFormData] = useState({
+        name: '',
+        firstname: '',
+        lastname: '',
+        phone: '',
+        plotNumber: '',
+        interestedIn: 'IntrestedIn',
+        dateOfVisit: '',
+        lead: 'lead',
     })
 
     //Dropdown for selecting leads
@@ -30,6 +37,7 @@ const bookvisit = () => {
     const [InterstedIn, setInterstedIn] = useState('IntrestedIn')
     const [InterstedInList, setInterstedInList] = useState([])
 
+    //GET leads and interested in data
     useEffect(() => {
         fetch('http://127.0.0.1:5000/test?key=Lead')
             .then(res => res.json())
@@ -59,8 +67,17 @@ const bookvisit = () => {
 
     const handleLead = (Value) => {
         setlead(Value)
-        setForm((prev) => ({ ...prev, lead: Value }))
+        setFormData((prev) => ({ ...prev, lead: Value }))
     }
+
+    const handleChange = (e) => {
+        const { name, value } = e.target
+        setFormData((prev) => ({
+            ...prev,
+            [name]: value,
+        }))
+    }
+
     const handleDropdown = (value) => {
         setInterstedIn(value)
         setFormData((prev) => ({
@@ -69,19 +86,41 @@ const bookvisit = () => {
         }))
     }
 
+    //POST form data
+    const handlesubmit = async (e) => {
+        e.preventDefault()
+        try {
+            const res = await fetch('http://127.00.0.1:5000/test', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData),
+            })
+            if (res.ok) {
+                alert('Visit Booked Successfully')
+            } else {
+                console.error('Booking failed:', res.statusText)
+                alert(res.statusText)
+            }
+        } catch (error) {
+            alert('Network Error. Please try again later.')
+        }
+    }
     const LeadForm = () => {
         switch (lead) {
             case 'New Lead':
                 return (
-                    <CForm>
+                    <CForm on onSubmit={handlesubmit}>
                         <CInputGroup className="mb-3">
-                            <CFormInput name="firstname" placeholder="Firstname" />
+                            <CFormInput name="firstname" placeholder="Firstname" value={formData.firstname} onChange={handleChange} />
                         </CInputGroup>
                         <CInputGroup className="mb-3">
-                            <CFormInput name="lastname" placeholder="lastname" />
+                            <CFormInput name="lastname" placeholder="lastname" value={formData.lastname} onChange={handleChange} />
                         </CInputGroup>
                         <CInputGroup className="mb-3">
-                            <CFormInput name="phone" placeholder="Phone Number" />
+                            <CFormInput name="phone" placeholder="Phone Number" value={formData.phone} onChange={handleChange} />
+                        </CInputGroup>
+                        <CInputGroup className="mb-3">
+                            <CFormInput name="plot number" placeholder="plot number" value={formData.plotNumber} onChange={handleChange} />
                         </CInputGroup>
                         <CDropdown className='d-flex mb-2'>
                             <CDropdownToggle color='primary'>{InterstedIn}</CDropdownToggle>
@@ -102,21 +141,26 @@ const bookvisit = () => {
                                 type='date'
                                 placeholder='Date of visit'
                                 required
+                                value={formData.dateOfVisit}
+                                onChange={handleChange}
                             />
                         </CInputGroup>
+                        <div className="d-grid mb-4" >
+                            <CButton color="primary" onClick={handlesubmit}>Book Visit</CButton>
+                        </div>
                     </CForm>
                 )
             case 'Existing Lead':
                 return (
-                    <CForm>
+                    <CForm onSubmit={handlesubmit}>
                         <CInputGroup className="mb-3">
-                            <CFormInput name="firstname" placeholder="Firstname" />
+                            <CFormInput name="name" placeholder="Name" value={formData.name} onChange={handleChange} />
                         </CInputGroup>
                         <CInputGroup className="mb-3">
-                            <CFormInput name="lastname" placeholder="lastname" />
+                            <CFormInput name="phone" placeholder="Phone Number" value={formData.phone} onChange={handleChange} />
                         </CInputGroup>
                         <CInputGroup className="mb-3">
-                            <CFormInput name="phone" placeholder="Phone Number" />
+                            <CFormInput name="plot number" placeholder="plot number" value={formData.dateOfVisit} onChange={handleChange} />
                         </CInputGroup>
                         <CDropdown className='d-flex mb-2'>
                             <CDropdownToggle color='primary'>{InterstedIn}</CDropdownToggle>
@@ -137,8 +181,13 @@ const bookvisit = () => {
                                 type='date'
                                 placeholder='Date of visit'
                                 required
+                                value={formData.dateOfVisit}
+                                onChange={handleChange}
                             />
                         </CInputGroup>
+                        <div className="d-grid mb-4" >
+                            <CButton color="primary" onClick={handlesubmit}>Book Visit</CButton>
+                        </div>
                     </CForm>
 
                 )
@@ -146,9 +195,6 @@ const bookvisit = () => {
                 return null
         }
     }
-
-
-
     return (
         <div className="bg-body-tertiary min-vh-100 d-flex flex-row align-items-center">
             <CContainer>
@@ -169,11 +215,8 @@ const bookvisit = () => {
                                             ))}
                                         </CDropdownMenu>
                                     </CDropdown>
-                                    {LeadForm()}
-                                    <div className="d-grid mb-4" >
-                                        <CButton color="primary" type="submit">Book Visit</CButton>
-                                    </div>
                                 </CForm>
+                                {LeadForm()}
                             </CCardBody>
                         </CCard>
                     </CCol>
