@@ -439,7 +439,7 @@ const _nav = [
         to: '/500',
       },
       {
-        component:CNavItem,
+        component: CNavItem,
         name: 'Register Agent',
         to: '/register_agent',
       },
@@ -453,6 +453,11 @@ const _nav = [
         name: 'Book Visit',
         to: '/bookvisit',
       },
+      {
+        component: CNavItem,
+        name: 'Verification',
+        to: '/verification',
+      },
     ],
   },
   {
@@ -461,24 +466,24 @@ const _nav = [
     icon: <CIcon icon={cilSpeedometer} customClassName="nav-icon" />,
     items: [
       {
-        component:CNavItem,
+        component: CNavItem,
         name: 'Dashboard',
         to: '/dashboard',
       },
       {
-        component:CNavItem,
-        name:'Agent Dashboard',
-        to:'/agent_dashboard',
+        component: CNavItem,
+        name: 'Agent Dashboard',
+        to: '/agent_dashboard',
       },
       {
-        component:CNavItem,
-        name:'Customer Dashboard',
-        to:'/customer_dashboard',
+        component: CNavItem,
+        name: 'Customer Dashboard',
+        to: '/customer_dashboard',
       },
       {
-        component:CNavItem,
-        name:'Admin Dashboard',
-        to:'/admin_dashboard',
+        component: CNavItem,
+        name: 'Admin Dashboard',
+        to: '/admin_dashboard',
       },
     ],
   },

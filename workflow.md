@@ -27,3 +27,5 @@ LandingPage:
  Task 4:
     - Added a new page BookVisit
     - lead dropdown added including forms
+ Task 5: 
+   - added new verification page for otp verification
