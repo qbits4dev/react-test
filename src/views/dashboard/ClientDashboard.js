@@ -240,12 +240,11 @@ const ClientDashboard = () => {
         ],
       },
       // Add a 'buttonLink' property for the booking form
-      buttonLink: 'www.google.com', // Replace with the actual route to the booking form
+      buttonLink: '/bookvisit', // Replace with the actual route to the booking form
       buttonText: 'Book Visit', // Text for the button
     },
   ]
-
-
+  
   return (
     <>
       <WidgetsDropdown widgetsData={agentWidgetsData} className="mb-4" />

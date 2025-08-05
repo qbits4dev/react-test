@@ -4,9 +4,10 @@ import React from 'react'
 //Dashboard
 const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
 
-const Agentdashboard=React.lazy(() => import('./views/dashboard/agent_dashboard'))
-const Customerdashboard=React.lazy(() => import('./views/dashboard/customer_dashboard'))
-const Admindashboard=React.lazy(() => import('./views/dashboard/admin_dashboard'))
+const ClientDashboard = React.lazy(() => import('./views/dashboard/ClientDashboard'))
+const AdminDashboard = React.lazy(() => import('./views/dashboard/AdminDashboard'))
+const AgentDashboard = React.lazy(() => import('./views/dashboard/AgentDashboard'))
+
 
 const Colors = React.lazy(() => import('./views/theme/colors/Colors'))
 const Typography = React.lazy(() => import('./views/theme/typography/Typography'))
@@ -64,9 +65,9 @@ const routes = [
   { path: '/dashboard', name: 'Dashboard', element: Dashboard },
 
 
-  { path:'/agent_dashboard', name: 'Agent Dashboard', element: Agentdashboard},
-  { path:'/customer_dashboard', name: 'Customer Dashboard', element: Customerdashboard},
-  { path:'/admin_dashboard', name: 'Admin Dashboard', element: Admindashboard},
+  { path: '/Clientdashboard', name: 'Dashboard', element: ClientDashboard },
+  { path: '/Admindashboard', name: 'Dashboard', element: AdminDashboard },
+  { path: '/Agentdashboard', name: 'Dashboard', element: AgentDashboard },
   { path: '/theme', name: 'Theme', element: Colors, exact: true },
   { path: '/theme/colors', name: 'Colors', element: Colors },
   { path: '/theme/typography', name: 'Typography', element: Typography },
@@ -110,7 +111,7 @@ const routes = [
   { path: '/notifications/modals', name: 'Modals', element: Modals },
   { path: '/notifications/toasts', name: 'Toasts', element: Toasts },
   { path: '/widgets', name: 'Widgets', element: Widgets },
-  { path:'/bookvisit', name: 'Book Visit', element: bookvisit },
+  { path: '/bookvisit', name: 'Book Visit', element: bookvisit },
 ]
 
 export default routes
