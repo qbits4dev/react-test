@@ -49,12 +49,16 @@ const Client_Register = () => {
                 headers: { 'content-type': 'application/json' },
                 body: JSON.stringify(formData),
             })
+            console.log('Response:', res)
+            console.log('Response Status:', res.status)
             if (res.ok) {
                 alert('Registration Successful')
                 Navigate('login')
             }
             else {
-                alert('Registration Failed. Please try again.')
+                console.error('Registration failed:', res.statusText)
+                alert(res.statusText)
+
             }
         } catch (error) {
             alert('Network Error. Please try again later.')

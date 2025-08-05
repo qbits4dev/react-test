@@ -1,10 +1,12 @@
+import { element } from 'prop-types'
 import React from 'react'
 
-
+//Dashboard
 const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
-const ClientDashboard = React.lazy(() => import('./views/dashboard/ClientDashboard'))
-const AdminDashboard = React.lazy(() => import('./views/dashboard/AdminDashboard'))
-const AgentDashboard = React.lazy(() => import('./views/dashboard/AgentDashboard'))
+
+const Agentdashboard=React.lazy(() => import('./views/dashboard/agent_dashboard'))
+const Customerdashboard=React.lazy(() => import('./views/dashboard/customer_dashboard'))
+const Admindashboard=React.lazy(() => import('./views/dashboard/admin_dashboard'))
 
 const Colors = React.lazy(() => import('./views/theme/colors/Colors'))
 const Typography = React.lazy(() => import('./views/theme/typography/Typography'))
@@ -40,6 +42,7 @@ const Layout = React.lazy(() => import('./views/forms/layout/Layout'))
 const Range = React.lazy(() => import('./views/forms/range/Range'))
 const Select = React.lazy(() => import('./views/forms/select/Select'))
 const Validation = React.lazy(() => import('./views/forms/validation/Validation'))
+const bookvisit = React.lazy(() => import('./views/pages/bookvisit'))
 
 const Charts = React.lazy(() => import('./views/charts/Charts'))
 
@@ -56,14 +59,14 @@ const Toasts = React.lazy(() => import('./views/notifications/toasts/Toasts'))
 
 const Widgets = React.lazy(() => import('./views/widgets/Widgets'))
 
-const AgentRegistration = React.lazy(() => import('./views/pages/register/register_agent'))
-const ClientRegister = React.lazy(() => import('./views/pages/register/cilent_register'))
 const routes = [
   { path: '/', exact: true, name: 'Home' },
   { path: '/dashboard', name: 'Dashboard', element: Dashboard },
-  { path: '/Clientdashboard', name: 'Dashboard', element: ClientDashboard },
-  { path: '/Admindashboard', name: 'Dashboard', element: AdminDashboard },
-  { path: '/Agentdashboard', name: 'Dashboard', element: AgentDashboard },
+
+
+  { path:'/agent_dashboard', name: 'Agent Dashboard', element: Agentdashboard},
+  { path:'/customer_dashboard', name: 'Customer Dashboard', element: Customerdashboard},
+  { path:'/admin_dashboard', name: 'Admin Dashboard', element: Admindashboard},
   { path: '/theme', name: 'Theme', element: Colors, exact: true },
   { path: '/theme/colors', name: 'Colors', element: Colors },
   { path: '/theme/typography', name: 'Typography', element: Typography },
@@ -107,8 +110,7 @@ const routes = [
   { path: '/notifications/modals', name: 'Modals', element: Modals },
   { path: '/notifications/toasts', name: 'Toasts', element: Toasts },
   { path: '/widgets', name: 'Widgets', element: Widgets },
-  { path:'/register_agent', name: 'Agent Registration', element: AgentRegistration},
-  { path:'/client_register', name: 'Client Registration', element: ClientRegister},
+  { path:'/bookvisit', name: 'Book Visit', element: bookvisit },
 ]
 
 export default routes

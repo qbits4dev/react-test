@@ -16,6 +16,11 @@ const Login = React.lazy(() => import('./views/pages/login/Login'))
 const Register = React.lazy(() => import('./views/pages/register/Register'))
 const Page404 = React.lazy(() => import('./views/pages/page404/Page404'))
 const Page500 = React.lazy(() => import('./views/pages/page500/Page500'))
+const Verification = React.lazy(() => import('./views/pages/verification'))
+
+const AgentRegistration = React.lazy(() => import('./views/pages/register/register_agent'))
+const ClientRegister = React.lazy(() => import('./views/pages/register/cilent_register'))
+
 
 const App = () => {
   const { isColorModeSet, setColorMode } = useColorModes('coreui-free-react-admin-template-theme')
@@ -50,6 +55,9 @@ const App = () => {
           <Route exact path="/404" name="Page 404" element={<Page404 />} />
           <Route exact path="/500" name="Page 500" element={<Page500 />} />
           <Route path="*" name="Home" element={<DefaultLayout />} />
+          <Route path="/register_agent" name="Agent Registration" element={<AgentRegistration />} />
+          <Route path="/cilent_register" name="Client Registration" element={<ClientRegister />} />
+          <Route path="/verification" name="verification" element={<Verification/>} />
         </Routes>
       </Suspense>
     </HashRouter>
