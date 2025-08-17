@@ -1,4 +1,6 @@
 # To Do: add invoice / payment receipt/ message notification
 # To Do: message in login and login otp
 # To Do: payment schedule and /notification
-# To Do:
+# To Do: 
+payment receipt - sample html is added update the same in core ui and give a downloaded pdf to customers 
+the pdf needs to be sent in email and whats app and download option multiple times.
