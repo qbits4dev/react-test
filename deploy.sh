@@ -8,6 +8,15 @@ APP_NAME="react-test-app"
 PORT=5000
 HOST=0.0.0.0
 
+
+
+# Change to the project directory (hardcoded path)
+cd /home/atulitha/Desktop/github/react-test
+
+# Kill any running pm2 instance for this app before starting deployment
+echo "Stopping any running pm2 instance for $APP_NAME ..."
+pm2 delete $APP_NAME || true
+
 # Fetch latest code
 BRANCH="combined"
 echo "Fetching latest code from branch: $BRANCH ..."
@@ -48,7 +57,7 @@ pm2 start serve \
     --name $APP_NAME \
     --output logs/${APP_NAME}-out.log \
     --error logs/${APP_NAME}-error.log \
-    -- -s build -l $HOST:$PORT
+    -- -s build --listen $PORT
 
 echo "Deployment complete. App running at http://$HOST:$PORT"
 
