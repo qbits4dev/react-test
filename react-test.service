@@ -1,0 +1,13 @@
+[Unit]
+Description=React Test Deploy Service
+After=network.target
+
+[Service]
+Type=simple
+User=atulitha
+WorkingDirectory=/home/atulitha/Desktop/github/react-test
+ExecStart=/home/atulitha/Desktop/github/react-test/deploy.sh
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
