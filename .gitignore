@@ -25,3 +25,5 @@ yarn-debug.log*
 yarn-error.log*
 
 .vercel
+logs/react-test-app-error.log
+logs/react-test-app-out.log
