@@ -6,7 +6,11 @@ After=network.target
 Type=simple
 User=atulitha
 WorkingDirectory=/home/atulitha/Desktop/github/react-test
-ExecStart=/home/atulitha/Desktop/github/react-test/deploy.sh
+ExecStartPre=/home/atulitha/Desktop/github/react-test/deploy.sh
+ExecStart=/usr/bin/pm2-runtime start serve --name react-test-app \
+	--output /home/atulitha/Desktop/github/react-test/logs/react-test-app-out.log \
+	--error /home/atulitha/Desktop/github/react-test/logs/react-test-app-error.log \
+	-- -s build --listen 5000
 Restart=on-failure
 
 [Install]

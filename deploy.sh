@@ -8,8 +8,6 @@ APP_NAME="react-test-app"
 PORT=5000
 HOST=0.0.0.0
 
-
-
 # Change to the project directory (hardcoded path)
 cd /home/atulitha/Desktop/github/react-test
 
@@ -53,14 +51,14 @@ fi
 mkdir -p logs
 
 echo "Starting the app on $HOST:$PORT..."
-pm2 start serve \
-    --name $APP_NAME \
-    --output logs/${APP_NAME}-out.log \
-    --error logs/${APP_NAME}-error.log \
-    -- -s build --listen $PORT
+# pm2 start serve \
+#     --name $APP_NAME \
+#     --output logs/${APP_NAME}-out.log \
+#     --error logs/${APP_NAME}-error.log \
+#     -- -s build --listen $PORT
 
 echo "Deployment complete. App running at http://$HOST:$PORT"
 
 # Show running process name(s)
 echo "\nRunning process for $APP_NAME:"
-pm2 list | grep "$APP_NAME" || echo "No running process found for $APP_NAME."
+# pm2 list | grep "$APP_NAME" || echo "No running process found for $APP_NAME."

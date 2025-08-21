@@ -1,0 +1,78 @@
+sample_data = {
+            'agents': [
+                {'id': 1, 'name': 'Self Registration'},
+                {'id': 2, 'name': 'Agent Jhon'},
+                {'id': 3, 'name': 'Agent Smith'}
+            ],
+            'projectdetails1': {
+                'project1': [
+                    {'value': 'villas_ng', 'text': 'Luxury Villas'},
+                    {'value': 'Flats_ng', 'text': 'Luxury Flats'},
+                    {'value': 'plots_ng', 'text': 'Plots'}
+                ],
+                'project2': [
+                    {'value': 'plots_pns', 'text': 'Plots'}
+                ]
+            },
+            'projectdetails2': {
+                'villas_ng': [
+                    {'value': 'villa1', 'text': 'Villa 1-East facing', 'size': 2500},
+                    {'value': 'villa2', 'text': 'Villa 2-West facing', 'size': 2600}
+                ],
+                'Flats_ng': [
+                    {'value': 'flat1', 'text': 'Flat no 101-East facing', 'size': 1200},
+                    {'value': 'flat2', 'text': 'Flat no 102-West facing', 'size': 1250}
+                ],
+                'plots_ng': [
+                    {'value': 'plot1', 'text': 'Plot 1', 'size': 300},
+                    {'value': 'plot2', 'text': 'Plot 2', 'size': 320}
+                ],
+                'plots_pns': [
+                    {'value': 'plot1', 'text': 'Plot 1', 'size': 350},
+                    {'value': 'plot2', 'text': 'Plot 2', 'size': 370}
+                ]
+            },
+            'projects': [
+                {"id": 'Aditya Enclave', "name": "Aditya Enclave"},
+                {"id": "Aditya Heights", "name": "Aditya Heights"},
+                {"id": "Aditya Meadows", "name": "Aditya Meadows"},
+                {"id": "Aditya Greens", "name": "Aditya Greens"},
+                {"id": "Aditya Pearl", "name": "Aditya Pearl"}
+            ],
+            "Designation": [
+                {"id": "Agent", "name": "Agent"},
+                {"id": "Director", "name": "Director"},
+                {"id": "Manager", "name": "Manager"},
+                {"id": "Senior Agent", "name": "Senior Agent"},
+                {"id": "Team Lead", "name": "Team Lead"}
+            ],
+            "teams": [
+                {"id": "Team A", "name": "Team A"},
+                {"id": "Team Alpha", "name": "Team Alpha"},
+                {"id": "Team B", "name": "Team B"},
+                {"id": "Team Beta", "name": "Team Beta"},
+                {"id": "Team C", "name": "Team C"},
+                {"id": "Team D", "name": "Team D"},
+                {"id": "Team Delta", "name": "Team Delta"},
+                {"id": "Team Gamma", "name": "Team Gamma"}
+            ],
+            "name": [
+                {"id": 9, "name": "Jane Smith"},
+                {"id": 10, "name": "Raj Yadav"}
+            ],
+            "directors": [
+                {"id": 1, "name": "Satish Kumar"},
+                {"id": 2, "name": "Anita Sharma"}
+            ],
+            "InterstedIn" : [
+                {"id": "Vasudha Township","name":"Vasudha Township"},
+                {"id": "Fortune City","name": "Fortune City"},
+                {"id": "Royal Smart City","name": "Royal Smart City"},
+                {"id": "Vasudha Township","name":"Vasudha Township"},
+                {"id": "Sree Pavitra Avenue","name":"Sree Pavitra Avenue"},
+                {"id": "Nandha Gokulam","name":"Nandha Gokulam"},
+            ],
+            "Gender" :[
+                {"id":"Male", "name":"Male"},
+                {"id": "Female", "name": "Female"},
+            ],
