@@ -61,43 +61,42 @@ import MainChart from './MainChart'
 
 const ClientDashboard = () => {
 
-  const ApiDetails = () => {
-    const [product, setProduct] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-  
-  useEffect(() => {
-      const fetchProduct = async () => {
-        try {
-          setLoading(true);
-          // Fetch data for a single product (e.g., product with ID 1)
-          const response = await fetch('https://api.qbits4dev.com/');
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+      const [product, setProduct] = useState(null);
+      const [loading, setLoading] = useState(true);
+      const [error, setError] = useState(null);
+    
+    useEffect(() => {
+        const fetchProduct = async () => {
+          try {
+            setLoading(true);
+            // Fetch data for a single product (e.g., product with ID 1)
+            const response = await fetch('https://api.qbits4dev.com');
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            setProduct(data); // Store the entire product object in state
+    
+          } catch (error) {
+            setError(error);
+            console.error('Error fetching product data:', error);
+            // You might want to set a more user-friendly error message here
+          } finally {
+            setLoading(false);
           }
-          const data = await response.json();
-          setProduct(data); // Store the entire product object in state
-  
-        } catch (error) {
-          setError(error);
-          console.error('Error fetching product data:', error);
-          // You might want to set a more user-friendly error message here
-        } finally {
-          setLoading(false);
-        }
-      };
-  
-      fetchProduct(); // Call the async function
-    }, []); // Empty dependency array
-  
-    if (loading) {
-      return <div>Loading product details...</div>;
-    }
-  
-    if (error) {
-      return <div>Error: {error.message}</div>;
-    }
-  }
+        };
+    
+        fetchProduct(); // Call the async function
+      }, []); // Empty dependency array
+    
+      if (loading) {
+        return <div>Loading product details...</div>;
+      }
+    
+      if (error) {
+        return <div>Error: {error.message}</div>;
+      }
+    
 
   const progressExample = [
     { title: 'Visits', value: '29.703 Users', percent: 40, color: 'success' },
