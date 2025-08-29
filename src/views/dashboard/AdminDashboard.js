@@ -1,5 +1,7 @@
-import React from 'react'
+// import React from 'react'
 import classNames from 'classnames'
+import React, { useState, useEffect } from 'react';
+
 
 import {
   CAvatar,
@@ -56,7 +58,60 @@ import WidgetsDropdown from '../widgets/WidgetsCardsAd'
 
 import MainChart from './MainChart'
 
+
 const ClientDashboard = () => {
+
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('https://api.qbits4dev.com')
+      .then(res => res.json())
+      .then(json => {
+        setData(json);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) return <div>Loading...</div>;
+
+    //   const [product, setProduct] = useState(null);
+    //   const [loading, setLoading] = useState(true);
+    //   const [error, setError] = useState(null);
+    
+    // useEffect(() => {
+    //     const fetchProduct = async () => {
+    //       try {
+    //         setLoading(true);
+    //         // Fetch data for a single product (e.g., product with ID 1)
+    //         const response = await fetch('https://api.qbits4dev.com');
+    //         if (!response.ok) {
+    //           throw new Error(`HTTP error! status: ${response.status}`);
+    //         }
+    //         const data = await response.json();
+    //         setProduct(data); // Store the entire product object in state
+    
+    //       } catch (error) {
+    //         setError(error);
+    //         console.error('Error fetching product data:', error);
+    //         // You might want to set a more user-friendly error message here
+    //       } finally {
+    //         setLoading(false);
+    //       }
+    //     };
+    
+    //     fetchProduct(); // Call the async function
+    //   }, []); // Empty dependency array
+    
+    //   if (loading) {
+    //     return <div>Loading product details...</div>;
+    //   }
+    
+    //   if (error) {
+    //     return <div>Error: {error.message}</div>;
+    //   }
+    
+
   const progressExample = [
     { title: 'Visits', value: '29.703 Users', percent: 40, color: 'success' },
     { title: 'Unique', value: '24.093 Users', percent: 20, color: 'info' },
@@ -275,6 +330,24 @@ const ClientDashboard = () => {
   return (
     <>
       <WidgetsDropdown widgetsData={agentWidgetsData} className="mb-4" />
+
+      <div>
+      <h3>Fetched Users</h3>
+      <p>{data.Hello}</p>
+      </div>
+      {/* <div>
+            <h2>API Response Details:</h2>
+            {product ? (
+                <>
+                    <p><strong>Hello:</strong> {product.Hello}</p>
+                    <p><strong>Message:</strong> {product.message}</p>
+                     </>
+            ) : (
+               
+                <p>API data not available after loading.</p>
+            )}
+        </div> */}
+       Working
       <CCard className="mb-4">
         <CCardBody>
           <CRow>
@@ -433,6 +506,7 @@ const ClientDashboard = () => {
                     <CTableHeaderCell className="bg-body-tertiary text-center">
                       Payment Method
                     </CTableHeaderCell>
+
                     <CTableHeaderCell className="bg-body-tertiary">Activity</CTableHeaderCell>
                   </CTableRow>
                 </CTableHead>
