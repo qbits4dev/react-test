@@ -43,15 +43,22 @@ const Client_Register = () => {
       email: formData.email,
       password: formData.password,
       role: "customer", // always customer
+    //   "title": formData.first_name,
+    //   "body": formData.email,
+    //   "userId": 1
     }
 
     try {
       const res = await fetch('https://api.qbits4dev.com/auth/register', {
+      // const res = await fetch('https://dummyjson.com/posts', {
+
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
+      console.log("yes")
       const result = await res.json()
+      console.log(result)
       if (res.ok && result.u_id) {
         setUserCode(result.u_id)
         alert(`Registration Successful! Your User Code: ${result.u_id}`)
