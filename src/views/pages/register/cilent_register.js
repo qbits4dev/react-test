@@ -5,17 +5,15 @@ import {
   CInputGroup, CInputGroupText, CRow
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilLockLocked, cilUser, cilPhone } from '@coreui/icons'
+import { cilUser, cilPhone } from '@coreui/icons'
 
 const Client_Register = () => {
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
     email: '',
-    phone: '',
-    password: '',
-    repeatPassword: '',
-    dateOfVisit: '',
+    phone_number: '',   // note: adjust to match your API, e.g., "phone" or "phone_number"
+    reference_agent: '', // new field
   })
   const [error, setError] = useState(null)
   const [userCode, setUserCode] = useState('')
@@ -31,34 +29,19 @@ const Client_Register = () => {
     setError(null)
     setUserCode('')
 
-    if (formData.password !== formData.repeatPassword) {
-      setError('Passwords do not match')
-      return
-    }
-
-    // Create API payload with required fields
+    // Construct API payload (include role if required)
     const payload = {
-      first_name: formData.first_name,
-      last_name: formData.last_name,
-      email: formData.email,
-      password: formData.password,
-      role: "customer", // always customer
-    //   "title": formData.first_name,
-    //   "body": formData.email,
-    //   "userId": 1
+      ...formData,
+      role: "customer" // remove if not needed by API
     }
 
     try {
-      const res = await fetch('https://api.qbits4dev.com/auth/register', {
-      // const res = await fetch('https://dummyjson.com/posts', {
-
+      const res = await fetch('https://api.qbits4dev.com/register/client', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
-      console.log("yes")
       const result = await res.json()
-      console.log(result)
       if (res.ok && result.u_id) {
         setUserCode(result.u_id)
         alert(`Registration Successful! Your User Code: ${result.u_id}`)
@@ -85,59 +68,59 @@ const Client_Register = () => {
                     <CInputGroupText>
                       <CIcon icon={cilUser} />
                     </CInputGroupText>
-                    <CFormInput name="first_name" placeholder="First Name" autoComplete="given-name" value={formData.first_name} onChange={handleChange} required />
+                    <CFormInput
+                      name="first_name"
+                      placeholder="First Name"
+                      value={formData.first_name}
+                      onChange={handleChange}
+                      required
+                    />
                   </CInputGroup>
                   <CInputGroup className="mb-3">
                     <CInputGroupText>
                       <CIcon icon={cilUser} />
                     </CInputGroupText>
-                    <CFormInput name="last_name" placeholder="Last Name" autoComplete="family-name" value={formData.last_name} onChange={handleChange} required />
+                    <CFormInput
+                      name="last_name"
+                      placeholder="Last Name"
+                      value={formData.last_name}
+                      onChange={handleChange}
+                      required
+                    />
                   </CInputGroup>
                   <CInputGroup className="mb-3">
                     <CInputGroupText>@</CInputGroupText>
-                    <CFormInput name="email" placeholder="Email" autoComplete="email" value={formData.email} onChange={handleChange} required />
+                    <CFormInput
+                      name="email"
+                      placeholder="Email"
+                      type="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      required
+                    />
                   </CInputGroup>
                   <CInputGroup className='mb-3'>
                     <CInputGroupText>
                       <CIcon icon={cilPhone} />
                     </CInputGroupText>
-                    <CFormInput name="phone" placeholder="Phone Number" autoComplete="tel" value={formData.phone} onChange={handleChange} />
-                  </CInputGroup>
-                  <CInputGroup className="mb-3">
-                    <CInputGroupText>
-                      <CIcon icon={cilLockLocked} />
-                    </CInputGroupText>
                     <CFormInput
-                      name="password"
-                      type="password"
-                      placeholder="Password"
-                      autoComplete="new-password"
-                      value={formData.password}
+                      name="phone_number"
+                      placeholder="Phone Number"
+                      value={formData.phone_number}
                       onChange={handleChange}
                       required
                     />
                   </CInputGroup>
-                  <CInputGroup className="mb-4">
+                  <CInputGroup className='mb-3'>
                     <CInputGroupText>
-                      <CIcon icon={cilLockLocked} />
+                      <CIcon icon={cilUser} />
                     </CInputGroupText>
                     <CFormInput
-                      name="repeatPassword"
-                      type="password"
-                      placeholder="Repeat password"
-                      autoComplete="new-password"
-                      value={formData.repeatPassword}
+                      name="reference_agent"
+                      placeholder="Reference Agent"
+                      value={formData.reference_agent}
                       onChange={handleChange}
                       required
-                    />
-                  </CInputGroup>
-                  <CInputGroup className='mb-4'>
-                    <CFormInput
-                      name='dateOfVisit'
-                      type='date'
-                      placeholder='Date of visit'
-                      value={formData.dateOfVisit}
-                      onChange={handleChange}
                     />
                   </CInputGroup>
                   {error && <div style={{ color: "red" }}>{error}</div>}
