@@ -13,7 +13,7 @@ services:
       - coolify
     labels:
       - traefik.enable=true
-      - traefik.http.routers.web.rule=Host(`n04gskkccwccgc8ckgsg0c08.qbits4dev.com`)
+      - traefik.http.routers.web.rule=Host(`u4o08g0kws48wg8kkkcswg00.qbits4dev.com`)
       - traefik.http.routers.web.entrypoints=https
       - traefik.http.routers.web.tls.certresolver=letsencrypt
       - traefik.http.services.web.loadbalancer.server.port=8002
