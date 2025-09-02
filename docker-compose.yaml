@@ -5,8 +5,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        NPM_INSTALL_ONLY: true
     environment:
       - NODE_ENV=production
     networks:

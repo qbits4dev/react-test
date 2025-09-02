@@ -1,14 +1,14 @@
-# Production Dockerfile for Vite/React app
 
-# Build stage: install all dependencies (including devDependencies) and build
+# Multi-stage Dockerfile for Vite/React app
 FROM node:20-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json* ./
-RUN npm install
+RUN npm install --production=True
 COPY . .
 RUN npm run build
 
 FROM nginx:alpine
 COPY --from=build /app/build /usr/share/nginx/html
 EXPOSE 8002
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD wget --spider -q http://localhost/ || exit 1
 CMD ["nginx", "-g", "daemon off;"]
