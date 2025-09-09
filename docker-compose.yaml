@@ -1,20 +1,17 @@
-version: '3.8'
+version: "3.9"
+
 services:
   qbits-ui:
+    container_name: qbits-ui
     build:
-      context: .   # build from repository root
+      context: .
       dockerfile: Dockerfile
-    environment:
-      - NODE_ENV=production
-    networks:
-      - coolify
-
+    image: qbits-ui:latest
+    restart: unless-stopped
+    # No ports: Coolify/Traefik forwards to internal port 9001
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9001/"]
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:9001/ || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3
 
-networks:
-  coolify:
-    external: true
