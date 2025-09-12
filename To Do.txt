@@ -4,3 +4,12 @@
 # To Do: 
 payment receipt - sample html is added update the same in core ui and give a downloaded pdf to customers 
 the pdf needs to be sent in email and whats app and download option multiple times.
+---nivas---
+# To Do: reports in a seperate card 
+# To Do: book a site visit
+# To Do: avaliable plots card
+# To Do: on clivk of aviable plots go to book a site
+# To Do: Advance payment 
+
+# To Do: Telugu Calander "chandramanam" calender
+# test all the pages clear
