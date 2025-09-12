@@ -304,7 +304,7 @@ const ClientDashboard = () => {
       title: 'Agent Performance',
       value: 'View Reports', // Value indicating action
       color: 'secondary', // Example color
-      // Adding a placeholder chart for this card as requested
+      to:'/views/pages/Reports',
       chartData: {
         labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'], // Dummy data labels
         datasets: [

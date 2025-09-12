@@ -7,6 +7,7 @@ const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
 const ClientDashboard = React.lazy(() => import('./views/dashboard/ClientDashboard'))
 const AdminDashboard = React.lazy(() => import('./views/dashboard/AdminDashboard'))
 const AgentDashboard = React.lazy(() => import('./views/dashboard/AgentDashboard'))
+const Reports = React.lazy(() => import('./views/pages/Reports'))
 
 
 const Colors = React.lazy(() => import('./views/theme/colors/Colors'))
@@ -44,6 +45,7 @@ const Range = React.lazy(() => import('./views/forms/range/Range'))
 const Select = React.lazy(() => import('./views/forms/select/Select'))
 const Validation = React.lazy(() => import('./views/forms/validation/Validation'))
 const bookvisit = React.lazy(() => import('./views/pages/bookvisit'))
+const BookSite = React.lazy(() => import('./views/pages/bookSite'))
 
 const Charts = React.lazy(() => import('./views/charts/Charts'))
 
@@ -63,8 +65,6 @@ const Widgets = React.lazy(() => import('./views/widgets/Widgets'))
 const routes = [
   { path: '/', exact: true, name: 'Home' },
   { path: '/dashboard', name: 'Dashboard', element: Dashboard },
-
-
   { path: '/Clientdashboard', name: 'Dashboard', element: ClientDashboard },
   { path: '/Admindashboard', name: 'Dashboard', element: AdminDashboard },
   { path: '/Agentdashboard', name: 'Dashboard', element: AgentDashboard },
@@ -112,6 +112,8 @@ const routes = [
   { path: '/notifications/toasts', name: 'Toasts', element: Toasts },
   { path: '/widgets', name: 'Widgets', element: Widgets },
   { path: '/bookvisit', name: 'Book Visit', element: bookvisit },
+  { path: '/Reports', name: 'Reports', element: Reports },
+  { path: '/BookSite', name: 'Book Site', element: BookSite },
 ]
 
 export default routes

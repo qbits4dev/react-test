@@ -15,6 +15,7 @@ import {
   cilStar,
 } from '@coreui/icons'
 import { CNavGroup, CNavItem, CNavTitle } from '@coreui/react'
+import { compareAsc } from 'date-fns'
 
 const _nav = [
   {
@@ -488,35 +489,14 @@ const _nav = [
         name: 'Verification',
         to: '/verification',
       },
-    ],
-  },
-  {
-    component: CNavGroup,
-    name: 'Dashboards',
-    icon: <CIcon icon={cilSpeedometer} customClassName="nav-icon" />,
-    items: [
       {
         component: CNavItem,
-        name: 'Dashboard',
-        to: '/dashboard',
-      },
-      {
-        component: CNavItem,
-        name: 'Agent Dashboard',
-        to: '/agent_dashboard',
-      },
-      {
-        component: CNavItem,
-        name: 'Customer Dashboard',
-        to: '/customer_dashboard',
-      },
-      {
-        component: CNavItem,
-        name: 'Admin Dashboard',
-        to: '/admin_dashboard',
+        name: 'Book Site',
+        to: '/bookSite',
       },
     ],
   },
+  
   {
     component: CNavItem,
     name: 'Docs',
