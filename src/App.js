@@ -1,11 +1,9 @@
 import React, { Suspense, useEffect } from 'react'
-import { HashRouter, Route, Routes } from 'react-router-dom'
+import { HashRouter, Route, Routes, Navigate } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 
 import { CSpinner, useColorModes } from '@coreui/react'
 import './scss/style.scss'
-
-// We use those styles to show code examples, you should remove them in your application.
 import './scss/examples.scss'
 
 // Containers
@@ -18,17 +16,32 @@ const Page404 = React.lazy(() => import('./views/pages/page404/Page404'))
 const Page500 = React.lazy(() => import('./views/pages/page500/Page500'))
 const Verification = React.lazy(() => import('./views/pages/verification'))
 
-const AgentRegistration = React.lazy(() => import('./views/pages/register/register_agent'))
-const ClientRegister = React.lazy(() => import('./views/pages/register/cilent_register'))
+const AgentRegistration = React.lazy(() =>
+  import('./views/pages/register/register_agent')
+)
+const ClientRegister = React.lazy(() =>
+  import('./views/pages/register/cilent_register')
+)
 
+// ProtectedRoute component
+const ProtectedRoute = ({ children }) => {
+  const token = localStorage.getItem('access_token')
+  if (!token) {
+    return <Navigate to="/login" replace />
+  }
+  return children
+}
 
 const App = () => {
-  const { isColorModeSet, setColorMode } = useColorModes('coreui-free-react-admin-template-theme')
+  const { isColorModeSet, setColorMode } = useColorModes(
+    'coreui-free-react-admin-template-theme'
+  )
   const storedTheme = useSelector((state) => state.theme)
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.href.split('?')[1])
-    const theme = urlParams.get('theme') && urlParams.get('theme').match(/^[A-Za-z0-9\s]+/)[0]
+    const theme =
+      urlParams.get('theme') && urlParams.get('theme').match(/^[A-Za-z0-9\s]+/)[0]
     if (theme) {
       setColorMode(theme)
     }
@@ -50,14 +63,35 @@ const App = () => {
         }
       >
         <Routes>
+          {/* Public routes */}
           <Route exact path="/login" name="Login Page" element={<Login />} />
           <Route exact path="/register" name="Register Page" element={<Register />} />
+          <Route
+            exact
+            path="/register_agent"
+            name="Agent Registration"
+            element={<AgentRegistration />}
+          />
+          <Route
+            exact
+            path="/cilent_register"
+            name="Client Registration"
+            element={<ClientRegister />}
+          />
           <Route exact path="/404" name="Page 404" element={<Page404 />} />
           <Route exact path="/500" name="Page 500" element={<Page500 />} />
-          <Route path="*" name="Home" element={<DefaultLayout />} />
-          <Route path="/register_agent" name="Agent Registration" element={<AgentRegistration />} />
-          <Route path="/cilent_register" name="Client Registration" element={<ClientRegister />} />
-          <Route path="/verification" name="verification" element={<Verification/>} />
+          <Route exact path="/verification" name="Verification" element={<Verification />} />
+
+          {/* Protected routes */}
+          <Route
+            path="/*"
+            name="Home"
+            element={
+              <ProtectedRoute>
+                <DefaultLayout />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </Suspense>
     </HashRouter>
