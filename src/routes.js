@@ -113,7 +113,7 @@ const routes = [
   { path: '/widgets', name: 'Widgets', element: Widgets },
   { path: '/bookvisit', name: 'Book Visit', element: bookvisit },
   { path: '/Reports', name: 'Reports', element: Reports },
-  { path: '/BookSite', name: 'Book Site', element: BookSite },
+  { path: '/bookSite', name: 'Book Site', element: BookSite },
 ]
 
 export default routes

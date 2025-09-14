@@ -50,7 +50,7 @@ const WidgetsDropdown = (props) => {
 
       if (widgetChartRef2.current) {
         setTimeout(() => {
-           widgetChartRef2.current.data.datasets[0].pointBackgroundColor = getStyle('--cui-info');
+          widgetChartRef2.current.data.datasets[0].pointBackgroundColor = getStyle('--cui-info');
           widgetChartRef2.current.update();
         });
       }
@@ -72,6 +72,9 @@ const WidgetsDropdown = (props) => {
     }
     return [];
   };
+
+
+
 
   return (
     <CRow className={className} xs={{ gutter: 4 }}>
@@ -179,14 +182,14 @@ const WidgetsDropdown = (props) => {
                         y: {
                           min:
                             widget.chartData.datasets &&
-                            widget.chartData.datasets[0] &&
-                            widget.chartData.datasets[0].data
+                              widget.chartData.datasets[0] &&
+                              widget.chartData.datasets[0].data
                               ? Math.min(...widget.chartData.datasets[0].data) - 10
                               : 0,
                           max:
                             widget.chartData.datasets &&
-                            widget.chartData.datasets[0] &&
-                            widget.chartData.datasets[0].data
+                              widget.chartData.datasets[0] &&
+                              widget.chartData.datasets[0].data
                               ? Math.max(...widget.chartData.datasets[0].data) + 10
                               : 100,
                           display: false,
@@ -208,172 +211,172 @@ const WidgetsDropdown = (props) => {
       ))}
     </CRow>
   );
-  
 
-//   return (
-//     <CRow className={className} xs={{ gutter: 4 }}>
-//       {widgetsData.map((widget) => ( // Map over the widgetsData prop
-//         <CCol sm={6} xl={4} xxl={3} key={widget.id}> {/* Use widget.id as key */}
-//           <CWidgetStatsA
-//             color={widget.color} // Use data from the widget object
-//             value={
-//               <>
-//                 {widget.value}{' '}
-//                 {widget.percentageChange && ( // Conditionally render percentage change
-//                   <span className="fs-6 fw-normal">
-//                     ({widget.percentageChange} <CIcon icon={widget.changeIcon} />)
-//                   </span>
-//                 )}
-//               </>
-//             }
-//             title={widget.title} // Use data from the widget object
-//             action={
-//               widget.buttonLink ? ( // Condition 1: Render a button if 'buttonLink' exists
-//                 <Link to={widget.buttonLink}>
-//                   <CButton color="light" size="sm"> {/* Use CButton for styling */}
-//                     {widget.buttonText || 'Go'} {/* Use buttonText if provided, otherwise 'Go' */}
-//                   </CButton>
-//                 </Link>
-//               ) : getWidgetLinks(widget).length > 0 ? ( // Condition 2: Render a dropdown of links if 'links' array or single 'link' exists
-//                 <CDropdown // Use CDropdown to display the list of links
-//                   alignment="end"
-//                   visible={activeWidgetId === widget.id}
-//                   onVisibleChange={(visible) => !visible && setActiveWidgetId(null)} // Close dropdown when clicking outside
-//                 >
-//                   <CDropdownToggle color="transparent" caret={false} className="text-white p-0" onClick={() => handleWidgetClick(widget.id)}>
-//                     <CIcon icon={cilOptions} /> {/* Use an icon to indicate clickable action */}
-//                   </CDropdownToggle>
-//                   <CDropdownMenu>
-//                     {getWidgetLinks(widget).map((link, index) => ( // Map over the combined links
-//                       link.route.startsWith('/') ? ( // Check if it's an internal link
-//                         <CDropdownItem key={index} as={Link} to={link.route}> {/* Use Link component */}
-//                           {link.label}
-//                         </CDropdownItem>
-//                       ) : ( // External link within the dropdown
-//                          <CDropdownItem key={index} href={link.route} target="_blank" rel="noopener noreferrer">
-//                            {link.label}
-//                          </CDropdownItem>
-//                       )
-//                     ))}
-//                   </CDropdownMenu>
-//                 </CDropdown>
-//               ) : (
-//                 // Default Condition: Render the default dropdown if no buttonLink and no links
-//                 <CDropdown alignment="end">
-//                   <CDropdownToggle color="transparent" caret={false} className="text-white p-0">
-//                     <CIcon icon={cilOptions} />
-//                   </CDropdownToggle>
-//                   <CDropdownMenu>
-//                     <CDropdownItem>Action</CDropdownItem>
-//                     <CDropdownItem>Another action</CDropdownItem>
-//                     <CDropdownItem>Something else here...</CDropdownItem>
-//                     <CDropdownItem disabled>Disabled action</CDropdownItem>
-//                   </CDropdownMenu>
-//                 </CDropdown>
-//               )
-//             }
-//             chart={
-//               // Render chart only if chartData exists
-//               widget.chartData ? (
-//                 // You might need more sophisticated logic here to determine which chart component to use
-//                 // based on the widget data (e.g., a 'chartType' property in your data)
-//                 widget.id === 'sessions' ? ( // Example: Use CChartBar for the widget with id 'sessions'
-//                   <CChartBar
-//                     className="mt-3 mx-3"
-//                     style={{ height: '70px' }}
-//                     data={widget.chartData} // Use data from the widget object
-//                     options={{
-//                       maintainAspectRatio: false,
-//                       plugins: {
-//                         legend: {
-//                           display: false,
-//                         },
-//                       },
-//                       scales: {
-//                         x: {
-//                           grid: {
-//                             display: false,
-//                             drawTicks: false,
-//                           },
-//                           ticks: {
-//                             display: false,
-//                           },
-//                         },
-//                         y: {
-//                           border: {
-//                             display: false,
-//                           },
-//                           grid: {
-//                             display: false,
-//                             drawBorder: false,
-//                             drawTicks: false,
-//                           },
-//                           ticks: {
-//                             display: false,
-//                           },
-//                         },
-//                       },
-//                     }}
-//                   />
-//                 ) : ( // Example: Use CChartLine for all other widgets
-//                   <CChartLine
-//                     className="mt-3 mx-3"
-//                     style={{ height: '70px' }}
-//                     data={widget.chartData} // Use data from the widget object
-//                     options={{
-//                       plugins: {
-//                         legend: {
-//                           display: false,
-//                         },
-//                       },
-//                       maintainAspectRatio: false,
-//                       scales: {
-//                         x: {
-//                           border: {
-//                             display: false,
-//                           },
-//                           grid: {
-//                             display: false,
-//                             drawBorder: false,
-//                           },
-//                           ticks: {
-//                             display: false,
-//                           },
-//                         },
-//                         y: {
-//                           // Adjust min/max based on your data - consider adding min/max to your widget data structure
-//                           min: widget.chartData.datasets && widget.chartData.datasets[0] && widget.chartData.datasets[0].data ? Math.min(...widget.chartData.datasets[0].data) - 10 : 0,
-//                           max: widget.chartData.datasets && widget.chartData.datasets[0] && widget.chartData.datasets[0].data ? Math.max(...widget.chartData.datasets[0].data) + 10 : 100,
-//                           display: false,
-//                           grid: {
-//                             display: false,
-//                           },
-//                           ticks: {
-//                             display: false,
-//                           },
-//                         },
-//                       },
-//                       elements: {
-//                         line: {
-//                           borderWidth: 1,
-//                           tension: 0.4,
-//                         },
-//                         point: {
-//                           radius: 4,
-//                           hitRadius: 10,
-//                           hoverRadius: 4,
-//                         },
-//                       },
-//                     }}
-//                   />
-//                 )
-//               ) : null // Don't render chart if no chartData
-//             }
-//           />
-//         </CCol>
-//       ))}
-//     </CRow>
-//   );
+
+    // return (
+    //   <CRow className={className} xs={{ gutter: 4 }}>
+    //     {widgetsData.map((widget) => ( // Map over the widgetsData prop
+    //       <CCol sm={6} xl={4} xxl={3} key={widget.id}> {/* Use widget.id as key */}
+    //         <CWidgetStatsA
+    //           color={widget.color} // Use data from the widget object
+    //           value={
+    //             <>
+    //               {widget.value}{' '}
+    //               {widget.percentageChange && ( // Conditionally render percentage change
+    //                 <span className="fs-6 fw-normal">
+    //                   ({widget.percentageChange} <CIcon icon={widget.changeIcon} />)
+    //                 </span>
+    //               )}
+    //             </>
+    //           }
+    //           title={widget.title} // Use data from the widget object
+    //           action={
+    //             widget.buttonLink ? ( // Condition 1: Render a button if 'buttonLink' exists
+    //               <Link to={widget.buttonLink}>
+    //                 <CButton color="light" size="sm"> {/* Use CButton for styling */}
+    //                   {widget.buttonText || 'Go'} {/* Use buttonText if provided, otherwise 'Go' */}
+    //                 </CButton>
+    //               </Link>
+    //             ) : getWidgetLinks(widget).length > 0 ? ( // Condition 2: Render a dropdown of links if 'links' array or single 'link' exists
+    //               <CDropdown // Use CDropdown to display the list of links
+    //                 alignment="end"
+    //                 visible={activeWidgetId === widget.id}
+    //                 onVisibleChange={(visible) => !visible && setActiveWidgetId(null)} // Close dropdown when clicking outside
+    //               >
+    //                 <CDropdownToggle color="transparent" caret={false} className="text-white p-0" onClick={() => handleWidgetClick(widget.id)}>
+    //                   <CIcon icon={cilOptions} /> {/* Use an icon to indicate clickable action */}
+    //                 </CDropdownToggle>
+    //                 <CDropdownMenu>
+    //                   {getWidgetLinks(widget).map((link, index) => ( // Map over the combined links
+    //                     link.route.startsWith('/') ? ( // Check if it's an internal link
+    //                       <CDropdownItem key={index} as={Link} to={link.route}> {/* Use Link component */}
+    //                         {link.label}
+    //                       </CDropdownItem>
+    //                     ) : ( // External link within the dropdown
+    //                        <CDropdownItem key={index} href={link.route} target="_blank" rel="noopener noreferrer">
+    //                          {link.label}
+    //                        </CDropdownItem>
+    //                     )
+    //                   ))}
+    //                 </CDropdownMenu>
+    //               </CDropdown>
+    //             ) : (
+    //               // Default Condition: Render the default dropdown if no buttonLink and no links
+    //               <CDropdown alignment="end">
+    //                 <CDropdownToggle color="transparent" caret={false} className="text-white p-0">
+    //                   <CIcon icon={cilOptions} />
+    //                 </CDropdownToggle>
+    //                 <CDropdownMenu>
+    //                   <CDropdownItem>Action</CDropdownItem>
+    //                   <CDropdownItem>Another action</CDropdownItem>
+    //                   <CDropdownItem>Something else here...</CDropdownItem>
+    //                   <CDropdownItem disabled>Disabled action</CDropdownItem>
+    //                 </CDropdownMenu>
+    //               </CDropdown>
+    //             )
+    //           }
+    //           chart={
+    //             // Render chart only if chartData exists
+    //             widget.chartData ? (
+    //               // You might need more sophisticated logic here to determine which chart component to use
+    //               // based on the widget data (e.g., a 'chartType' property in your data)
+    //               widget.id === 'sessions' ? ( // Example: Use CChartBar for the widget with id 'sessions'
+    //                 <CChartBar
+    //                   className="mt-3 mx-3"
+    //                   style={{ height: '70px' }}
+    //                   data={widget.chartData} // Use data from the widget object
+    //                   options={{
+    //                     maintainAspectRatio: false,
+    //                     plugins: {
+    //                       legend: {
+    //                         display: false,
+    //                       },
+    //                     },
+    //                     scales: {
+    //                       x: {
+    //                         grid: {
+    //                           display: false,
+    //                           drawTicks: false,
+    //                         },
+    //                         ticks: {
+    //                           display: false,
+    //                         },
+    //                       },
+    //                       y: {
+    //                         border: {
+    //                           display: false,
+    //                         },
+    //                         grid: {
+    //                           display: false,
+    //                           drawBorder: false,
+    //                           drawTicks: false,
+    //                         },
+    //                         ticks: {
+    //                           display: false,
+    //                         },
+    //                       },
+    //                     },
+    //                   }}
+    //                 />
+    //               ) : ( // Example: Use CChartLine for all other widgets
+    //                 <CChartLine
+    //                   className="mt-3 mx-3"
+    //                   style={{ height: '70px' }}
+    //                   data={widget.chartData} // Use data from the widget object
+    //                   options={{
+    //                     plugins: {
+    //                       legend: {
+    //                         display: false,
+    //                       },
+    //                     },
+    //                     maintainAspectRatio: false,
+    //                     scales: {
+    //                       x: {
+    //                         border: {
+    //                           display: false,
+    //                         },
+    //                         grid: {
+    //                           display: false,
+    //                           drawBorder: false,
+    //                         },
+    //                         ticks: {
+    //                           display: false,
+    //                         },
+    //                       },
+    //                       y: {
+    //                         // Adjust min/max based on your data - consider adding min/max to your widget data structure
+    //                         min: widget.chartData.datasets && widget.chartData.datasets[0] && widget.chartData.datasets[0].data ? Math.min(...widget.chartData.datasets[0].data) - 10 : 0,
+    //                         max: widget.chartData.datasets && widget.chartData.datasets[0] && widget.chartData.datasets[0].data ? Math.max(...widget.chartData.datasets[0].data) + 10 : 100,
+    //                         display: false,
+    //                         grid: {
+    //                           display: false,
+    //                         },
+    //                         ticks: {
+    //                           display: false,
+    //                         },
+    //                       },
+    //                     },
+    //                     elements: {
+    //                       line: {
+    //                         borderWidth: 1,
+    //                         tension: 0.4,
+    //                       },
+    //                       point: {
+    //                         radius: 4,
+    //                         hitRadius: 10,
+    //                         hoverRadius: 4,
+    //                       },
+    //                     },
+    //                   }}
+    //                 />
+    //               )
+    //             ) : null // Don't render chart if no chartData
+    //           }
+    //         />
+    //       </CCol>
+    //     ))}
+    //   </CRow>
+    // );
 };
 
 WidgetsDropdown.propTypes = {

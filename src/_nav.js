@@ -481,22 +481,12 @@ const _nav = [
       },
       {
         component: CNavItem,
-        name: 'Book Visit',
-        to: '/bookvisit',
-      },
-      {
-        component: CNavItem,
-        name: 'Verification',
-        to: '/verification',
-      },
-      {
-        component: CNavItem,
         name: 'Book Site',
         to: '/bookSite',
       },
     ],
   },
-  
+
   {
     component: CNavItem,
     name: 'Docs',

@@ -47,7 +47,7 @@ const Login = () => {
       client_secret: '',
     }
 
-    try {
+    /*try {
       const formBody = new URLSearchParams();
       formBody.append('grant_type', 'password');
       formBody.append('username', payload.username);  
@@ -75,89 +75,102 @@ const Login = () => {
       setErrors({ form: error.message || 'Request failed' });
     }
     
+  }*/
+    if (username === 'testuser' && password === 'testpass') {
+      // Simulate a successful login response
+      localStorage.setItem('access_token', 'dummy_access_token');
+      localStorage.setItem('refresh_token', 'dummy_refresh_token');
+      setErrors({});
+      navigate('/dashboard'); // redirect to protected page
+      return;
+    } else {
+      // Simulate an error
+      setErrors({ form: 'Invalid credentials (dummy data)' });
+      return;
+    }
   }
 
-  return (
-    <div className="bg-body-tertiary min-vh-100 d-flex flex-row align-items-center">
-      <CContainer>
-        <CRow className="justify-content-center">
-          <CCol md={8}>
-            <CCardGroup>
-              <CCard className="p-4">
-                <CCardBody>
-                  <CForm onSubmit={handleLogin} noValidate>
-                    <h1>Login</h1>
-                    <p className="text-body-secondary">Sign In to your account</p>
-                    {errors.form && <p className="text-danger">{errors.form}</p>}
+    return (
+      <div className="bg-body-tertiary min-vh-100 d-flex flex-row align-items-center">
+        <CContainer>
+          <CRow className="justify-content-center">
+            <CCol md={8}>
+              <CCardGroup>
+                <CCard className="p-4">
+                  <CCardBody>
+                    <CForm onSubmit={handleLogin} noValidate>
+                      <h1>Login</h1>
+                      <p className="text-body-secondary">Sign In to your account</p>
+                      {errors.form && <p className="text-danger">{errors.form}</p>}
 
-                    <CInputGroup className="mb-3">
-                      <CInputGroupText>
-                        <CIcon icon={cilUser} />
-                      </CInputGroupText>
-                      <CFormInput
-                        name="username"
-                        placeholder="Username"
-                        autoComplete="username"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        invalid={!!errors.username}
-                        required
-                      />
-                    </CInputGroup>
-                    {errors.username && (
-                      <CFormText className="text-danger">{errors.username}</CFormText>
-                    )}
+                      <CInputGroup className="mb-3">
+                        <CInputGroupText>
+                          <CIcon icon={cilUser} />
+                        </CInputGroupText>
+                        <CFormInput
+                          name="username"
+                          placeholder="Username"
+                          autoComplete="username"
+                          value={username}
+                          onChange={(e) => setUsername(e.target.value)}
+                          invalid={!!errors.username}
+                          required
+                        />
+                      </CInputGroup>
+                      {errors.username && (
+                        <CFormText className="text-danger">{errors.username}</CFormText>
+                      )}
 
-                    <CInputGroup className="mb-4">
-                      <CInputGroupText>
-                        <CIcon icon={cilLockLocked} />
-                      </CInputGroupText>
-                      <CFormInput
-                        name="password"
-                        type="password"
-                        placeholder="Password"
-                        autoComplete="current-password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        invalid={!!errors.password}
-                        required
-                      />
-                    </CInputGroup>
-                    {errors.password && (
-                      <CFormText className="text-danger">{errors.password}</CFormText>
-                    )}
+                      <CInputGroup className="mb-4">
+                        <CInputGroupText>
+                          <CIcon icon={cilLockLocked} />
+                        </CInputGroupText>
+                        <CFormInput
+                          name="password"
+                          type="password"
+                          placeholder="Password"
+                          autoComplete="current-password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          invalid={!!errors.password}
+                          required
+                        />
+                      </CInputGroup>
+                      {errors.password && (
+                        <CFormText className="text-danger">{errors.password}</CFormText>
+                      )}
 
-                    <CButton type="submit" color="primary" className="px-4">
-                      Login
-                    </CButton>
-                  </CForm>
-                </CCardBody>
-              </CCard>
-
-              <CCard className="text-white bg-primary py-5" style={{ width: '44%' }}>
-                <CCardBody className="text-center">
-                  <div>
-                    <h2 className="mb-5">Sign up</h2>
-                    <p>If you don't have an account, you can register here.</p>
-                    <Link to="/register_agent">
-                      <CButton color="info" className="mt-3 ms-2" active tabIndex={-1}>
-                        Agent Register
+                      <CButton type="submit" color="primary" className="px-4">
+                        Login
                       </CButton>
-                    </Link>
-                    <Link to="/client_register">
-                      <CButton color="danger" className="mt-3 ms-2" active tabIndex={-1}>
-                        Client Register
-                      </CButton>
-                    </Link>
-                  </div>
-                </CCardBody>
-              </CCard>
-            </CCardGroup>
-          </CCol>
-        </CRow>
-      </CContainer>
-    </div>
-  )
-}
+                    </CForm>
+                  </CCardBody>
+                </CCard>
 
-export default Login
+                <CCard className="text-white bg-primary py-5" style={{ width: '44%' }}>
+                  <CCardBody className="text-center">
+                    <div>
+                      <h2 className="mb-5">Sign up</h2>
+                      <p>If you don't have an account, you can register here.</p>
+                      <Link to="/register_agent">
+                        <CButton color="info" className="mt-3 ms-2" active tabIndex={-1}>
+                          Agent Register
+                        </CButton>
+                      </Link>
+                      <Link to="/cilent_register">
+                        <CButton color="danger" className="mt-3 ms-2" active tabIndex={-1}>
+                          Client Register
+                        </CButton>
+                      </Link>
+                    </div>
+                  </CCardBody>
+                </CCard>
+              </CCardGroup>
+            </CCol>
+          </CRow>
+        </CContainer>
+      </div>
+    )
+  }
+
+  export default Login
