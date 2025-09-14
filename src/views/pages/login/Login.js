@@ -46,34 +46,47 @@ const Login = () => {
       client_id: '',
       client_secret: '',
     }
-
-    try {
-      const formBody = new URLSearchParams();
-      formBody.append('grant_type', 'password');
-      formBody.append('username', payload.username);  
-      formBody.append('password', payload.password);  
-      formBody.append('scope', payload.scope || ''); 
-      formBody.append('client_id', payload.client_id || '');
-      formBody.append('client_secret', payload.client_secret || '');
     
-      const response = await fetch('https://api.qbits4dev.com/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: formBody.toString(),
-      });
-    
-      const data = await response.json();
-      if (response.ok) {
-        localStorage.setItem('access_token', data.access_token);
-        localStorage.setItem('refresh_token', data.refresh_token);
-        setErrors({});
-        navigate('/dashboard'); // redirect to protected page
-      } else {
-        setErrors({ form: data.message || 'Invalid credentials' });
-      }
-    } catch (error) {
-      setErrors({ form: error.message || 'Request failed' });
+    if (username === 'testuser' && password === 'testpass') {
+      // Simulate a successful login response
+      localStorage.setItem('access_token', 'dummy_access_token');
+      localStorage.setItem('refresh_token', 'dummy_refresh_token');
+      setErrors({});
+      navigate('/dashboard'); // redirect to protected page
+      return;
+    } else {
+      // Simulate an error
+      setErrors({ form: 'Invalid credentials (dummy data)' });
+      return;
     }
+
+    // try {
+    //   const formBody = new URLSearchParams();
+    //   formBody.append('grant_type', 'password');
+    //   formBody.append('username', payload.username);  
+    //   formBody.append('password', payload.password);  
+    //   formBody.append('scope', payload.scope || ''); 
+    //   formBody.append('client_id', payload.client_id || '');
+    //   formBody.append('client_secret', payload.client_secret || '');
+    
+    //   const response = await fetch('https://api.qbits4dev.com/auth/login', {
+    //     method: 'POST',
+    //     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    //     body: formBody.toString(),
+    //   });
+    
+    //   const data = await response.json();
+    //   if (response.ok) {
+    //     localStorage.setItem('access_token', data.access_token);
+    //     localStorage.setItem('refresh_token', data.refresh_token);
+    //     setErrors({});
+    //     navigate('/dashboard'); // redirect to protected page
+    //   } else {
+    //     setErrors({ form: data.message || 'Invalid credentials' });
+    //   }
+    // } catch (error) {
+    //   setErrors({ form: error.message || 'Request failed' });
+    // }
     
   }
 

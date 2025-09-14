@@ -228,7 +228,7 @@ const AgentDashboard = () => {
     <>
       <WidgetsDropdown widgetsData={agentWidgetsData} className="mb-4" />
       <CCard className="mb-4">
-        <CCardBody>
+        {/* <CCardBody>
           <CRow>
             <CCol sm={5}>
               <h4 id="traffic" className="card-title mb-0">
@@ -255,8 +255,11 @@ const AgentDashboard = () => {
             </CCol>
           </CRow>
           <MainChart />
-        </CCardBody>
-        <CCardFooter>
+        </CCardBody> */}
+
+{/* upper commented part is sales report graph  */}
+
+        {/* <CCardFooter>
           <CRow
             xs={{ cols: 1, gutter: 4 }}
             sm={{ cols: 2 }}
@@ -279,7 +282,12 @@ const AgentDashboard = () => {
               </CCol>
             ))}
           </CRow>
-        </CCardFooter>
+        </CCardFooter> */}
+
+
+        {/* Footer of that sales report graph */}
+
+        
       </CCard>
       <WidgetsBrand className="mb-4" withCharts />
       <CRow>
@@ -290,7 +298,7 @@ const AgentDashboard = () => {
               <CRow>
                 <CCol xs={12} md={6} xl={6}>
                   <CRow>
-                    <CCol xs={6}>
+                    {/* <CCol xs={6}>
                       <div className="border-start border-start-4 border-start-info py-1 px-3">
                         <div className="text-body-secondary text-truncate small">New Clients</div>
                         <div className="fs-5 fw-semibold">9,123</div>
@@ -303,7 +311,8 @@ const AgentDashboard = () => {
                         </div>
                         <div className="fs-5 fw-semibold">22,643</div>
                       </div>
-                    </CCol>
+                    </CCol> */}
+
                   </CRow>
                   <hr className="mt-0" />
                   {progressGroupExample1.map((item, index) => (
