@@ -25,13 +25,6 @@ export default function InvoiceCoreUIComponent() {
     area: '2,400 sq.ft',
     location: 'Kokapet, Hyderabad',
   })
-  const [area, setArea] = useState(0)
-  const [rate, setRate] = useState(10000)
-  const [charges, setCharges] = useState(500000)
-  const [amount, setAmount] = useState(0)
-  const [gst, setGst] = useState(0)
-  const [total, setTotal] = useState(0)
-
 
   return (
     <CContainer className="p-0" style={{ maxWidth: '210mm' }}>
@@ -243,7 +236,7 @@ footer.footer { height: 20mm; background: var(--blue-dark); color: #fff; font-si
             </section>
 
             <section>
-              <table className="items" style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <table className="items">
                 <thead>
                   <tr>
                     <th style={{ width: '52%' }}>Description</th>
@@ -255,65 +248,66 @@ footer.footer { height: 20mm; background: var(--blue-dark); color: #fff; font-si
                 <tbody>
                   <tr>
                     <td>Base Price (Property Value)</td>
-                    <td className="num">{area}</td>
-                    <td className="num">{rate.toLocaleString()}</td>
-                    <td className="num">{amount.toLocaleString()}</td>
+                    <td className="num">{property.area}</td>
+                    <td className="num">10,000</td>
+                    <td className="num">24,000,000</td>
                   </tr>
                   <tr>
                     <td>Development Charges</td>
                     <td className="num">1</td>
-                    <td className="num">{charges.toLocaleString()}</td>
-                    <td className="num">{charges.toLocaleString()}</td>
+                    <td className="num">500,000</td>
+                    <td className="num">500,000</td>
                   </tr>
                   <tr>
                     <td>GST (18%)</td>
                     <td className="num">—</td>
                     <td className="num">—</td>
-                    <td className="num">{gst.toLocaleString()}</td>
+                    <td className="num">4,290,000</td>
                   </tr>
                   <tr>
                     <td colSpan={3} style={{ textAlign: 'right', fontWeight: 700 }}>Total</td>
-                    <td className="num">{total.toLocaleString()}</td>
+                    <td className="num">28,790,000</td>
                   </tr>
                 </tbody>
               </table>
-            </section>
 
-
-            <div className="totals">
-              <div>Subtotal</div>
-              <div style={{ textAlign: 'right' }}>24,500,000</div>
-              <div>Tax</div>
-              <div style={{ textAlign: 'right' }}>4,290,000</div>
-            </div>
-
-            <div className="words">Amount in words: Twenty-eight million seven hundred ninety thousand only.</div>
-
-            <div className="lower">
-              <div className="qrbox">
-                <h3>Payment</h3>
-                <div id="qrcode">[QR]</div>
-                <div className="muted">UPI / Bank transfer details here</div>
+              <div className="totals">
+                <div>Subtotal</div>
+                <div style={{ textAlign: 'right' }}>24,500,000</div>
+                <div>Tax</div>
+                <div style={{ textAlign: 'right' }}>4,290,000</div>
               </div>
 
-              <div className="terms">
-                <h3>Terms & Notes</h3>
-                <div>1. Payment due within 7 days of invoice date.<br />2. Late payment subject to interest.</div>
+              <div className="words">Amount in words: Twenty-eight million seven hundred ninety thousand only.</div>
 
-                <div className="signs">
-                  <div>Authorized Signatory</div>
-                  <div>For Sri Aditya Developers</div>
+              <div className="lower">
+                <div className="qrbox">
+                  <h3>Payment</h3>
+                  <div id="qrcode">[QR]</div>
+                  <div className="muted">UPI / Bank transfer details here</div>
+                </div>
+
+                <div className="terms">
+                  <h3>Terms & Notes</h3>
+                  <div>1. Payment due within 7 days of invoice date.<br />2. Late payment subject to interest.</div>
+
+                  <div className="signs">
+                    <div>Authorized Signatory</div>
+                    <div>For Sri Aditya Developers</div>
+                  </div>
                 </div>
               </div>
-            </div>
-        </CCardBody>
-      </CCard>
 
-      <footer className="footer">
-        <div className="contact">Sri Aditya Developers • Address line • Phone: +91-XXXXXXXXXX • Email: info@sriaditya.dev</div>
-      </footer>
+            </section>
 
-    </div>
-    </CContainer >
+          </CCardBody>
+        </CCard>
+
+        <footer className="footer">
+          <div className="contact">Sri Aditya Developers • Address line • Phone: +91-XXXXXXXXXX • Email: info@sriaditya.dev</div>
+        </footer>
+
+      </div>
+    </CContainer>
   )
 }
