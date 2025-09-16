@@ -38,3 +38,7 @@
   - Invalid request 400
  12. forgot password
   - working
+ 13. Password reset
+  - Success
+ 14. forgot Uid
+  - success
