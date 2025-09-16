@@ -484,6 +484,11 @@ const _nav = [
         name: 'Book Site',
         to: '/bookSite',
       },
+      {
+        component: CNavItem,
+        name: 'Invoice',
+        to: '/invoice',
+      },
     ],
   },
 
