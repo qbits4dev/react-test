@@ -75,42 +75,42 @@ const ClientDashboard = () => {
 
   if (loading) return <div>Loading...</div>;
 
-    //   const [product, setProduct] = useState(null);
-    //   const [loading, setLoading] = useState(true);
-    //   const [error, setError] = useState(null);
-    
-    // useEffect(() => {
-    //     const fetchProduct = async () => {
-    //       try {
-    //         setLoading(true);
-    //         // Fetch data for a single product (e.g., product with ID 1)
-    //         const response = await fetch('https://api.qbits4dev.com');
-    //         if (!response.ok) {
-    //           throw new Error(`HTTP error! status: ${response.status}`);
-    //         }
-    //         const data = await response.json();
-    //         setProduct(data); // Store the entire product object in state
-    
-    //       } catch (error) {
-    //         setError(error);
-    //         console.error('Error fetching product data:', error);
-    //         // You might want to set a more user-friendly error message here
-    //       } finally {
-    //         setLoading(false);
-    //       }
-    //     };
-    
-    //     fetchProduct(); // Call the async function
-    //   }, []); // Empty dependency array
-    
-    //   if (loading) {
-    //     return <div>Loading product details...</div>;
-    //   }
-    
-    //   if (error) {
-    //     return <div>Error: {error.message}</div>;
-    //   }
-    
+  //   const [product, setProduct] = useState(null);
+  //   const [loading, setLoading] = useState(true);
+  //   const [error, setError] = useState(null);
+
+  // useEffect(() => {
+  //     const fetchProduct = async () => {
+  //       try {
+  //         setLoading(true);
+  //         // Fetch data for a single product (e.g., product with ID 1)
+  //         const response = await fetch('https://api.qbits4dev.com');
+  //         if (!response.ok) {
+  //           throw new Error(`HTTP error! status: ${response.status}`);
+  //         }
+  //         const data = await response.json();
+  //         setProduct(data); // Store the entire product object in state
+
+  //       } catch (error) {
+  //         setError(error);
+  //         console.error('Error fetching product data:', error);
+  //         // You might want to set a more user-friendly error message here
+  //       } finally {
+  //         setLoading(false);
+  //       }
+  //     };
+
+  //     fetchProduct(); // Call the async function
+  //   }, []); // Empty dependency array
+
+  //   if (loading) {
+  //     return <div>Loading product details...</div>;
+  //   }
+
+  //   if (error) {
+  //     return <div>Error: {error.message}</div>;
+  //   }
+
 
   const progressExample = [
     { title: 'Visits', value: '29.703 Users', percent: 40, color: 'success' },
@@ -298,13 +298,33 @@ const ClientDashboard = () => {
       buttonLink: '/bookvisit', // Replace with the actual route to the booking form
       buttonText: 'Book Visit', // Text for the button
     },
-     {
+    {
+      id: 'Book Site',
+      title: 'Book Site',
+      value: '40',
+      color: 'danger',
+      chartData: {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+        datasets: [
+          {
+            label: 'Conversions',
+            backgroundColor: 'transparent',
+            borderColor: 'rgba(255,255,255,.55)',
+            pointBackgroundColor: 'var(--cui-success)',
+            data: [5, 8, 10, 12, 15, 18, 20], // Agent-specific conversion data
+          },
+        ],
+      },
+      buttonLink: '/booksite', // Replace with the actual route to the booking form
+      buttonText: 'Book Site', // Text for the button
+    },
+    {
       //Card 2: Agent Details with Leads Data (Multiple Internal Links in Dropdown)
       id: 'agent-details',
       title: 'Agent Performance',
       value: 'View Reports', // Value indicating action
       color: 'secondary', // Example color
-      to:'/views/pages/Reports',
+      to: '/views/pages/Reports',
       chartData: {
         labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'], // Dummy data labels
         datasets: [
@@ -332,8 +352,8 @@ const ClientDashboard = () => {
       <WidgetsDropdown widgetsData={agentWidgetsData} className="mb-4" />
 
       <div>
-      <h3>Fetched Users</h3>
-      <p>{data.Hello}</p>
+        <h3>Fetched Users</h3>
+        <p>{data.Hello}</p>
       </div>
       {/* <div>
             <h2>API Response Details:</h2>
@@ -347,7 +367,7 @@ const ClientDashboard = () => {
                 <p>API data not available after loading.</p>
             )}
         </div> */}
-       Working
+      Working
       <CCard className="mb-4">
         <CCardBody>
           <CRow>
