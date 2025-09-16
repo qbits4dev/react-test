@@ -239,7 +239,6 @@ const AgentDashboard = () => {
         ],
       },
     },
-    // Add other agent-specific widget data here
   ]
 
 
