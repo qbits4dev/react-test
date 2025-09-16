@@ -1,19 +1,19 @@
 import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   CButton, CCard, CCardBody, CCol, CContainer, CForm, CFormInput,
   CInputGroup, CInputGroupText, CRow
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilUser, cilPhone } from '@coreui/icons'
+import { cilUser, cilPhone, cilArrowLeft } from '@coreui/icons' // Changed cilMenu to cilArrowLeft
 
 const Client_Register = () => {
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
     email: '',
-    phone_number: '',   // note: adjust to match your API, e.g., "phone" or "phone_number"
-    reference_agent: '', // new field
+    phone_number: '',
+    reference_agent: '',
   })
   const [error, setError] = useState(null)
   const [userCode, setUserCode] = useState('')
@@ -26,14 +26,11 @@ const Client_Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    // ... (rest of the function is unchanged)
     setError(null)
     setUserCode('')
 
-    // Construct API payload (include role if required)
-    const payload = {
-      ...formData,
-      role: "customer" // remove if not needed by API
-    }
+    const payload = { ...formData, role: "customer" }
 
     try {
       const res = await fetch('https://api.qbits4dev.com/register/client', {
@@ -62,74 +59,46 @@ const Client_Register = () => {
             <CCard className="mx-4">
               <CCardBody className="p-4">
                 <CForm onSubmit={handleSubmit}>
-                  <h1>Register</h1>
+                  {/* --- UPDATED: Back arrow icon --- */}
+                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
+                    <Link to="/login" className="me-3 text-dark">
+                      <CIcon icon={cilArrowLeft} size="xl" title="Back to Login" />
+                    </Link>
+                    <h1 className='mb-0'>Register</h1>
+                  </div>
+                  
                   <p className="text-body-secondary">Customer Registration</p>
+                  
+                  {/* --- Rest of the form is unchanged --- */}
                   <CInputGroup className="mb-3">
-                    <CInputGroupText>
-                      <CIcon icon={cilUser} />
-                    </CInputGroupText>
-                    <CFormInput
-                      name="first_name"
-                      placeholder="First Name"
-                      value={formData.first_name}
-                      onChange={handleChange}
-                      required
-                    />
+                    <CInputGroupText><CIcon icon={cilUser} /></CInputGroupText>
+                    <CFormInput name="first_name" placeholder="First Name" value={formData.first_name} onChange={handleChange} required />
                   </CInputGroup>
                   <CInputGroup className="mb-3">
-                    <CInputGroupText>
-                      <CIcon icon={cilUser} />
-                    </CInputGroupText>
-                    <CFormInput
-                      name="last_name"
-                      placeholder="Last Name"
-                      value={formData.last_name}
-                      onChange={handleChange}
-                      required
-                    />
+                    <CInputGroupText><CIcon icon={cilUser} /></CInputGroupText>
+                    <CFormInput name="last_name" placeholder="Last Name" value={formData.last_name} onChange={handleChange} required />
                   </CInputGroup>
                   <CInputGroup className="mb-3">
                     <CInputGroupText>@</CInputGroupText>
-                    <CFormInput
-                      name="email"
-                      placeholder="Email"
-                      type="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      required
-                    />
+                    <CFormInput name="email" placeholder="Email" type="email" value={formData.email} onChange={handleChange} required />
                   </CInputGroup>
                   <CInputGroup className='mb-3'>
-                    <CInputGroupText>
-                      <CIcon icon={cilPhone} />
-                    </CInputGroupText>
-                    <CFormInput
-                      name="phone_number"
-                      placeholder="Phone Number"
-                      value={formData.phone_number}
-                      onChange={handleChange}
-                      required
-                    />
+                    <CInputGroupText><CIcon icon={cilPhone} /></CInputGroupText>
+                    <CFormInput name="phone_number" placeholder="Phone Number" value={formData.phone_number} onChange={handleChange} required />
                   </CInputGroup>
                   <CInputGroup className='mb-3'>
-                    <CInputGroupText>
-                      <CIcon icon={cilUser} />
-                    </CInputGroupText>
-                    <CFormInput
-                      name="reference_agent"
-                      placeholder="Reference Agent"
-                      value={formData.reference_agent}
-                      onChange={handleChange}
-                      required
-                    />
+                    <CInputGroupText><CIcon icon={cilUser} /></CInputGroupText>
+                    <CFormInput name="reference_agent" placeholder="Reference Agent" value={formData.reference_agent} onChange={handleChange} required />
                   </CInputGroup>
-                  {error && <div style={{ color: "red" }}>{error}</div>}
+                  
+                  {error && <div className="text-danger mt-2">{error}</div>}
                   {userCode && (
-                    <div style={{ color: "green", fontWeight: "bold", marginTop: "1em" }}>
+                    <div className="text-success fw-bold mt-3">
                       Your User Code: {userCode}
                     </div>
                   )}
-                  <div className="d-grid">
+
+                  <div className="d-grid mt-3">
                     <CButton color="success" type='submit'>Submit Registration</CButton>
                   </div>
                 </CForm>

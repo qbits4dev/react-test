@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom' // Import Link
 import {
   CButton,
   CCard,
@@ -15,27 +16,19 @@ import {
   CRow,
   CInputGroupText,
 } from '@coreui/react'
-import { useNavigate } from 'react-router-dom'
 import { faIdCard } from '@fortawesome/free-solid-svg-icons'
-import { cilLockLocked, cilUser, cilPhone, cilCalendar } from '@coreui/icons'
+import { cilLockLocked, cilUser, cilPhone, cilCalendar, cilArrowLeft } from '@coreui/icons' // Import cilArrowLeft
 import CIcon from '@coreui/icons-react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 const Register_agent = () => {
   const navigate = useNavigate()
 
-  // Roles fetched from single API call
   const [roles, setRoles] = useState([])
-
-  // Dropdown display states
   const [designationName, setDesignationName] = useState('Select Designation')
   const [agentTeamName, setAgentTeamName] = useState('Select Agent Team')
   const [directorName, setDirectorName] = useState('Select Director')
-
-  // Gender selection
   const [gender, setGender] = useState('')
-
-  // Form State with exact API field names
   const [form, setForm] = useState({
     first_name: '',
     last_name: '',
@@ -55,11 +48,8 @@ const Register_agent = () => {
     reference_agent: '',
     gender: ''
   })
-
-  // Validation errors
   const [errors, setErrors] = useState({})
 
-  // Fetch roles once
   useEffect(() => {
     fetch('https://api.qbits4dev.com/register/?key=role')
       .then(res => res.json())
@@ -73,7 +63,6 @@ const Register_agent = () => {
       .catch(() => setRoles([]))
   }, [])
 
-  // Handle dropdown select - sets display name and form id
   const handleDesignationSelect = (role) => {
     setDesignationName(role.name)
     setForm(prev => ({ ...prev, designation: role.id }))
@@ -87,13 +76,11 @@ const Register_agent = () => {
     setForm(prev => ({ ...prev, directors: role.id }))
   }
 
-  // Gender change handler
   const handleGenderChange = (e) => {
     setGender(e.target.value)
     setForm(prev => ({ ...prev, gender: e.target.value }))
   }
 
-  // Input & file change handler with PDF file check
   const handleChange = (e) => {
     const { name, value, files } = e.target
     if (['aadhaar_file', 'pan_file', 'photo_file'].includes(name)) {
@@ -117,14 +104,12 @@ const Register_agent = () => {
     }
   }
 
-  // Minimum DOB date for 18 years old
   const getMaxDob = () => {
     const today = new Date()
     today.setFullYear(today.getFullYear() - 18)
     return today.toISOString().split('T')[0]
   }
 
-  // Basic validation of fields
   const validate = () => {
     let newErrors = {}
     if (!form.first_name.trim()) newErrors.first_name = 'First name required'
@@ -148,7 +133,6 @@ const Register_agent = () => {
     return Object.keys(newErrors).length === 0
   }
 
-  // Submit handler
   const handleSubmit = async () => {
     if (!validate()) return
 
@@ -184,10 +168,16 @@ const Register_agent = () => {
             <CCard className="mx-4">
               <CCardBody className="p-4">
                 <CForm>
-                  <h1>Agent Registration</h1>
+                  {/* --- UPDATED: Back arrow icon --- */}
+                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
+                    <Link to="/login" className="me-3 text-dark">
+                      <CIcon icon={cilArrowLeft} size="xl" title="Back to Login" />
+                    </Link>
+                    <h1 className="mb-0">Agent Registration</h1>
+                  </div>
+
                   <p className="text-body-secondary">Enter Agent details</p>
 
-                  {/* First Name */}
                   <CInputGroup className="mb-3">
                     <CInputGroupText><CIcon icon={cilUser} /></CInputGroupText>
                     <CFormInput
@@ -200,7 +190,6 @@ const Register_agent = () => {
                     />
                   </CInputGroup>
 
-                  {/* Last Name */}
                   <CInputGroup className="mb-3">
                     <CInputGroupText><CIcon icon={cilUser} /></CInputGroupText>
                     <CFormInput
@@ -213,7 +202,6 @@ const Register_agent = () => {
                     />
                   </CInputGroup>
 
-                  {/* Email */}
                   <CInputGroup className="mb-3">
                     <CInputGroupText>@</CInputGroupText>
                     <CFormInput
@@ -227,7 +215,6 @@ const Register_agent = () => {
                     />
                   </CInputGroup>
 
-                  {/* Phone */}
                   <CInputGroup className="mb-3">
                     <CInputGroupText><CIcon icon={cilPhone} /></CInputGroupText>
                     <CFormInput
@@ -240,7 +227,6 @@ const Register_agent = () => {
                     />
                   </CInputGroup>
 
-                  {/* Password */}
                   <CInputGroup className="mb-3">
                     <CInputGroupText><CIcon icon={cilLockLocked} /></CInputGroupText>
                     <CFormInput
@@ -254,7 +240,6 @@ const Register_agent = () => {
                     />
                   </CInputGroup>
 
-                  {/* Confirm Password */}
                   <CInputGroup className="mb-3">
                     <CInputGroupText><CIcon icon={cilLockLocked} /></CInputGroupText>
                     <CFormInput
@@ -268,17 +253,12 @@ const Register_agent = () => {
                     />
                   </CInputGroup>
 
-                  {/* DOB */}
                   <CInputGroup className="mb-3">
                     <CInputGroupText><CIcon icon={cilCalendar} /></CInputGroupText>
                     <CFormInput
                       name="dob"
                       type="date"
-                      max={(() => {
-                        const today = new Date()
-                        today.setFullYear(today.getFullYear() - 18)
-                        return today.toISOString().split('T')[0]
-                      })()}
+                      max={getMaxDob()}
                       value={form.dob}
                       onChange={handleChange}
                       invalid={!!errors.dob}
@@ -286,7 +266,6 @@ const Register_agent = () => {
                     />
                   </CInputGroup>
 
-                  {/* Gender */}
                   <div className="mb-3">
                     <label>Gender:</label>
                     <div>
@@ -308,7 +287,6 @@ const Register_agent = () => {
                     )}
                   </div>
 
-                  {/* Designation Dropdown */}
                   <CDropdown className="d-flex mb-3">
                     <CDropdownToggle color="primary">{designationName}</CDropdownToggle>
                     <CDropdownMenu>
@@ -323,37 +301,6 @@ const Register_agent = () => {
                     </CDropdownMenu>
                   </CDropdown>
 
-                  {/* Agent Team Dropdown */}
-                  {/* <CDropdown className="d-flex mb-3">
-                    <CDropdownToggle color="primary">{agentTeamName}</CDropdownToggle>
-                    <CDropdownMenu>
-                      {roles.map(role => (
-                        <CDropdownItem
-                          key={role.id}
-                          onClick={() => handleAgentTeamSelect(role)}
-                        >
-                          {role.name}
-                        </CDropdownItem>
-                      ))}
-                    </CDropdownMenu>
-                  </CDropdown> */}
-
-                  {/* Directors Dropdown */}
-                  {/* <CDropdown className="d-flex mb-4">
-                    <CDropdownToggle color="primary">{directorName}</CDropdownToggle>
-                    <CDropdownMenu>
-                      {roles.map(role => (
-                        <CDropdownItem
-                          key={role.id}
-                          onClick={() => handleDirectorSelect(role)}
-                        >
-                          {role.name}
-                        </CDropdownItem>
-                      ))}
-                    </CDropdownMenu>
-                  </CDropdown> */}
-
-                  {/* Aadhaar Number */}
                   <CInputGroup className="mb-3">
                     <CInputGroupText><FontAwesomeIcon icon={faIdCard} /></CInputGroupText>
                     <CFormInput
@@ -366,7 +313,6 @@ const Register_agent = () => {
                     />
                   </CInputGroup>
 
-                  {/* PAN Number */}
                   <CInputGroup className="mb-3">
                     <CInputGroupText><FontAwesomeIcon icon={faIdCard} /></CInputGroupText>
                     <CFormInput
@@ -379,7 +325,6 @@ const Register_agent = () => {
                     />
                   </CInputGroup>
 
-                  {/* Aadhaar File */}
                   <div className="mb-3">
                     <p>Aadhaar Card (PDF only)</p>
                     <CFormInput
@@ -394,7 +339,6 @@ const Register_agent = () => {
                     )}
                   </div>
 
-                  {/* PAN File */}
                   <div className="mb-3">
                     <p>PAN Card (PDF only)</p>
                     <CFormInput
@@ -409,7 +353,6 @@ const Register_agent = () => {
                     )}
                   </div>
 
-                  {/* Photo File */}
                   <div className="mb-3">
                     <p>Photo (PDF only)</p>
                     <CFormInput
@@ -424,7 +367,6 @@ const Register_agent = () => {
                     )}
                   </div>
 
-                  {/* Submit button */}
                   <div className="d-grid">
                     <CButton color="info" onClick={handleSubmit}>
                       Create Account
