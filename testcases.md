@@ -33,4 +33,4 @@
    3. /projects/plots Get plots
       - Response Succssful
    4. /projects/plots Create plots
-      - Error: Response  status is 400 
+      - Response Successful 
