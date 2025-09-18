@@ -1,34 +1,37 @@
-import React, { useState } from 'react'
+import React, { useState,useEffect } from 'react'
 import {
-  CContainer,
-  CCard,
-  CCardBody,
-  CFormInput,
-  CFormTextarea,
-  CButton,
+    CContainer,
+    CCard,
+    CCardBody,
+    CFormInput,
+    CFormTextarea,
+    CButton,
 } from '@coreui/react'
 
 export default function Print() {
-  const [billTo, setBillTo] = useState({
-    name: 'Mr./Ms. Client Name',
-    address: 'Client Address Line 1',
-    city: 'City, State, PIN',
-    phone: '+91-XXXXXXXXXX',
-    email: 'client@example.com',
-  })
+    const [billTo, setBillTo] = useState({
+        name: 'Mr./Ms. Client Name',
+        address: 'Client Address Line 1',
+        city: 'City, State, PIN',
+        phone: '+91-XXXXXXXXXX',
+        email: 'client@example.com',
+    })
 
-  const [property, setProperty] = useState({
-    project: 'Aditya Meadows',
-    type: 'Villa',
-    unit: 'V-12',
-    plot: '45',
-    area: '2,400 sq.ft',
-    location: 'Kokapet, Hyderabad',
-  })
+    const [property, setProperty] = useState({
+        project: 'Aditya Meadows',
+        type: 'Villa',
+        unit: 'V-12',
+        plot: '45',
+        area: '2,400 sq.ft',
+        location: 'Kokapet, Hyderabad',
+    })
 
-  return (
-    <CContainer className="p-0" style={{ maxWidth: '210mm' }}>
-      <style>{`
+    useEffect(() => {
+        window.print();
+    }, []);
+    return (
+        <CContainer className="p-0" style={{ maxWidth: '210mm' }}>
+            <style>{`
 :root {
   --blue: #1f5cff;
   --blue-mid: #5184ff;
@@ -41,7 +44,7 @@ export default function Print() {
 }
 * { box-sizing: border-box; }
 body, .invoice-root { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; color: var(--ink); }
-.page { width: 210mm; height: 297mm; margin: 0 auto; position: relative; display: flex; flex-direction: column; } /* A4 exact height */
+.page { width: 210mm; min-height: 297mm; margin: 0 auto; position: relative; display: flex; flex-direction: column; }
 .page::after { content: ""; position: absolute; top: 6mm; left: 6mm; right: 6mm; bottom: 6mm; border: 1px solid var(--ring); border-radius: 8px; pointer-events: none; z-index: 9; }
 header.header { position: relative; height: 44mm; background: var(--blue); overflow: hidden; }
 header .wave { position: absolute; inset: 0; }
@@ -72,7 +75,7 @@ footer.footer { height: 20mm; background: var(--blue-dark); color: #fff; font-si
 .lower { display: grid; grid-template-columns: 0.36fr 1fr; gap: 12px; }
 .qrbox, .terms { border: 1px solid var(--line); border-radius: 8px; background: #fff; padding: 10px 12px; }
 .signs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; color: var(--muted); font-size: 13px; }
-@media print { .page { width: auto; height: auto; } .no-print { display: none !important; } }
+@media print { .page { width: auto; min-height: auto; } .no-print { display: none !important; } }
 
 /* Input styling to blend inputs with the invoice design */
 .cardlet .inline-input,
@@ -103,216 +106,273 @@ footer.footer { height: 20mm; background: var(--blue-dark); color: #fff; font-si
   box-shadow: 0 0 0 4px rgba(81,132,255,0.07);
   border-radius: 6px;
 }
+
+.page {
+  width: 210mm;
+  height: 297mm;   /* 🔹 fixed A4 height */
+  margin: 0 auto;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+.page::after {
+  content: "";
+  position: absolute;
+  top: 6mm;
+  left: 6mm;
+  right: 6mm;
+  bottom: 6mm;
+  border: 1px solid var(--ring);
+  border-radius: 8px;
+  pointer-events: none;
+  z-index: 9;
+}
+@media print {
+  .page {
+    width: 210mm;
+    height: 297mm;
+    margin: 0;
+    -webkit-print-color-adjust: exact; /* keep colors */
+    print-color-adjust: exact;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
+  header.header {
+  position: relative;
+  height: 44mm;             /* locked header height */
+  min-height: 44mm;         /* prevent shrinking */
+  background: var(--blue);
+  overflow: hidden;
+}
+
+header .wave {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;             /* force svg to fill */
+}
+
+header .wave svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
 `}</style>
 
-      <div className="page invoice-root">
-        <header className="header">
-          <div className="wave">
-            <svg viewBox="0 0 1440 180" preserveAspectRatio="none">
-              <path d="M0,0 H1440 V120 C1100,80 800,150 0,120 Z" fill="var(--blue)"></path>
-            </svg>
-          </div>
+            <div className="page invoice-root">
+                <header className="header">
+                    <div className="wave">
+                        <svg viewBox="0 0 1440 180" preserveAspectRatio="none">
+                            <path d="M0,0 H1440 V120 C1100,80 800,150 0,120 Z" fill="var(--blue)"></path>
+                        </svg>
+                    </div>
 
-          <div className="brand">
-            <div className="logo-wrap">
-              <img src="src/assets/images/siradithya.jpg" alt="Sri Aditya Developers Logo" />
+                    <div className="brand">
+                        <div className="logo-wrap">
+                            <img src="src/assets/images/siradithya.jpg" alt="Sri Aditya Developers Logo" />
+                        </div>
+                        <div className="title">
+                            <div className="name">Sri Aditya Developers</div>
+                            <div className="tag">Real Estate • Villas • Plots</div>
+                        </div>
+                    </div>
+
+                    <div className="inv-title">INVOICE</div>
+                </header>
+
+                <CCard className="card">
+                    <CCardBody className="content">
+                        <div className="wm"><img src="/placeholder-watermark.png" alt="watermark" /></div>
+
+                        {/* Invoice Ribbon */}
+                        <section className="ribbon">
+                            <h1>Invoice</h1>
+                            <div className="meta">
+                                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                    <tbody>
+                                        <tr>
+                                            <td style={{ color: '#374151', width: '45%' }}>Invoice No.</td>
+                                            <td style={{ textAlign: 'right', fontWeight: 600 }}>SAD-INV-1007</td>
+                                        </tr>
+                                        <tr>
+                                            <td style={{ color: '#374151' }}>Invoice Date</td>
+                                            <td style={{ textAlign: 'right', fontWeight: 600 }}>17-Sep-2025</td>
+                                        </tr>
+                                        <tr>
+                                            <td style={{ color: '#374151' }}>Due Date</td>
+                                            <td style={{ textAlign: 'right', fontWeight: 600 }}>24-Sep-2025</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
+
+                        {/* Bill To + Property Details */}
+                        <section className="info">
+                            <div className="cardlet">
+                                <h3>Bill To</h3>
+                                <CFormInput
+                                    className="inline-input name-field"
+                                    placeholder="Client Name"
+                                    value={billTo.name}
+                                    onChange={(e) => setBillTo({ ...billTo, name: e.target.value })}
+                                />
+                                <CFormTextarea
+                                    className="inline-textarea"
+                                    rows={3}
+                                    placeholder="Address"
+                                    value={billTo.address}
+                                    onChange={(e) => setBillTo({ ...billTo, address: e.target.value })}
+                                />
+                                <CFormInput
+                                    className="inline-input"
+                                    placeholder="City, State, PIN"
+                                    value={billTo.city}
+                                    onChange={(e) => setBillTo({ ...billTo, city: e.target.value })}
+                                />
+                                <CFormInput
+                                    className="inline-input"
+                                    placeholder="Phone"
+                                    value={billTo.phone}
+                                    onChange={(e) => setBillTo({ ...billTo, phone: e.target.value })}
+                                />
+                                <CFormInput
+                                    className="inline-input"
+                                    placeholder="Email"
+                                    value={billTo.email}
+                                    onChange={(e) => setBillTo({ ...billTo, email: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="cardlet">
+                                <h3>Property Details</h3>
+                                <CFormInput
+                                    className="inline-input"
+                                    placeholder="Project"
+                                    value={property.project}
+                                    onChange={(e) => setProperty({ ...property, project: e.target.value })}
+                                />
+                                <CFormInput
+                                    className="inline-input"
+                                    placeholder="Property Type"
+                                    value={property.type}
+                                    onChange={(e) => setProperty({ ...property, type: e.target.value })}
+                                />
+                                <div style={{ display: 'flex', gap: 8 }}>
+                                    <CFormInput
+                                        style={{ flex: 1 }}
+                                        className="inline-input"
+                                        placeholder="Unit No"
+                                        value={property.unit}
+                                        onChange={(e) => setProperty({ ...property, unit: e.target.value })}
+                                    />
+                                    <CFormInput
+                                        style={{ flex: 1 }}
+                                        className="inline-input"
+                                        placeholder="Plot No"
+                                        value={property.plot}
+                                        onChange={(e) => setProperty({ ...property, plot: e.target.value })}
+                                    />
+                                </div>
+                                <CFormInput
+                                    className="inline-input"
+                                    placeholder="Super Built-up Area"
+                                    value={property.area}
+                                    onChange={(e) => setProperty({ ...property, area: e.target.value })}
+                                />
+                                <CFormInput
+                                    className="inline-input"
+                                    placeholder="Location"
+                                    value={property.location}
+                                    onChange={(e) => setProperty({ ...property, location: e.target.value })}
+                                />
+                            </div>
+                        </section>
+
+                        {/* Items */}
+                        <section>
+                            <table className="items">
+                                <thead>
+                                    <tr>
+                                        <th style={{ width: '52%' }}>Description</th>
+                                        <th style={{ width: '16%' }}>Qty/Area</th>
+                                        <th style={{ width: '16%' }}>Rate</th>
+                                        <th style={{ width: '16%' }}>Amount (₹)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Base Price (Property Value)</td>
+                                        <td>{property.area}</td>
+                                        <td>10,000</td>
+                                        <td>24,000,000</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Development Charges</td>
+                                        <td>1</td>
+                                        <td>500,000</td>
+                                        <td>500,000</td>
+                                    </tr>
+                                    <tr>
+                                        <td>GST (18%)</td>
+                                        <td>—</td>
+                                        <td>—</td>
+                                        <td>4,290,000</td>
+                                    </tr>
+                                    <tr>
+                                        <td colSpan={3} style={{ textAlign: 'right', fontWeight: 700 }}>Total</td>
+                                        <td>28,790,000</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            <div className="totals">
+                                <div>Subtotal</div>
+                                <div style={{ textAlign: 'right' }}>24,500,000</div>
+                                <div>Tax</div>
+                                <div style={{ textAlign: 'right' }}>4,290,000</div>
+                            </div>
+
+                            <div className="words">Amount in words: Twenty-eight million seven hundred ninety thousand only.</div>
+
+                            <div className="lower">
+                                <div className="qrbox">
+                                    <h3>Payment</h3>
+                                    <div id="qrcode">[QR]</div>
+                                    <div className="muted">UPI / Bank transfer details here</div>
+                                </div>
+
+                                <div className="terms">
+                                    <h3>Terms & Notes</h3>
+                                    <div>1. Payment due within 7 days of invoice date.<br />2. Late payment subject to interest.</div>
+
+                                    <div className="signs">
+                                        <div>Authorized Signatory</div>
+                                        <div>For Sri Aditya Developers</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="no-print mt-5" style={{ textAlign: 'center', margin: '12px 0' }}>
+                                <CButton
+                                    color="success"
+                                    onClick={() => window.print()}
+                                >
+                                    Submit
+                                </CButton>
+                            </div>
+                        </section>
+
+                    </CCardBody>
+                </CCard>
+
+                <footer className="footer">
+                    <div className="contact">Sri Aditya Developers • Address line • Phone: +91-XXXXXXXXXX • Email: info@sriaditya.dev</div>
+                </footer>
             </div>
-            <div className="title">
-              <div className="name">Sri Aditya Developers</div>
-              <div className="tag">Real Estate • Villas • Plots</div>
-            </div>
-          </div>
-
-          <div className="inv-title">INVOICE</div>
-        </header>
-
-        <CCard className="card">
-          <CCardBody className="content">
-            <div className="wm"><img src="/placeholder-watermark.png" alt="watermark" /></div>
-
-            {/* Invoice Ribbon */}
-            <section className="ribbon">
-              <h1>Invoice</h1>
-              <div className="meta">
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <tbody>
-                    <tr>
-                      <td style={{ color: '#374151', width: '45%' }}>Invoice No.</td>
-                      <td style={{ textAlign: 'right', fontWeight: 600 }}>SAD-INV-1007</td>
-                    </tr>
-                    <tr>
-                      <td style={{ color: '#374151' }}>Invoice Date</td>
-                      <td style={{ textAlign: 'right', fontWeight: 600 }}>17-Sep-2025</td>
-                    </tr>
-                    <tr>
-                      <td style={{ color: '#374151' }}>Due Date</td>
-                      <td style={{ textAlign: 'right', fontWeight: 600 }}>24-Sep-2025</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </section>
-
-            {/* Bill To + Property Details */}
-            <section className="info">
-              <div className="cardlet">
-                <h3>Bill To</h3>
-                <CFormInput
-                  className="inline-input name-field"
-                  placeholder="Client Name"
-                  value={billTo.name}
-                  onChange={(e) => setBillTo({ ...billTo, name: e.target.value })}
-                />
-                <CFormTextarea
-                  className="inline-textarea"
-                  rows={3}
-                  placeholder="Address"
-                  value={billTo.address}
-                  onChange={(e) => setBillTo({ ...billTo, address: e.target.value })}
-                />
-                <CFormInput
-                  className="inline-input"
-                  placeholder="City, State, PIN"
-                  value={billTo.city}
-                  onChange={(e) => setBillTo({ ...billTo, city: e.target.value })}
-                />
-                <CFormInput
-                  className="inline-input"
-                  placeholder="Phone"
-                  value={billTo.phone}
-                  onChange={(e) => setBillTo({ ...billTo, phone: e.target.value })}
-                />
-                <CFormInput
-                  className="inline-input"
-                  placeholder="Email"
-                  value={billTo.email}
-                  onChange={(e) => setBillTo({ ...billTo, email: e.target.value })}
-                />
-              </div>
-
-              <div className="cardlet">
-                <h3>Property Details</h3>
-                <CFormInput
-                  className="inline-input"
-                  placeholder="Project"
-                  value={property.project}
-                  onChange={(e) => setProperty({ ...property, project: e.target.value })}
-                />
-                <CFormInput
-                  className="inline-input"
-                  placeholder="Property Type"
-                  value={property.type}
-                  onChange={(e) => setProperty({ ...property, type: e.target.value })}
-                />
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <CFormInput
-                    style={{ flex: 1 }}
-                    className="inline-input"
-                    placeholder="Unit No"
-                    value={property.unit}
-                    onChange={(e) => setProperty({ ...property, unit: e.target.value })}
-                  />
-                  <CFormInput
-                    style={{ flex: 1 }}
-                    className="inline-input"
-                    placeholder="Plot No"
-                    value={property.plot}
-                    onChange={(e) => setProperty({ ...property, plot: e.target.value })}
-                  />
-                </div>
-                <CFormInput
-                  className="inline-input"
-                  placeholder="Super Built-up Area"
-                  value={property.area}
-                  onChange={(e) => setProperty({ ...property, area: e.target.value })}
-                />
-                <CFormInput
-                  className="inline-input"
-                  placeholder="Location"
-                  value={property.location}
-                  onChange={(e) => setProperty({ ...property, location: e.target.value })}
-                />
-              </div>
-            </section>
-
-            {/* Items */}
-            <section>
-              <table className="items">
-                <thead>
-                  <tr>
-                    <th style={{ width: '52%' }}>Description</th>
-                    <th style={{ width: '16%' }}>Qty/Area</th>
-                    <th style={{ width: '16%' }}>Rate</th>
-                    <th style={{ width: '16%' }}>Amount (₹)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>Base Price (Property Value)</td>
-                    <td>{property.area}</td>
-                    <td>10,000</td>
-                    <td>24,000,000</td>
-                  </tr>
-                  <tr>
-                    <td>Development Charges</td>
-                    <td>1</td>
-                    <td>500,000</td>
-                    <td>500,000</td>
-                  </tr>
-                  <tr>
-                    <td>GST (18%)</td>
-                    <td>—</td>
-                    <td>—</td>
-                    <td>4,290,000</td>
-                  </tr>
-                  <tr>
-                    <td colSpan={3} style={{ textAlign: 'right', fontWeight: 700 }}>Total</td>
-                    <td>28,790,000</td>
-                  </tr>
-                </tbody>
-              </table>
-
-              <div className="totals">
-                <div>Subtotal</div>
-                <div style={{ textAlign: 'right' }}>24,500,000</div>
-                <div>Tax</div>
-                <div style={{ textAlign: 'right' }}>4,290,000</div>
-              </div>
-
-              <div className="words">Amount in words: Twenty-eight million seven hundred ninety thousand only.</div>
-
-              <div className="lower">
-                <div className="qrbox">
-                  <h3>Payment</h3>
-                  <div id="qrcode">[QR]</div>
-                  <div className="muted">UPI / Bank transfer details here</div>
-                </div>
-
-                <div className="terms">
-                  <h3>Terms & Notes</h3>
-                  <div>1. Payment due within 7 days of invoice date.<br />2. Late payment subject to interest.</div>
-
-                  <div className="signs">
-                    <div>Authorized Signatory</div>
-                    <div>For Sri Aditya Developers</div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="no-print mt-5" style={{ textAlign: 'center', margin: '12px 0' }}>
-                <CButton color="primary" onClick={() => window.print()}>
-                  Print Invoice
-                </CButton>
-              </div>
-            </section>
-
-          </CCardBody>
-        </CCard>
-
-        <footer className="footer">
-          <div className="contact">Sri Aditya Developers • Address line • Phone: +91-XXXXXXXXXX • Email: info@sriaditya.dev</div>
-        </footer>
-      </div>
-    </CContainer>
-  )
+        </CContainer>
+    )
 }
