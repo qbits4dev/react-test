@@ -5,9 +5,10 @@ import {
   CCardBody,
   CFormInput,
   CFormTextarea,
+  CButton,
 } from '@coreui/react'
 
-// Single-file CoreUI React component with full CSS + user-editable Bill To & Property Details
+// Single-file CoreUI React component with full CSS + user-editable Bill To & Property Details + Print Button
 export default function InvoiceCoreUIComponent() {
   const [billTo, setBillTo] = useState({
     name: 'Mr./Ms. Client Name',
@@ -25,6 +26,11 @@ export default function InvoiceCoreUIComponent() {
     area: '2,400 sq.ft',
     location: 'Kokapet, Hyderabad',
   })
+
+  // Print handler
+  const handlePrint = () => {
+    window.print()
+  }
 
   return (
     <CContainer className="p-0" style={{ maxWidth: '210mm' }}>
@@ -94,7 +100,6 @@ footer.footer { height: 20mm; background: var(--blue-dark); color: #fff; font-si
   box-shadow: 0 0 0 4px rgba(81,132,255,0.07);
   border-radius: 6px;
 }
-
 `}</style>
 
       <div className="page invoice-root">
@@ -102,14 +107,12 @@ footer.footer { height: 20mm; background: var(--blue-dark); color: #fff; font-si
           <div className="wave">
             <svg viewBox="0 0 1440 180" preserveAspectRatio="none">
               <path d="M0,0 H1440 V120 C1100,80 800,150 0,120 Z" fill="var(--blue)"></path>
-              {/* <path d="M0,40 C400,120 1000,80 1440,110 V180 H0 Z" fill="var(--blue-mid)"></path> */}
             </svg>
           </div>
 
           <div className="brand">
             <div className="logo-wrap">
-              {/* user requested to ignore the original embedded image source - use placeholder */}
-              <img src="src\assets\images\siradithya.jpg" alt="Sri Aditya Developers Logo" />
+              <img src="src/assets/images/siradithya.jpg" alt="Sri Aditya Developers Logo" />
             </div>
             <div className="title">
               <div className="name">Sri Aditya Developers</div>
@@ -124,6 +127,7 @@ footer.footer { height: 20mm; background: var(--blue-dark); color: #fff; font-si
           <CCardBody className="content">
             <div className="wm"><img src="/placeholder-watermark.png" alt="watermark" /></div>
 
+            {/* Invoice Ribbon */}
             <section className="ribbon">
               <h1>Invoice</h1>
               <div className="meta">
@@ -146,6 +150,7 @@ footer.footer { height: 20mm; background: var(--blue-dark); color: #fff; font-si
               </div>
             </section>
 
+            {/* Bill To + Property Details */}
             <section className="info">
               <div className="cardlet">
                 <h3>Bill To</h3>
@@ -235,6 +240,7 @@ footer.footer { height: 20mm; background: var(--blue-dark); color: #fff; font-si
               </div>
             </section>
 
+            {/* Items */}
             <section>
               <table className="items">
                 <thead>
@@ -298,6 +304,11 @@ footer.footer { height: 20mm; background: var(--blue-dark); color: #fff; font-si
                 </div>
               </div>
 
+              <div className="no-print" style={{ textAlign: 'center', margin: '12px 0' }}>
+                <CButton color="primary" onClick={handlePrint}>
+                  Print Invoice
+                </CButton>
+              </div>
             </section>
 
           </CCardBody>
