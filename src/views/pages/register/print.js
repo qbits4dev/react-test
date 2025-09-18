@@ -358,7 +358,7 @@ header .wave svg {
 
                             <div className="no-print mt-5" style={{ textAlign: 'center', margin: '12px 0' }}>
                                 <CButton
-                                    color="success"
+                                    color="info"
                                     onClick={() => window.print()}
                                 >
                                     print
