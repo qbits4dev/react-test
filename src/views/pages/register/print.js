@@ -7,10 +7,8 @@ import {
   CFormTextarea,
   CButton,
 } from '@coreui/react'
-import { Navigate, redirect, useNavigate } from 'react-router-dom'
 
-// Single-file CoreUI React component with full CSS + user-editable Bill To & Property Details + Submit Button
-export default function InvoiceCoreUIComponent() {
+export default function Print() {
   const [billTo, setBillTo] = useState({
     name: 'Mr./Ms. Client Name',
     address: 'Client Address Line 1',
@@ -28,12 +26,6 @@ export default function InvoiceCoreUIComponent() {
     location: 'Kokapet, Hyderabad',
   })
 
-  const navigate =useNavigate()
-  // Submit handler
-  const handleSubmit = () => {
-    navigate('/print') 
-  }
-
   return (
     <CContainer className="p-0" style={{ maxWidth: '210mm' }}>
       <style>{`
@@ -49,7 +41,7 @@ export default function InvoiceCoreUIComponent() {
 }
 * { box-sizing: border-box; }
 body, .invoice-root { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; color: var(--ink); }
-.page { width: 210mm; min-height: 297mm; margin: 0 auto; position: relative; display: flex; flex-direction: column; }
+.page { width: 210mm; height: 297mm; margin: 0 auto; position: relative; display: flex; flex-direction: column; } /* A4 exact height */
 .page::after { content: ""; position: absolute; top: 6mm; left: 6mm; right: 6mm; bottom: 6mm; border: 1px solid var(--ring); border-radius: 8px; pointer-events: none; z-index: 9; }
 header.header { position: relative; height: 44mm; background: var(--blue); overflow: hidden; }
 header .wave { position: absolute; inset: 0; }
@@ -68,9 +60,9 @@ footer.footer { height: 20mm; background: var(--blue-dark); color: #fff; font-si
 .ribbon { display: grid; grid-template-columns: 1fr 240px; gap: 16px; background: #f5f9ff; border: 1px solid var(--line); border-radius: 8px; padding: 12px 16px; margin-bottom: 12px; }
 .ribbon h1 { margin: 0; font-size: 18px; color: #0F1D5A; }
 .meta { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: #fff; font-size: 12px; }
-.info { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
-.cardlet { border: 1px solid var(--line); border-radius: 8px; background: #fff; padding: 10px 12px; font-size: 13px; }
-.cardlet h3 { margin: 0 0 4px; color: #1E3A8A; font-size: 14px; }
+.info { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; align-items: stretch; }
+.cardlet { border: 1px solid var(--line); border-radius: 8px; background: #fff; padding: 10px 12px; font-size: 13px; display: flex; flex-direction: column; }
+.cardlet h3 { margin: 0 0 8px; color: #1E3A8A; font-size: 14px; }
 .items { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 8px; }
 .items th { background: var(--bg-soft); color: #0F1D5A; text-align: left; padding: 8px; font-weight: 700; border-bottom: 1px solid var(--line); }
 .items td { padding: 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
@@ -80,7 +72,7 @@ footer.footer { height: 20mm; background: var(--blue-dark); color: #fff; font-si
 .lower { display: grid; grid-template-columns: 0.36fr 1fr; gap: 12px; }
 .qrbox, .terms { border: 1px solid var(--line); border-radius: 8px; background: #fff; padding: 10px 12px; }
 .signs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; color: var(--muted); font-size: 13px; }
-@media print { .page { width: auto; min-height: auto; } .no-print { display: none !important; } }
+@media print { .page { width: auto; height: auto; } .no-print { display: none !important; } }
 
 /* Input styling to blend inputs with the invoice design */
 .cardlet .inline-input,
@@ -88,15 +80,25 @@ footer.footer { height: 20mm; background: var(--blue-dark); color: #fff; font-si
   width: 100%;
   border: none;
   background: transparent;
-  padding: 0;
-  margin: 0 0 6px 0;
+  padding: 6px 4px;
+  margin: 0 0 10px 0;
   font: inherit;
   color: inherit;
   outline: none;
   resize: none;
+  min-height: 34px;
+  line-height: 1.4;
 }
+
+/* Textarea height */
+.cardlet .inline-textarea {
+  min-height: 60px;
+}
+
 /* make the name field slightly bolder */
 .cardlet .inline-input.name-field { font-weight: 700; font-size: 14px; }
+
+/* focus highlight */
 .cardlet .inline-input:focus, .cardlet .inline-textarea:focus {
   box-shadow: 0 0 0 4px rgba(81,132,255,0.07);
   border-radius: 6px;
@@ -140,11 +142,11 @@ footer.footer { height: 20mm; background: var(--blue-dark); color: #fff; font-si
                     </tr>
                     <tr>
                       <td style={{ color: '#374151' }}>Invoice Date</td>
-                      <td style={{ textAlign: 'right', fontWeight: 600 }}>17-Aug-2025</td>
+                      <td style={{ textAlign: 'right', fontWeight: 600 }}>17-Sep-2025</td>
                     </tr>
                     <tr>
                       <td style={{ color: '#374151' }}>Due Date</td>
-                      <td style={{ textAlign: 'right', fontWeight: 600 }}>24-Aug-2025</td>
+                      <td style={{ textAlign: 'right', fontWeight: 600 }}>24-Sep-2025</td>
                     </tr>
                   </tbody>
                 </table>
@@ -163,7 +165,7 @@ footer.footer { height: 20mm; background: var(--blue-dark); color: #fff; font-si
                 />
                 <CFormTextarea
                   className="inline-textarea"
-                  rows={2}
+                  rows={3}
                   placeholder="Address"
                   value={billTo.address}
                   onChange={(e) => setBillTo({ ...billTo, address: e.target.value })}
@@ -190,23 +192,19 @@ footer.footer { height: 20mm; background: var(--blue-dark); color: #fff; font-si
 
               <div className="cardlet">
                 <h3>Property Details</h3>
-                <div style={{ marginBottom: 6 }}>
-                  <CFormInput
-                    className="inline-input"
-                    placeholder="Project"
-                    value={property.project}
-                    onChange={(e) => setProperty({ ...property, project: e.target.value })}
-                  />
-                </div>
-                <div style={{ marginBottom: 6 }}>
-                  <CFormInput
-                    className="inline-input"
-                    placeholder="Property Type"
-                    value={property.type}
-                    onChange={(e) => setProperty({ ...property, type: e.target.value })}
-                  />
-                </div>
-                <div style={{ display: 'flex', gap: 8, marginBottom: 6 }}>
+                <CFormInput
+                  className="inline-input"
+                  placeholder="Project"
+                  value={property.project}
+                  onChange={(e) => setProperty({ ...property, project: e.target.value })}
+                />
+                <CFormInput
+                  className="inline-input"
+                  placeholder="Property Type"
+                  value={property.type}
+                  onChange={(e) => setProperty({ ...property, type: e.target.value })}
+                />
+                <div style={{ display: 'flex', gap: 8 }}>
                   <CFormInput
                     style={{ flex: 1 }}
                     className="inline-input"
@@ -222,22 +220,18 @@ footer.footer { height: 20mm; background: var(--blue-dark); color: #fff; font-si
                     onChange={(e) => setProperty({ ...property, plot: e.target.value })}
                   />
                 </div>
-                <div style={{ marginBottom: 6 }}>
-                  <CFormInput
-                    className="inline-input"
-                    placeholder="Super Built-up Area"
-                    value={property.area}
-                    onChange={(e) => setProperty({ ...property, area: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <CFormInput
-                    className="inline-input"
-                    placeholder="Location"
-                    value={property.location}
-                    onChange={(e) => setProperty({ ...property, location: e.target.value })}
-                  />
-                </div>
+                <CFormInput
+                  className="inline-input"
+                  placeholder="Super Built-up Area"
+                  value={property.area}
+                  onChange={(e) => setProperty({ ...property, area: e.target.value })}
+                />
+                <CFormInput
+                  className="inline-input"
+                  placeholder="Location"
+                  value={property.location}
+                  onChange={(e) => setProperty({ ...property, location: e.target.value })}
+                />
               </div>
             </section>
 
@@ -247,33 +241,33 @@ footer.footer { height: 20mm; background: var(--blue-dark); color: #fff; font-si
                 <thead>
                   <tr>
                     <th style={{ width: '52%' }}>Description</th>
-                    <th style={{ width: '16%' }} className="num">Qty/Area</th>
-                    <th style={{ width: '16%' }} className="num">Rate</th>
-                    <th style={{ width: '16%' }} className="num">Amount (₹)</th>
+                    <th style={{ width: '16%' }}>Qty/Area</th>
+                    <th style={{ width: '16%' }}>Rate</th>
+                    <th style={{ width: '16%' }}>Amount (₹)</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
                     <td>Base Price (Property Value)</td>
-                    <td className="num">{property.area}</td>
-                    <td className="num">10,000</td>
-                    <td className="num">24,000,000</td>
+                    <td>{property.area}</td>
+                    <td>10,000</td>
+                    <td>24,000,000</td>
                   </tr>
                   <tr>
                     <td>Development Charges</td>
-                    <td className="num">1</td>
-                    <td className="num">500,000</td>
-                    <td className="num">500,000</td>
+                    <td>1</td>
+                    <td>500,000</td>
+                    <td>500,000</td>
                   </tr>
                   <tr>
                     <td>GST (18%)</td>
-                    <td className="num">—</td>
-                    <td className="num">—</td>
-                    <td className="num">4,290,000</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>4,290,000</td>
                   </tr>
                   <tr>
                     <td colSpan={3} style={{ textAlign: 'right', fontWeight: 700 }}>Total</td>
-                    <td className="num">28,790,000</td>
+                    <td>28,790,000</td>
                   </tr>
                 </tbody>
               </table>
@@ -305,10 +299,9 @@ footer.footer { height: 20mm; background: var(--blue-dark); color: #fff; font-si
                 </div>
               </div>
 
-              {/* Submit button */}
               <div className="no-print mt-5" style={{ textAlign: 'center', margin: '12px 0' }}>
-                <CButton color="info" onClick={handleSubmit}>
-                  Submit
+                <CButton color="primary" onClick={() => window.print()}>
+                  Print Invoice
                 </CButton>
               </div>
             </section>
@@ -319,7 +312,6 @@ footer.footer { height: 20mm; background: var(--blue-dark); color: #fff; font-si
         <footer className="footer">
           <div className="contact">Sri Aditya Developers • Address line • Phone: +91-XXXXXXXXXX • Email: info@sriaditya.dev</div>
         </footer>
-
       </div>
     </CContainer>
   )
