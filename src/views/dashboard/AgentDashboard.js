@@ -82,7 +82,7 @@ const AgentDashboard = () => {
 
   const progressGroupExample3 = [
     { title: 'Organic Search', icon: cibGoogle, percent: 56, value: '191,235' },
-    { title: 'Facebook', icon: cibFacebook, percent: 15, value: '51,223' },
+    { title: 'Targets', icon: cibFacebook, percent: 15, value: '51,223' },
     { title: 'Twitter', icon: cibTwitter, percent: 11, value: '37,564' },
     { title: 'LinkedIn', icon: cibLinkedin, percent: 8, value: '27,319' },
   ]
@@ -219,6 +219,26 @@ const AgentDashboard = () => {
         ],
       },
     },
+    {
+      id: 'targets',
+      title: 'Targets',
+      value: '50',
+      percentageChange: '10%',
+      changeIcon: 'cilArrowTop',
+      color: 'success',
+      chartData: {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+        datasets: [
+          {
+            label: 'Conversions',
+            backgroundColor: 'transparent',
+            borderColor: 'rgba(255,255,255,.55)',
+            pointBackgroundColor: 'var(--cui-success)',
+            data: [5, 8, 10, 12, 15, 18, 20], // Agent-specific conversion data
+          },
+        ],
+      },
+    },
     // Add other agent-specific widget data here
   ]
 
@@ -228,7 +248,7 @@ const AgentDashboard = () => {
     <>
       <WidgetsDropdown widgetsData={agentWidgetsData} className="mb-4" />
       <CCard className="mb-4">
-        {/* <CCardBody>
+        <CCardBody>
           <CRow>
             <CCol sm={5}>
               <h4 id="traffic" className="card-title mb-0">
@@ -255,11 +275,8 @@ const AgentDashboard = () => {
             </CCol>
           </CRow>
           <MainChart />
-        </CCardBody> */}
-
-{/* upper commented part is sales report graph  */}
-
-        {/* <CCardFooter>
+        </CCardBody>
+        <CCardFooter>
           <CRow
             xs={{ cols: 1, gutter: 4 }}
             sm={{ cols: 2 }}
@@ -282,12 +299,7 @@ const AgentDashboard = () => {
               </CCol>
             ))}
           </CRow>
-        </CCardFooter> */}
-
-
-        {/* Footer of that sales report graph */}
-
-        
+        </CCardFooter>
       </CCard>
       <WidgetsBrand className="mb-4" withCharts />
       <CRow>
@@ -298,7 +310,7 @@ const AgentDashboard = () => {
               <CRow>
                 <CCol xs={12} md={6} xl={6}>
                   <CRow>
-                    {/* <CCol xs={6}>
+                    <CCol xs={6}>
                       <div className="border-start border-start-4 border-start-info py-1 px-3">
                         <div className="text-body-secondary text-truncate small">New Clients</div>
                         <div className="fs-5 fw-semibold">9,123</div>
@@ -311,8 +323,7 @@ const AgentDashboard = () => {
                         </div>
                         <div className="fs-5 fw-semibold">22,643</div>
                       </div>
-                    </CCol> */}
-
+                    </CCol>
                   </CRow>
                   <hr className="mt-0" />
                   {progressGroupExample1.map((item, index) => (
