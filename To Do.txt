@@ -13,3 +13,13 @@ the pdf needs to be sent in email and whats app and download option multiple tim
 
 # To Do: Telugu Calander "chandramanam" calender
 # test all the pages clear
+
+no leads 
+
+office-admin
+company-admin
+
+cu-000001
+id-000001 > gm 
+
+cl-000001

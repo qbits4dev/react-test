@@ -82,7 +82,7 @@ const AgentDashboard = () => {
 
   const progressGroupExample3 = [
     { title: 'Organic Search', icon: cibGoogle, percent: 56, value: '191,235' },
-    { title: 'Facebook', icon: cibFacebook, percent: 15, value: '51,223' },
+    { title: 'Targets', icon: cibFacebook, percent: 15, value: '51,223' },
     { title: 'Twitter', icon: cibTwitter, percent: 11, value: '37,564' },
     { title: 'LinkedIn', icon: cibLinkedin, percent: 8, value: '27,319' },
   ]
@@ -239,6 +239,30 @@ const AgentDashboard = () => {
         ],
       },
     },
+<<<<<<< HEAD
+=======
+    {
+      id: 'targets',
+      title: 'Targets',
+      value: '50',
+      percentageChange: '10%',
+      changeIcon: 'cilArrowTop',
+      color: 'success',
+      chartData: {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+        datasets: [
+          {
+            label: 'Conversions',
+            backgroundColor: 'transparent',
+            borderColor: 'rgba(255,255,255,.55)',
+            pointBackgroundColor: 'var(--cui-success)',
+            data: [5, 8, 10, 12, 15, 18, 20], // Agent-specific conversion data
+          },
+        ],
+      },
+    },
+    // Add other agent-specific widget data here
+>>>>>>> cc3666369ff41954742c5bf6d075ecc971e06a29
   ]
 
 
