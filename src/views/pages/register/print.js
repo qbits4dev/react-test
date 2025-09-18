@@ -1,4 +1,4 @@
-import React, { useState,useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
     CContainer,
     CCard,
@@ -361,7 +361,7 @@ header .wave svg {
                                     color="success"
                                     onClick={() => window.print()}
                                 >
-                                    Submit
+                                    print
                                 </CButton>
                             </div>
                         </section>
