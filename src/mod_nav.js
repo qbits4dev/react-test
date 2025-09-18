@@ -102,6 +102,11 @@ const _nav = [
         name: 'Invoice',
         to: '/invoice',
       },
+      {
+        component: CNavItem,
+        name:'Projects',
+        to:'/Projects',
+      },
     ],
   },
 ]

@@ -102,7 +102,7 @@ footer.footer { height: 20mm; background: var(--blue-dark); color: #fff; font-si
           <div className="wave">
             <svg viewBox="0 0 1440 180" preserveAspectRatio="none">
               <path d="M0,0 H1440 V120 C1100,80 800,150 0,120 Z" fill="var(--blue)"></path>
-              <path d="M0,40 C400,120 1000,80 1440,110 V180 H0 Z" fill="var(--blue-mid)"></path>
+              {/* <path d="M0,40 C400,120 1000,80 1440,110 V180 H0 Z" fill="var(--blue-mid)"></path> */}
             </svg>
           </div>
 

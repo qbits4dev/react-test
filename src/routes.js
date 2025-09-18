@@ -47,6 +47,8 @@ const Select = React.lazy(() => import('./views/forms/select/Select'))
 const Validation = React.lazy(() => import('./views/forms/validation/Validation'))
 const bookvisit = React.lazy(() => import('./views/pages/bookvisit'))
 const BookSite = React.lazy(() => import('./views/pages/bookSite'))
+const Projects = React.lazy(() => import('./views/pages/register/Projects'))
+
 
 const Charts = React.lazy(() => import('./views/charts/Charts'))
 
@@ -116,6 +118,7 @@ const routes = [
   { path: '/Reports', name: 'Reports', element: Reports },
   { path: '/bookSite', name: 'Book Site', element: BookSite },
   { path: '/Invoice', name: 'Invoice', element: Invoice },
+  { path: '/Projects', name: 'Projects', element: Projects },
 ]
 
 export default routes
