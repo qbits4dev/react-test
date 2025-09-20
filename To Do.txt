@@ -23,3 +23,36 @@ cu-000001
 id-000001 > gm 
 
 cl-000001
+
+designations/roles
+
+marketing executive 
+marketing manager
+asst general manager
+depty general manager
+general manager
+sr general manager
+depty marketing director
+marketing director
+royal marketing director
+club member
+
+leads box > target 
+
+add branch 
+
+marital status 
+nomiee datails 
+bank details
+perminant address
+present address
+
+persinal detalis 
+
+fathername/ spouse
+age claulate
+occoupation
+experaince 
+language 
+marital status
+education
