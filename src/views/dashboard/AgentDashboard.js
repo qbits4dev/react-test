@@ -239,8 +239,7 @@ const AgentDashboard = () => {
         ],
       },
     },
-<<<<<<< HEAD
-=======
+
     {
       id: 'targets',
       title: 'Targets',
@@ -261,8 +260,6 @@ const AgentDashboard = () => {
         ],
       },
     },
-    // Add other agent-specific widget data here
->>>>>>> cc3666369ff41954742c5bf6d075ecc971e06a29
   ]
 
 
