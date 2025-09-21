@@ -82,7 +82,7 @@
   font-weight: bold;
 }
 .header h2{
-  align-items:left;
+  padding-left: 150mm;
   margin: 0;
 }
 .header .tagline {
