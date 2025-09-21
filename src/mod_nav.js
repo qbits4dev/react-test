@@ -100,17 +100,12 @@ const _nav = [
       {
         component: CNavItem,
         name: 'Invoice',
-        to: '/invoice',
+        to: '/invoiceApp',
       },
       {
         component: CNavItem,
         name:'Projects',
         to:'/Projects',
-      },
-      {
-        component: CNavItem,
-        name:'Print',
-        to:'/print',
       },
     ],
   },

@@ -1,0 +1,106 @@
+:root {
+  --blue: #1f5cff;
+  --blue-mid: #5184ff;
+  --blue-dark: #0d2a68;
+  --ink: #111827;
+  --muted: #6b7280;
+  --line: #dfe7f5;
+  --ring: #cfe0ff;
+  --bg-soft: #ecf2ff;
+}
+
+/* === A4 Page === */
+.a4-page {
+  width: 210mm;
+  min-height: 297mm;
+  margin: 0 auto;
+  background: white;
+  padding: 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Print */
+@page {
+  size: A4;
+  margin: 0;
+}
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    margin: 0;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .a4-page {
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
+
+/* === Header Wave === */
+.header {
+  position: relative;
+  background: var(--blue);
+  color: white;
+  padding: 30px 20px 80px 20px;
+  text-align: center;
+}
+.header .wave {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+}
+.header .brand {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.header .logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.header .logo img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+.header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+.header h2{
+  align-items:left;
+  margin: 0;
+}
+.header .tagline {
+  font-size: 0.9rem;
+  color: #e0eaff;
+}
+
+/* === Body === */
+.invoice-body {
+  padding: 20px;
+  flex: 1;
+}
+
+/* === Footer === */
+.invoice-footer {
+  background: var(--blue-dark);
+  color: white;
+  padding: 12px;
+  text-align: center;
+  font-size: 14px;
+}
