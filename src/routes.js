@@ -8,7 +8,7 @@ const ClientDashboard = React.lazy(() => import('./views/dashboard/ClientDashboa
 const AdminDashboard = React.lazy(() => import('./views/dashboard/AdminDashboard'))
 const AgentDashboard = React.lazy(() => import('./views/dashboard/AgentDashboard'))
 const Reports = React.lazy(() => import('./views/pages/Reports'))
-const InvoiceApp = React.lazy(() => import('./views/Invoice/InvoiceApp'))
+//const InvoiceApp = React.lazy(() => import('./views/Invoice/InvoiceApp'))
 
 
 const Colors = React.lazy(() => import('./views/theme/colors/Colors'))
@@ -117,7 +117,6 @@ const routes = [
   { path: '/bookvisit', name: 'Book Visit', element: bookvisit },
   { path: '/Reports', name: 'Reports', element: Reports },
   { path: '/bookSite', name: 'Book Site', element: BookSite },
-  { path: '/InvoiceApp', name: 'Invoice', element: InvoiceApp },
   { path: '/Projects', name: 'Projects', element: Projects },
 ]
 

@@ -36,6 +36,7 @@
     "core-js": "^3.40.0",
     "date-fns": "^4.1.0",
     "eslint-plugin-react-compiler": "^19.1.0-rc.2",
+    "framer-motion": "^12.23.18",
     "prop-types": "^15.8.1",
     "react": "^19.1.0",
     "react-datepicker": "^8.4.0",
