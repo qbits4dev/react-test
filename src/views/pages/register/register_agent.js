@@ -446,7 +446,7 @@
 import React, { useState } from 'react'
 import {
   CCard, CCardBody, CCol, CContainer, CRow, CForm, CInputGroup, CFormInput, CInputGroupText,
-  CButton, CDropdown, CDropdownToggle, CDropdownMenu, CDropdownItem
+  CButton, CDropdown, CDropdownToggle, CDropdownMenu, CDropdownItem, CFormSelect
 } from '@coreui/react'
 import { cilUser, cilCalendar } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
@@ -513,7 +513,7 @@ export default function RegisterAgentWizard() {
   }
 
   const handleSubmit = async () => {
-    
+
     try {
       const res = await fetch('http://127.0.0.1:5000/register/agent', {
         method: 'POST',
@@ -536,80 +536,182 @@ export default function RegisterAgentWizard() {
     <div className='bg-light min-vh-100 d-flex flex-row align-items-center py-5'>
       <CContainer>
         <CRow className='justify-content-center'>
-          <CCol md={12} lg={10}>
+          <CCol md={12} lg={6}>
             <CCard className='shadow-sm rounded-4'>
               <CCardBody className='p-5'>
                 <h1 className='mb-4 text-primary' style={{ fontWeight: 'bold' }}>Agent Registration</h1>
                 <CForm>
-                 
+
                   {step === 1 && (
-                    <CCard className='mb-4 p-3 bg-white shadow-sm'>
-                      <h5 className='text-info mb-3'>Personal Details</h5>
-                      <CRow className='mb-3'>
-                        <CCol md={6}>
+                    <CCard className="mb-4 p-3 bg-white shadow-sm">
+                      <h5 className="text-info mb-3">Personal Details</h5>
+
+                      <CRow className="mb-3">
+                        <CCol>
                           <CInputGroup>
-                            <CInputGroupText><CIcon icon={cilUser} /></CInputGroupText>
-                            <CFormInput placeholder='First Name' name='firstName' value={form.firstName} onChange={handleChange} />
+                            <CInputGroupText>
+                              <CIcon icon={cilUser} />
+                            </CInputGroupText>
+                            <CFormInput
+                              placeholder="First Name"
+                              name="firstName"
+                              value={form.firstName}
+                              onChange={handleChange}
+                            />
                           </CInputGroup>
                         </CCol>
-                        <CCol md={6}>
+                      </CRow>
+
+                      <CRow className="mb-3">
+                        <CCol>
                           <CInputGroup>
-                            <CInputGroupText><CIcon icon={cilUser} /></CInputGroupText>
-                            <CFormInput placeholder='Last Name' name='lastName' value={form.lastName} onChange={handleChange} />
+                            <CInputGroupText>
+                              <CIcon icon={cilUser} />
+                            </CInputGroupText>
+                            <CFormInput
+                              placeholder="Last Name"
+                              name="lastName"
+                              value={form.lastName}
+                              onChange={handleChange}
+                            />
                           </CInputGroup>
                         </CCol>
                       </CRow>
-                      <CRow className='mb-3'>
-                        <CCol md={6}>
-                          <CFormInput placeholder='Father Name' name='fatherName' value={form.fatherName} onChange={handleChange} />
-                        </CCol>
-                        <CCol md={6}>
-                          <CFormInput placeholder='Spouse Name' name='spouseName' value={form.spouseName} onChange={handleChange} />
+
+                      <CRow className="mb-3">
+                        <CCol>
+                          <CFormInput
+                            placeholder="Father Name"
+                            name="fatherName"
+                            value={form.fatherName}
+                            onChange={handleChange}
+                          />
                         </CCol>
                       </CRow>
-                      <CRow className='mb-3'>
-                        <CCol md={6}>
+
+                      <CRow className="mb-3">
+                        <CCol>
+                          <CFormInput
+                            placeholder="Spouse Name"
+                            name="spouseName"
+                            value={form.spouseName}
+                            onChange={handleChange}
+                          />
+                        </CCol>
+                      </CRow>
+
+                      <CRow className="mb-3">
+                        <CCol>
                           <CInputGroup>
-                            <CInputGroupText><CIcon icon={cilCalendar} /></CInputGroupText>
-                            <CFormInput type='date' name='dob' value={form.dob} onChange={handleChange} />
+                            <CInputGroupText>
+                              <CIcon icon={cilCalendar} />
+                            </CInputGroupText>
+                            <CFormInput
+                              type="date"
+                              name="dob"
+                              value={form.dob}
+                              onChange={handleChange}
+                            />
                           </CInputGroup>
                         </CCol>
-                        <CCol md={6}>
-                          <CFormInput placeholder='Age' name='age' value={form.age} readOnly />
+                      </CRow>
+
+                      <CRow className="mb-3">
+                        <CCol>
+                          <CFormInput placeholder="Age" name="age" value={form.age} readOnly />
                         </CCol>
                       </CRow>
-                      <CRow className='mb-3'>
-                        <CCol md={6}>
-                          <CFormInput placeholder='Email' name='email' value={form.email} onChange={handleChange} />
-                        </CCol>
-                        <CCol md={6}>
-                          <CFormInput placeholder='Phone' name='phone' value={form.phone} onChange={handleChange} />
-                        </CCol>
-                      </CRow>
-                      <CRow className='mb-3'>
-                        <CCol md={6}>
-                          <CFormInput placeholder='Occupation' name='occupation' value={form.occupation} onChange={handleChange} />
-                        </CCol>
-                        <CCol md={6}>
-                          <CFormInput placeholder='Experience (Years)' name='experience' value={form.experience} onChange={handleChange} />
+
+                      <CRow className="mb-3">
+                        <CCol>
+                          <CFormInput
+                            placeholder="Email"
+                            name="email"
+                            value={form.email}
+                            onChange={handleChange}
+                          />
                         </CCol>
                       </CRow>
-                      <CRow className='mb-3'>
-                        <CCol md={6}>
-                          <CFormInput placeholder='Language' name='language' value={form.language} onChange={handleChange} />
-                        </CCol>
-                        <CCol md={6}>
-                          <CFormInput placeholder='Marital Status' name='maritalStatus' value={form.maritalStatus} onChange={handleChange} />
+
+                      <CRow className="mb-3">
+                        <CCol>
+                          <CFormInput
+                            placeholder="Phone"
+                            name="phone"
+                            value={form.phone}
+                            onChange={handleChange}
+                          />
                         </CCol>
                       </CRow>
-                      <CFormInput placeholder='Education' name='education' value={form.education} onChange={handleChange} />
-                      <div className='d-flex justify-content-end mt-3'>
-                        <CButton color='primary' onClick={nextStep}>Next</CButton>
+
+                      <CRow className="mb-3">
+                        <CCol>
+                          <CFormInput
+                            placeholder="Occupation"
+                            name="occupation"
+                            value={form.occupation}
+                            onChange={handleChange}
+                          />
+                        </CCol>
+                      </CRow>
+
+                      <CRow className="mb-3">
+                        <CCol>
+                          <CFormInput
+                            placeholder="Experience (Years)"
+                            name="experience"
+                            value={form.experience}
+                            onChange={handleChange}
+                          />
+                        </CCol>
+                      </CRow>
+
+                      <CRow className="mb-3">
+                        <CCol>
+                          <CFormInput
+                            placeholder="Language"
+                            name="language"
+                            value={form.language}
+                            onChange={handleChange}
+                          />
+                        </CCol>
+                      </CRow>
+
+                      <CRow className="mb-3">
+                        <CCol>
+                          <CFormSelect
+                            name="maritalStatus"
+                            value={form.maritalStatus}
+                            onChange={handleChange}
+                          >
+                            <option value="">Select Marital Status</option>
+                            <option value="Married">Married</option>
+                            <option value="unmarried">unmarried</option>
+                          </CFormSelect>
+                        </CCol>
+                      </CRow>
+
+
+                      <CRow className="mb-3">
+                        <CCol>
+                          <CFormInput
+                            placeholder="Education"
+                            name="education"
+                            value={form.education}
+                            onChange={handleChange}
+                          />
+                        </CCol>
+                      </CRow>
+
+                      <div className="d-flex justify-content-end mt-3">
+                        <CButton color="primary" onClick={nextStep}>
+                          Next
+                        </CButton>
                       </div>
                     </CCard>
                   )}
 
-                  
+
                   {step === 2 && (
                     <CCard className='mb-4 p-3 bg-white shadow-sm'>
                       <h5 className='text-info mb-3'>Designation & Nominee/Bank Details</h5>
@@ -630,7 +732,7 @@ export default function RegisterAgentWizard() {
                         </CDropdown>
                       </CInputGroup>
 
-                     
+
                       <CRow>
                         <CCol md={6}>
                           <CCard className='p-3 bg-white shadow-sm mb-3'>
@@ -662,7 +764,7 @@ export default function RegisterAgentWizard() {
                     </CCard>
                   )}
 
-                 
+
                   {step === 3 && (
                     <CCard className='mb-4 p-3 bg-white shadow-sm'>
                       <h5 className='text-info mb-3'>Address</h5>
