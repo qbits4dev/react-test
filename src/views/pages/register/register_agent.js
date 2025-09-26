@@ -620,7 +620,7 @@ export default function RegisterAgentWizard() {
   const handleSubmit = async () => {
     if (!validateStep()) return
     try {
-      const res = await fetch('http://127.0.0.1:5000/register/agent', {
+      const res = await fetch('http://127.0.0.1:5000/test/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form)
@@ -735,11 +735,9 @@ export default function RegisterAgentWizard() {
                               onChange={handleChange}
                             >
                               <option value="">Select Language</option>
+                              <option value="Telugu">Telugu</option>
                               <option value="English">English</option>
                               <option value="Hindi">Hindi</option>
-                              <option value="Spanish">Spanish</option>
-                              <option value="French">French</option>
-                              <option value="German">German</option>
                               {/* Add more options as needed */}
                             </CFormSelect>
                           </CCol>
