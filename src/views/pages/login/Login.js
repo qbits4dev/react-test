@@ -150,7 +150,7 @@ const Login = () => {
               </CCard>
 
               {/* Register Card */}
-              <CCard className="text-black py-5 flex-fill mt-3 mt-md-0 md-3">
+              <CCard className="text-white bg-primary py-5 flex-fill mt-3 mt-md-0 md-3">
                 <CCardBody className="text-center d-flex flex-column justify-content-center">
                   <div>
                     <h2 className="mb-4">Sign up</h2>
