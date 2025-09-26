@@ -442,25 +442,25 @@
 //   )
 // }
 
-
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   CCard, CCardBody, CCol, CContainer, CRow, CForm, CInputGroup, CFormInput, CInputGroupText,
-  CButton, CDropdown, CDropdownToggle, CDropdownMenu, CDropdownItem, CFormSelect
+  CButton, CDropdown, CDropdownToggle, CDropdownMenu, CDropdownItem, CFormSelect, CSpinner
 } from '@coreui/react'
 import { cilUser, cilCalendar } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
 import { useNavigate } from 'react-router-dom'
-
-const designations = [
-  "Marketing Executive", "Marketing Manager", "Asst General Manager", "Deputy General Manager",
-  "General Manager", "Sr General Manager", "Deputy Marketing Director",
-  "Marketing Director", "Royal Marketing Director", "Club Member"
-]
+import { AppFooter, AppHeader } from './../../../components/index'
 
 export default function RegisterAgentWizard() {
   const navigate = useNavigate()
   const [step, setStep] = useState(1)
+
+  // designation states
+  const [designations, setDesignations] = useState([])
+  const [designationName, setDesignationName] = useState("Select Designation")
+  const [loadingDesignations, setLoadingDesignations] = useState(true)
+  const [designationError, setDesignationError] = useState("")
 
   const [form, setForm] = useState({
     firstName: '', lastName: '', fatherName: '', spouseName: '', age: '', dob: '', email: '', phone: '',
@@ -469,35 +469,133 @@ export default function RegisterAgentWizard() {
     permanentAddress: '', presentAddress: ''
   })
   const [errors, setErrors] = useState({})
-  const [designationName, setDesignationName] = useState('Select Designation')
 
+  // restrict input & handle changes
   const handleChange = (e) => {
-    const { name, value } = e.target
+    let { name, value } = e.target
+
+    // restrict alphabets only
+    if (['firstName', 'lastName', 'fatherName', 'spouseName', 'nomineeName', 'nomineeRelation'].includes(name)) {
+      value = value.replace(/[^A-Za-z ]/g, '')
+    }
+
+    // restrict numbers only
+    if (['phone', 'experience', 'accountNumber'].includes(name)) {
+      value = value.replace(/[^0-9]/g, '')
+    }
+
+    // restrict alphanumeric for occupation, language, addresses, bankName, IFSC
+    if (['occupation', 'language', 'education', 'permanentAddress', 'presentAddress', 'bankName', 'ifsc'].includes(name)) {
+      value = value.replace(/[^A-Za-z0-9 ,]/g, '')
+    }
+
     setForm(prev => ({ ...prev, [name]: value }))
 
-    if (name === 'dob') {
+    // Auto calculate age
+    if (name === 'dob' && value) {
       const birthDate = new Date(value)
       const today = new Date()
-      const age = today.getFullYear() - birthDate.getFullYear()
-      setForm(prev => ({ ...prev, age }))
+      let age = today.getFullYear() - birthDate.getFullYear()
+      const m = today.getMonth() - birthDate.getMonth()
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--
+      setForm(prev => ({ ...prev, age: age.toString() }))
     }
   }
 
+  // fetch designations from backend
+  useEffect(() => {
+    setLoadingDesignations(true)
+    fetch('http://127.0.0.1:5000/test?key=designation')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data.Designation)) {
+          setDesignations(data.Designation)
+          setDesignationError("")
+        } else {
+          setDesignations([])
+          setDesignationError("No designations found")
+        }
+      })
+      .catch(err => {
+        console.error("Fetch error:", err)
+        setDesignations([])
+        setDesignationError("Failed to fetch designations")
+      })
+      .finally(() => setLoadingDesignations(false))
+  }, [])
+
   const handleDesignationSelect = (designation) => {
-    setDesignationName(designation)
-    setForm(prev => ({ ...prev, designation }))
+    setDesignationName(designation.Role)
+    setForm(prev => ({ ...prev, designation: designation.Role }))
   }
 
+  // Field-level validation
+  const validateField = (name, value) => {
+    switch (name) {
+      case 'firstName':
+      case 'lastName':
+      case 'fatherName':
+      case 'spouseName':
+      case 'nomineeName':
+      case 'nomineeRelation':
+        if (!value) return 'Required'
+        if (!/^[A-Za-z ]+$/.test(value)) return 'Only alphabets allowed'
+        break
+      case 'phone':
+        if (!/^[0-9]{10}$/.test(value)) return 'Enter 10 digit phone number'
+        break
+      case 'email':
+        if (!/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(value)) return 'Invalid email'
+        break
+      case 'occupation':
+      case 'language':
+      case 'bankName':
+        if (!/^[A-Za-z0-9 ,]*$/.test(value)) return 'Invalid characters'
+        break
+      case 'experience':
+        if (!/^[0-9]{1,2}$/.test(value)) return 'Only numbers allowed'
+        break
+      case 'accountNumber':
+        if (!/^[0-9]{1,20}$/.test(value)) return 'Invalid account number'
+        break
+      case 'ifsc':
+        if (!/^[A-Za-z0-9]{0,11}$/.test(value)) return 'Invalid IFSC'
+        break
+      case 'education':
+      case 'permanentAddress':
+      case 'presentAddress':
+        if (!value) return 'Required'
+        break
+      case 'maritalStatus':
+      case 'designation':
+        if (!value) return 'Required'
+        break
+      default:
+        return ''
+    }
+    return ''
+  }
+
+  // Validate current step
   const validateStep = () => {
     let newErrors = {}
     if (step === 1) {
-      if (!form.firstName) newErrors.firstName = 'First name required'
-      if (!form.lastName) newErrors.lastName = 'Last name required'
-      if (!form.email) newErrors.email = 'Email required'
-      if (!form.phone) newErrors.phone = 'Phone required'
+      ['firstName', 'lastName', 'fatherName', 'spouseName', 'dob', 'email', 'phone', 'occupation', 'experience', 'language', 'maritalStatus', 'education'].forEach(f => {
+        const err = validateField(f, form[f])
+        if (err) newErrors[f] = err
+      })
     }
     if (step === 2) {
-      if (!form.designation) newErrors.designation = 'Designation required'
+      ['designation', 'nomineeName', 'nomineeRelation', 'bankName', 'accountNumber', 'ifsc'].forEach(f => {
+        const err = validateField(f, form[f])
+        if (err) newErrors[f] = err
+      })
+    }
+    if (step === 3) {
+      ['permanentAddress', 'presentAddress'].forEach(f => {
+        const err = validateField(f, form[f])
+        if (err) newErrors[f] = err
+      })
     }
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -513,7 +611,7 @@ export default function RegisterAgentWizard() {
   }
 
   const handleSubmit = async () => {
-
+    if (!validateStep()) return
     try {
       const res = await fetch('http://127.0.0.1:5000/register/agent', {
         method: 'POST',
@@ -533,262 +631,215 @@ export default function RegisterAgentWizard() {
   }
 
   return (
-    <div className='bg-light min-vh-100 d-flex flex-row align-items-center py-5'>
-      <CContainer>
-        <CRow className='justify-content-center'>
-          <CCol md={12} lg={6}>
-            <CCard className='shadow-sm rounded-4'>
-              <CCardBody className='p-5'>
-                <h1 className='mb-4 text-primary' style={{ fontWeight: 'bold' }}>Agent Registration</h1>
-                <CForm>
+    <div>
+      <AppHeader />
+      <div className='bg-light min-vh-100 d-flex flex-row align-items-center py-5'>
+        <CContainer>
+          <CRow className='justify-content-center'>
+            <CCol md={12} lg={6}>
+              <CCard className='shadow-sm rounded-4'>
+                <CCardBody className='p-5'>
+                  <h1 className='mb-4 text-primary' style={{ fontWeight: 'bold' }}>Agent Registration</h1>
+                  <CForm>
 
-                  {step === 1 && (
-                    <CCard className="mb-4 p-3 bg-white shadow-sm">
-                      <h5 className="text-info mb-3">Personal Details</h5>
+                    {/* STEP 1 */}
+                    {step === 1 && (
+                      <CCard className="mb-4 p-3 bg-white shadow-sm">
+                        <h5 className="text-info mb-3">Personal Details</h5>
+                        <CRow className="mb-3">
+                          <CCol>
+                            <CInputGroup>
+                              <CInputGroupText><CIcon icon={cilUser} /></CInputGroupText>
+                              <CFormInput placeholder="First Name" name="firstName" value={form.firstName} maxLength={30} onChange={handleChange} />
+                            </CInputGroup>
+                            {errors.firstName && <small className="text-danger">{errors.firstName}</small>}
+                          </CCol>
+                        </CRow>
 
-                      <CRow className="mb-3">
-                        <CCol>
-                          <CInputGroup>
-                            <CInputGroupText>
-                              <CIcon icon={cilUser} />
-                            </CInputGroupText>
-                            <CFormInput
-                              placeholder="First Name"
-                              name="firstName"
-                              value={form.firstName}
-                              onChange={handleChange}
-                            />
-                          </CInputGroup>
-                        </CCol>
-                      </CRow>
+                        <CRow className="mb-3">
+                          <CCol>
+                            <CInputGroup>
+                              <CInputGroupText><CIcon icon={cilUser} /></CInputGroupText>
+                              <CFormInput placeholder="Last Name" name="lastName" value={form.lastName} maxLength={30} onChange={handleChange} />
+                            </CInputGroup>
+                            {errors.lastName && <small className="text-danger">{errors.lastName}</small>}
+                          </CCol>
+                        </CRow>
 
-                      <CRow className="mb-3">
-                        <CCol>
-                          <CInputGroup>
-                            <CInputGroupText>
-                              <CIcon icon={cilUser} />
-                            </CInputGroupText>
-                            <CFormInput
-                              placeholder="Last Name"
-                              name="lastName"
-                              value={form.lastName}
-                              onChange={handleChange}
-                            />
-                          </CInputGroup>
-                        </CCol>
-                      </CRow>
+                        <CRow className="mb-3">
+                          <CCol>
+                            <CFormInput placeholder="Father Name" name="fatherName" value={form.fatherName} maxLength={30} onChange={handleChange} />
+                          </CCol>
+                        </CRow>
 
-                      <CRow className="mb-3">
-                        <CCol>
-                          <CFormInput
-                            placeholder="Father Name"
-                            name="fatherName"
-                            value={form.fatherName}
-                            onChange={handleChange}
-                          />
-                        </CCol>
-                      </CRow>
+                        <CRow className="mb-3">
+                          <CCol>
+                            <CFormInput placeholder="Spouse Name" name="spouseName" value={form.spouseName} maxLength={30} onChange={handleChange} />
+                          </CCol>
+                        </CRow>
 
-                      <CRow className="mb-3">
-                        <CCol>
-                          <CFormInput
-                            placeholder="Spouse Name"
-                            name="spouseName"
-                            value={form.spouseName}
-                            onChange={handleChange}
-                          />
-                        </CCol>
-                      </CRow>
+                        <CRow className="mb-3">
+                          <CCol>
+                            <CInputGroup>
+                              <CInputGroupText><CIcon icon={cilCalendar} /></CInputGroupText>
+                              <CFormInput type="date" name="dob" value={form.dob} onChange={handleChange} />
+                            </CInputGroup>
+                            {errors.dob && <small className="text-danger">{errors.dob}</small>}
+                          </CCol>
+                        </CRow>
 
-                      <CRow className="mb-3">
-                        <CCol>
-                          <CInputGroup>
-                            <CInputGroupText>
-                              <CIcon icon={cilCalendar} />
-                            </CInputGroupText>
-                            <CFormInput
-                              type="date"
-                              name="dob"
-                              value={form.dob}
-                              onChange={handleChange}
-                            />
-                          </CInputGroup>
-                        </CCol>
-                      </CRow>
+                        <CRow className="mb-3">
+                          <CCol>
+                            <CFormInput placeholder="Age" name="age" value={form.age} readOnly />
+                          </CCol>
+                        </CRow>
 
-                      <CRow className="mb-3">
-                        <CCol>
-                          <CFormInput placeholder="Age" name="age" value={form.age} readOnly />
-                        </CCol>
-                      </CRow>
+                        <CRow className="mb-3">
+                          <CCol>
+                            <CFormInput placeholder="Email" name="email" value={form.email} maxLength={50} onChange={handleChange} />
+                            {errors.email && <small className="text-danger">{errors.email}</small>}
+                          </CCol>
+                        </CRow>
 
-                      <CRow className="mb-3">
-                        <CCol>
-                          <CFormInput
-                            placeholder="Email"
-                            name="email"
-                            value={form.email}
-                            onChange={handleChange}
-                          />
-                        </CCol>
-                      </CRow>
+                        <CRow className="mb-3">
+                          <CCol>
+                            <CFormInput placeholder="Phone" name="phone" value={form.phone} maxLength={10} onChange={handleChange} />
+                            {errors.phone && <small className="text-danger">{errors.phone}</small>}
+                          </CCol>
+                        </CRow>
 
-                      <CRow className="mb-3">
-                        <CCol>
-                          <CFormInput
-                            placeholder="Phone"
-                            name="phone"
-                            value={form.phone}
-                            onChange={handleChange}
-                          />
-                        </CCol>
-                      </CRow>
+                        <CRow className="mb-3">
+                          <CCol>
+                            <CFormInput placeholder="Occupation" name="occupation" value={form.occupation} maxLength={30} onChange={handleChange} />
+                          </CCol>
+                        </CRow>
 
-                      <CRow className="mb-3">
-                        <CCol>
-                          <CFormInput
-                            placeholder="Occupation"
-                            name="occupation"
-                            value={form.occupation}
-                            onChange={handleChange}
-                          />
-                        </CCol>
-                      </CRow>
+                        <CRow className="mb-3">
+                          <CCol>
+                            <CFormInput placeholder="Experience (Years)" name="experience" value={form.experience} maxLength={2} onChange={handleChange} />
+                          </CCol>
+                        </CRow>
 
-                      <CRow className="mb-3">
-                        <CCol>
-                          <CFormInput
-                            placeholder="Experience (Years)"
-                            name="experience"
-                            value={form.experience}
-                            onChange={handleChange}
-                          />
-                        </CCol>
-                      </CRow>
+                        <CRow className="mb-3">
+                          <CCol>
+                            <CFormInput placeholder="Language" name="language" value={form.language} maxLength={50} onChange={handleChange} />
+                          </CCol>
+                        </CRow>
 
-                      <CRow className="mb-3">
-                        <CCol>
-                          <CFormInput
-                            placeholder="Language"
-                            name="language"
-                            value={form.language}
-                            onChange={handleChange}
-                          />
-                        </CCol>
-                      </CRow>
+                        <CRow className="mb-3">
+                          <CCol>
+                            <CFormSelect name="maritalStatus" value={form.maritalStatus} onChange={handleChange}>
+                              <option value="">Select Marital Status</option>
+                              <option value="Married">Married</option>
+                              <option value="Unmarried">Unmarried</option>
+                            </CFormSelect>
+                            {errors.maritalStatus && <small className="text-danger">{errors.maritalStatus}</small>}
+                          </CCol>
+                        </CRow>
 
-                      <CRow className="mb-3">
-                        <CCol>
-                          <CFormSelect
-                            name="maritalStatus"
-                            value={form.maritalStatus}
-                            onChange={handleChange}
-                          >
-                            <option value="">Select Marital Status</option>
-                            <option value="Married">Married</option>
-                            <option value="unmarried">unmarried</option>
-                          </CFormSelect>
-                        </CCol>
-                      </CRow>
+                        <CRow className="mb-3">
+                          <CCol>
+                            <CFormInput placeholder="Education" name="education" value={form.education} maxLength={50} onChange={handleChange} />
+                          </CCol>
+                        </CRow>
 
+                        <div className="d-flex justify-content-end mt-3">
+                          <CButton color="primary" onClick={nextStep}>Next</CButton>
+                        </div>
+                      </CCard>
+                    )}
 
-                      <CRow className="mb-3">
-                        <CCol>
-                          <CFormInput
-                            placeholder="Education"
-                            name="education"
-                            value={form.education}
-                            onChange={handleChange}
-                          />
-                        </CCol>
-                      </CRow>
+                    {/* STEP 2 */}
+                    {step === 2 && (
+                      <CCard className='mb-4 p-3 bg-white shadow-sm'>
+                        <h5 className='text-info mb-3'>Designation & Nominee/Bank Details</h5>
 
-                      <div className="d-flex justify-content-end mt-3">
-                        <CButton color="primary" onClick={nextStep}>
-                          Next
-                        </CButton>
-                      </div>
-                    </CCard>
-                  )}
+                        {/* Designation Dropdown */}
+                        <CInputGroup className='mb-3'>
+                          <CDropdown className='flex-grow-1'>
+                            <CInputGroupText><CIcon icon={cilUser} /></CInputGroupText>
+                            <CDropdownToggle color='light' className='text-start w-100'>
+                              {loadingDesignations ? <span><CSpinner size="sm" className="me-2" />Loading...</span> : designationName}
+                            </CDropdownToggle>
 
+                            <CDropdownMenu>
+                              {loadingDesignations && <CDropdownItem disabled>Loading...</CDropdownItem>}
+                              {!loadingDesignations && designationError && <CDropdownItem disabled>{designationError}</CDropdownItem>}
+                              {!loadingDesignations && !designationError && designations.map((d, idx) => (
+                                <CDropdownItem key={idx} onClick={() => handleDesignationSelect(d)}>{d.Role}</CDropdownItem>
+                              ))}
+                            </CDropdownMenu>
+                          </CDropdown>
+                        </CInputGroup>
+                        {errors.designation && <small className="text-danger">{errors.designation}</small>}
 
-                  {step === 2 && (
-                    <CCard className='mb-4 p-3 bg-white shadow-sm'>
-                      <h5 className='text-info mb-3'>Designation & Nominee/Bank Details</h5>
-                      {/* Designation */}
-                      <CInputGroup className='mb-3'>
-                        <CInputGroupText><CIcon icon={cilUser} /></CInputGroupText>
-                        <CDropdown className='flex-grow-1'>
-                          <CDropdownToggle color='light' className='text-start w-100'>
-                            {designationName}
-                          </CDropdownToggle>
-                          <CDropdownMenu>
-                            {designations.map((d, idx) => (
-                              <CDropdownItem key={idx} onClick={() => handleDesignationSelect(d)}>
-                                {d}
-                              </CDropdownItem>
-                            ))}
-                          </CDropdownMenu>
-                        </CDropdown>
-                      </CInputGroup>
+                        <CRow>
+                          <CCol md={6}>
+                            <CCard className='p-3 bg-white shadow-sm mb-3'>
+                              <h6 className='text-info mb-3'>Nominee Details</h6>
+                              <CFormInput placeholder='Nominee Name' name='nomineeName' value={form.nomineeName} maxLength={30} onChange={handleChange} className='mb-2' />
+                              {errors.nomineeName && <small className="text-danger">{errors.nomineeName}</small>}
+                              <CFormInput placeholder='Relation' name='nomineeRelation' value={form.nomineeRelation} maxLength={20} onChange={handleChange} />
+                              {errors.nomineeRelation && <small className="text-danger">{errors.nomineeRelation}</small>}
+                            </CCard>
+                          </CCol>
 
+                          <CCol md={6}>
+                            <CCard className='p-3 bg-white shadow-sm mb-3'>
+                              <h6 className='text-info mb-3'>Bank Details</h6>
+                              <CFormInput placeholder='Bank Name' name='bankName' value={form.bankName} maxLength={30} onChange={handleChange} className='mb-2' />
+                              {errors.bankName && <small className="text-danger">{errors.bankName}</small>}
+                              <CRow>
+                                <CCol md={6}>
+                                  <CFormInput placeholder='Account Number' name='accountNumber' value={form.accountNumber} maxLength={20} onChange={handleChange} />
+                                  {errors.accountNumber && <small className="text-danger">{errors.accountNumber}</small>}
+                                </CCol>
+                                <CCol md={6}>
+                                  <CFormInput placeholder='IFSC' name='ifsc' value={form.ifsc} maxLength={11} onChange={handleChange} />
+                                  {errors.ifsc && <small className="text-danger">{errors.ifsc}</small>}
+                                </CCol>
+                              </CRow>
+                            </CCard>
+                          </CCol>
+                        </CRow>
 
-                      <CRow>
-                        <CCol md={6}>
-                          <CCard className='p-3 bg-white shadow-sm mb-3'>
-                            <h6 className='text-info mb-3'>Nominee Details</h6>
-                            <CFormInput placeholder='Nominee Name' name='nomineeName' value={form.nomineeName} onChange={handleChange} className='mb-2' />
-                            <CFormInput placeholder='Relation' name='nomineeRelation' value={form.nomineeRelation} onChange={handleChange} />
-                          </CCard>
-                        </CCol>
-                        <CCol md={6}>
-                          <CCard className='p-3 bg-white shadow-sm mb-3'>
-                            <h6 className='text-info mb-3'>Bank Details</h6>
-                            <CFormInput placeholder='Bank Name' name='bankName' value={form.bankName} onChange={handleChange} className='mb-2' />
-                            <CRow>
-                              <CCol md={6}>
-                                <CFormInput placeholder='Account Number' name='accountNumber' value={form.accountNumber} onChange={handleChange} />
-                              </CCol>
-                              <CCol md={6}>
-                                <CFormInput placeholder='IFSC' name='ifsc' value={form.ifsc} onChange={handleChange} />
-                              </CCol>
-                            </CRow>
-                          </CCard>
-                        </CCol>
-                      </CRow>
+                        <div className='d-flex justify-content-between mt-3'>
+                          <CButton color='secondary' onClick={prevStep}>Back</CButton>
+                          <CButton color='primary' onClick={nextStep}>Next</CButton>
+                        </div>
+                      </CCard>
+                    )}
 
-                      <div className='d-flex justify-content-between mt-3'>
-                        <CButton color='secondary' onClick={prevStep}>Back</CButton>
-                        <CButton color='primary' onClick={nextStep}>Next</CButton>
-                      </div>
-                    </CCard>
-                  )}
+                    {/* STEP 3 */}
+                    {step === 3 && (
+                      <CCard className='mb-4 p-3 bg-white shadow-sm'>
+                        <h5 className='text-info mb-3'>Address</h5>
+                        <CRow className='mb-3'>
+                          <CCol md={6}>
+                            <CFormInput placeholder='Permanent Address' name='permanentAddress' value={form.permanentAddress} maxLength={100} onChange={handleChange} />
+                            {errors.permanentAddress && <small className="text-danger">{errors.permanentAddress}</small>}
+                          </CCol>
+                          <CCol md={6}>
+                            <CFormInput placeholder='Present Address' name='presentAddress' value={form.presentAddress} maxLength={100} onChange={handleChange} />
+                            {errors.presentAddress && <small className="text-danger">{errors.presentAddress}</small>}
+                          </CCol>
+                        </CRow>
 
+                        <div className='d-flex justify-content-between mt-3'>
+                          <CButton color='secondary' onClick={prevStep}>Back</CButton>
+                          <CButton color='success' onClick={handleSubmit}>Submit</CButton>
+                        </div>
+                      </CCard>
+                    )}
 
-                  {step === 3 && (
-                    <CCard className='mb-4 p-3 bg-white shadow-sm'>
-                      <h5 className='text-info mb-3'>Address</h5>
-                      <CRow className='mb-3'>
-                        <CCol md={6}>
-                          <CFormInput placeholder='Permanent Address' name='permanentAddress' value={form.permanentAddress} onChange={handleChange} />
-                        </CCol>
-                        <CCol md={6}>
-                          <CFormInput placeholder='Present Address' name='presentAddress' value={form.presentAddress} onChange={handleChange} />
-                        </CCol>
-                      </CRow>
-                      <div className='d-flex justify-content-between mt-3'>
-                        <CButton color='secondary' onClick={prevStep}>Back</CButton>
-                        <CButton color='success' onClick={handleSubmit}>Submit</CButton>
-                      </div>
-                    </CCard>
-                  )}
-
-                </CForm>
-              </CCardBody>
-            </CCard>
-          </CCol>
-        </CRow>
-      </CContainer>
+                  </CForm>
+                </CCardBody>
+              </CCard>
+            </CCol>
+          </CRow>
+        </CContainer>
+      </div>
+      <AppFooter />
     </div>
   )
 }
