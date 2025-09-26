@@ -475,7 +475,7 @@ export default function RegisterAgentWizard() {
     let { name, value } = e.target
 
     // restrict alphabets only
-    if (['firstName', 'lastName', 'fatherName', 'spouseName', 'nomineeName', 'nomineeRelation'].includes(name)) {
+    if (['firstName', 'lastName', 'fatherName', 'spouseName', 'nomineeName', 'nomineeRelation','language', 'education','occupation'].includes(name)) {
       value = value.replace(/[^A-Za-z ]/g, '')
     }
 
@@ -485,11 +485,8 @@ export default function RegisterAgentWizard() {
     }
 
     // restrict alphanumeric for occupation, language, addresses, bankName, IFSC
-    if (['occupation', 'permanentAddress', 'presentAddress', 'bankName', 'ifsc'].includes(name)) {
+    if (['permanentAddress', 'presentAddress', 'bankName', 'ifsc'].includes(name)) {
       value = value.replace(/[^A-Za-z0-9 ,]/g, '')
-    }
-    if (['language', 'education'].includes(name)) {
-      value = value.replace(/[^A-Za-z,]/g, '')
     }
 
     setForm(prev => ({ ...prev, [name]: value }))
@@ -590,7 +587,7 @@ export default function RegisterAgentWizard() {
   const validateStep = () => {
     let newErrors = {}
     if (step === 1) {
-      ['firstName', 'lastName', 'fatherName', 'spouseName', 'dob', 'email', 'phone', 'occupation', 'experience', 'language', 'maritalStatus', 'education'].forEach(f => {
+      ['firstName', 'lastName', 'fatherName', 'spouseName', 'dob', 'email', 'phone', 'experience', 'language', 'maritalStatus', 'education'].forEach(f => {
         const err = validateField(f, form[f])
         if (err) newErrors[f] = err
       })
