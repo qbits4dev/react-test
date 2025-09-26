@@ -56,3 +56,6 @@ experaince
 language 
 marital status
 education
+
+#Global 
+Fix Header and Footer

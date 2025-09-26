@@ -485,8 +485,11 @@ export default function RegisterAgentWizard() {
     }
 
     // restrict alphanumeric for occupation, language, addresses, bankName, IFSC
-    if (['occupation', 'language', 'education', 'permanentAddress', 'presentAddress', 'bankName', 'ifsc'].includes(name)) {
+    if (['occupation', 'permanentAddress', 'presentAddress', 'bankName', 'ifsc'].includes(name)) {
       value = value.replace(/[^A-Za-z0-9 ,]/g, '')
+    }
+    if (['language', 'education'].includes(name)) {
+      value = value.replace(/[^A-Za-z,]/g, '')
     }
 
     setForm(prev => ({ ...prev, [name]: value }))
@@ -498,8 +501,15 @@ export default function RegisterAgentWizard() {
       let age = today.getFullYear() - birthDate.getFullYear()
       const m = today.getMonth() - birthDate.getMonth()
       if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--
-      setForm(prev => ({ ...prev, age: age.toString() }))
+
+      if (age >= 18) {
+        setForm(prev => ({ ...prev, age: age.toString() }))
+      } else {
+        setForm(prev => ({ ...prev, age: '' })) // clear age field if under 18
+        alert('You must be at least 18 years old.')
+      }
     }
+
   }
 
   // fetch designations from backend
@@ -722,9 +732,22 @@ export default function RegisterAgentWizard() {
 
                         <CRow className="mb-3">
                           <CCol>
-                            <CFormInput placeholder="Language" name="language" value={form.language} maxLength={50} onChange={handleChange} />
+                            <CFormSelect
+                              name="language"
+                              value={form.language}
+                              onChange={handleChange}
+                            >
+                              <option value="">Select Language</option>
+                              <option value="English">English</option>
+                              <option value="Hindi">Hindi</option>
+                              <option value="Spanish">Spanish</option>
+                              <option value="French">French</option>
+                              <option value="German">German</option>
+                              {/* Add more options as needed */}
+                            </CFormSelect>
                           </CCol>
                         </CRow>
+
 
                         <CRow className="mb-3">
                           <CCol>
