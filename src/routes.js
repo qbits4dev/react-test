@@ -8,6 +8,7 @@ const ClientDashboard = React.lazy(() => import('./views/dashboard/ClientDashboa
 const AdminDashboard = React.lazy(() => import('./views/dashboard/AdminDashboard'))
 const AgentDashboard = React.lazy(() => import('./views/dashboard/AgentDashboard'))
 const Reports = React.lazy(() => import('./views/pages/Reports'))
+const Plots = React.lazy(() => import('./views/pages/Plots'))
 //const InvoiceApp = React.lazy(() => import('./views/Invoice/InvoiceApp'))
 
 
@@ -118,6 +119,7 @@ const routes = [
   { path: '/Reports', name: 'Reports', element: Reports },
   { path: '/bookSite', name: 'Book Site', element: BookSite },
   { path: '/Projects', name: 'Projects', element: Projects },
+  { path: '/Plots', name: 'Plots', element: Plots },
 ]
 
 export default routes
