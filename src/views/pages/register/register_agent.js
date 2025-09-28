@@ -287,7 +287,7 @@ export default function RegisterAgentWizard() {
                             </CCard>
                           </CCol>
                         </CRow>
-
+                        <CCard className='p-3 bg-white shadow-sm'>
                         <CRow className="mb-3">
                           <CCol xs={12} md={4} className="mb-3 mb-md-0">
                             <CFormLabel>Photo (JPEG only)</CFormLabel>
@@ -307,7 +307,7 @@ export default function RegisterAgentWizard() {
                             {errors.panFile && <small className="text-danger">{errors.panFile}</small>}
                           </CCol>
                         </CRow>
-
+                        </CCard>
 
                         <div className='d-flex justify-content-between mt-3'>
                           <CButton color='secondary' onClick={prevStep}>Back</CButton>

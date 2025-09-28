@@ -59,3 +59,19 @@ education
 
 #Global 
 Fix Header and Footer
+
+
+Add new project 
+1. name
+2. details
+3. location 
+4. layout
+5. no of plots 
+6. each plot dimensions l,b,h
+7. Total Area 
+8. venture started date 
+9. venture status- active 
+10. location highlights -  near by locations
+11. venture highlights - amuneties
+12. price per sq yard 
+13. 
