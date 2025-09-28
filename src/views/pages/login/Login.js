@@ -47,7 +47,7 @@ const Login = () => {
       client_secret: '',
     }
 
-    /*try {
+    try {
       const formBody = new URLSearchParams();
       formBody.append('grant_type', 'password');
       formBody.append('username', payload.username);  
@@ -75,20 +75,20 @@ const Login = () => {
       setErrors({ form: error.message || 'Request failed' });
     }
     
-  }*/
-    if (username === 'testuser' && password === 'testpass') {
-      // Simulate a successful login response
-      localStorage.setItem('access_token', 'dummy_access_token');
-      localStorage.setItem('refresh_token', 'dummy_refresh_token');
-      setErrors({});
-      navigate('/dashboard'); // redirect to protected page
-      return;
-    } else {
-      // Simulate an error
-      setErrors({ form: 'Invalid credentials (dummy data)' });
-      return;
-    }
   }
+  //   if (username === 'testuser' && password === 'testpass') {
+  //     // Simulate a successful login response
+  //     localStorage.setItem('access_token', 'dummy_access_token');
+  //     localStorage.setItem('refresh_token', 'dummy_refresh_token');
+  //     setErrors({});
+  //     navigate('/dashboard'); // redirect to protected page
+  //     return;
+  //   } else {
+  //     // Simulate an error
+  //     setErrors({ form: 'Invalid credentials (dummy data)' });
+  //     return;
+  //   }
+  // }
 
   return (
     <div className="bg-body-tertiary min-vh-100 d-flex flex-row align-items-center">

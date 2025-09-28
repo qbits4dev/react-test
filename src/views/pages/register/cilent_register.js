@@ -12,8 +12,10 @@ const Client_Register = () => {
     first_name: '',
     last_name: '',
     email: '',
-    phone_number: '',   // note: adjust to match your API, e.g., "phone" or "phone_number"
-    reference_agent: '', // new field
+    phone: '',           // consistent field name
+    reference_agent: '',
+    interested_project: '',
+    interested_plot: '',
   })
   const [error, setError] = useState(null)
   const [userCode, setUserCode] = useState('')
@@ -29,17 +31,23 @@ const Client_Register = () => {
     setError(null)
     setUserCode('')
 
-    // Construct API payload (include role if required)
-    const payload = {
-      ...formData,
-      role: "customer" // remove if not needed by API
-    }
+    const params = new URLSearchParams()
+    params.append('first_name', formData.first_name)
+    params.append('last_name', formData.last_name)
+    params.append('email', formData.email)
+    params.append('phone', formData.phone)
+    params.append('reference_agent', formData.reference_agent)
+    params.append('interested_project', formData.interested_project)
+    params.append('interested_plot', formData.interested_plot)
+
+    // Corrected console log to show the payload string
+    console.log('Form data sent:', params.toString())
 
     try {
       const res = await fetch('https://api.qbits4dev.com/register/client', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params.toString(),
       })
       const result = await res.json()
       if (res.ok && result.u_id) {
@@ -65,9 +73,7 @@ const Client_Register = () => {
                   <h1>Register</h1>
                   <p className="text-body-secondary">Customer Registration</p>
                   <CInputGroup className="mb-3">
-                    <CInputGroupText>
-                      <CIcon icon={cilUser} />
-                    </CInputGroupText>
+                    <CInputGroupText><CIcon icon={cilUser} /></CInputGroupText>
                     <CFormInput
                       name="first_name"
                       placeholder="First Name"
@@ -77,9 +83,7 @@ const Client_Register = () => {
                     />
                   </CInputGroup>
                   <CInputGroup className="mb-3">
-                    <CInputGroupText>
-                      <CIcon icon={cilUser} />
-                    </CInputGroupText>
+                    <CInputGroupText><CIcon icon={cilUser} /></CInputGroupText>
                     <CFormInput
                       name="last_name"
                       placeholder="Last Name"
@@ -100,21 +104,17 @@ const Client_Register = () => {
                     />
                   </CInputGroup>
                   <CInputGroup className='mb-3'>
-                    <CInputGroupText>
-                      <CIcon icon={cilPhone} />
-                    </CInputGroupText>
+                    <CInputGroupText><CIcon icon={cilPhone} /></CInputGroupText>
                     <CFormInput
-                      name="phone_number"
+                      name="phone"
                       placeholder="Phone Number"
-                      value={formData.phone_number}
+                      value={formData.phone}
                       onChange={handleChange}
                       required
                     />
                   </CInputGroup>
                   <CInputGroup className='mb-3'>
-                    <CInputGroupText>
-                      <CIcon icon={cilUser} />
-                    </CInputGroupText>
+                    <CInputGroupText><CIcon icon={cilUser} /></CInputGroupText>
                     <CFormInput
                       name="reference_agent"
                       placeholder="Reference Agent"
@@ -125,15 +125,19 @@ const Client_Register = () => {
                   </CInputGroup>
                   <CInputGroup className='mb-3'>
                     <CFormInput
-                      name='Intrested_Project'
-                      placeholder='Intersted Project'
+                      name='interested_project'
+                      placeholder='Interested Project'
+                      value={formData.interested_project}
+                      onChange={handleChange}
                       required
                     />
                   </CInputGroup>
                   <CInputGroup className='mb-3'>
                     <CFormInput
-                      name='Intrested_plot'
-                      placeholder='Intersted Plot'
+                      name='interested_plot'
+                      placeholder='Interested Plot'
+                      value={formData.interested_plot}
+                      onChange={handleChange}
                       required
                     />
                   </CInputGroup>
