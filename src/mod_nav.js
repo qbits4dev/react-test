@@ -95,7 +95,7 @@ const _nav = [
       {
         component: CNavItem,
         name: 'Client Register',
-        to: '/client_register',
+        to: '/cilent_register',
       },
       {
         component: CNavItem,
