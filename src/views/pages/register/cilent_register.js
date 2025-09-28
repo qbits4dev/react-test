@@ -123,6 +123,20 @@ const Client_Register = () => {
                       required
                     />
                   </CInputGroup>
+                  <CInputGroup className='mb-3'>
+                    <CFormInput
+                      name='Intrested_Project'
+                      placeholder='Intersted Project'
+                      required
+                    />
+                  </CInputGroup>
+                  <CInputGroup className='mb-3'>
+                    <CFormInput
+                      name='Intrested_plot'
+                      placeholder='Intersted Plot'
+                      required
+                    />
+                  </CInputGroup>
                   {error && <div style={{ color: "red" }}>{error}</div>}
                   {userCode && (
                     <div style={{ color: "green", fontWeight: "bold", marginTop: "1em" }}>
