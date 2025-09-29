@@ -74,4 +74,3 @@ Add new project
 10. location highlights -  near by locations
 11. venture highlights - amuneties
 12. price per sq yard 
-13. 

@@ -49,7 +49,10 @@ const Validation = React.lazy(() => import('./views/forms/validation/Validation'
 const bookvisit = React.lazy(() => import('./views/pages/bookvisit'))
 const BookSite = React.lazy(() => import('./views/pages/bookSite'))
 const Projects = React.lazy(() => import('./views/pages/register/Projects'))
+const newProjects = React.lazy(() => import('./views/pages/newProjects'))
 
+//Projects
+const skandagreenvalley = React.lazy(() => import('./views/pages/Projects/Skandagreenvalley'))
 
 const Charts = React.lazy(() => import('./views/charts/Charts'))
 
@@ -120,6 +123,8 @@ const routes = [
   { path: '/bookSite', name: 'Book Site', element: BookSite },
   { path: '/Projects', name: 'Projects', element: Projects },
   { path: '/Plots', name: 'Plots', element: Plots },
+  { path: '/newProjects', name: 'newProjects', element: newProjects },
+  {path: '/projects/skanda', name: 'skandagreenvalley', element: skandagreenvalley},
 ]
 
 export default routes
