@@ -122,6 +122,16 @@ const _nav = [
         name: 'Post Projects',
         to: '/PostProjects',
       },
+      {
+        component: CNavItem,
+        name: 'Get plots',
+        to: '/GetPlots',
+      },
+      {
+        component: CNavItem,
+        name: 'Post plots',
+        to: '/PostPlots',
+      },
     ],
   },
 ]
