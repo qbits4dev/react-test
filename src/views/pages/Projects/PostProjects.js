@@ -53,6 +53,7 @@ export default function ProjectForm() {
     };
 
     try {
+      console.log(payload)
       const response = await fetch('https://api.qbit4dev.com/projects/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
