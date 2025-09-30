@@ -129,8 +129,8 @@ const routes = [
   { path: '/Plots', name: 'Plots', element: Plots },
   { path: '/newProjects', name: 'newProjects', element: newProjects },
   { path: '/Projects/skanda', name: 'skandagreenvalley', element: skandagreenvalley },
-  { path: '/Projects/GetProjects', name: 'Get Projects', element: GetProjects },
-  { path: '/Projects/PostProjects', name: 'Post Projects', element: PostProjects },
+  { path: '/GetProjects', name: 'Get Projects', element: GetProjects },
+  { path: '/PostProjects', name: 'Post Projects', element: PostProjects },
 ]
 
 export default routes

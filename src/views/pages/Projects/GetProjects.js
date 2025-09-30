@@ -12,7 +12,7 @@ import {
   CButton,
 } from '@coreui/react';
 
-export default function ProjectsTable({ projects, onViewPlot }) {
+export default function ProjectsTable({ projects = [], onViewPlot }) {
   return (
     <CCard
       style={{
