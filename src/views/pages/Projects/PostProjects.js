@@ -13,7 +13,7 @@ import {
   CButton,
 } from '@coreui/react';
 
-export default function ProjectForm({ onSubmit }) {
+export default function ProjectForm() {
   const [form, setForm] = useState({
     name: '',
     description: '',
@@ -25,6 +25,8 @@ export default function ProjectForm({ onSubmit }) {
     developer: '',
   });
 
+  const [loading, setLoading] = useState(false);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
@@ -34,9 +36,50 @@ export default function ProjectForm({ onSubmit }) {
     setForm((prev) => ({ ...prev, status }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSubmit(form, setForm);
+
+    setLoading(true);
+
+    const payload = {
+      name: form.name,
+      description: form.description,
+      location: form.location,
+      start_date: form.start_date,
+      end_date: form.end_date,
+      status: form.status.toLowerCase(),
+      total_area: Number(form.total_area),
+      developer: form.developer,
+    };
+
+    try {
+      const response = await fetch('https://api.qbit4dev.com/projects/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || 'Failed to submit');
+      }
+
+      alert('Project submitted successfully!');
+      setForm({
+        name: '',
+        description: '',
+        location: '',
+        start_date: '',
+        end_date: '',
+        status: '',
+        total_area: '',
+        developer: '',
+      });
+    } catch (error) {
+      alert(`Error: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -62,7 +105,6 @@ export default function ProjectForm({ onSubmit }) {
         </div>
 
         <CForm onSubmit={handleSubmit}>
-          {/* Project Name + Developer */}
           <CRow className="mb-3">
             <CCol md={6} className="mb-3">
               <CFormInput
@@ -84,7 +126,6 @@ export default function ProjectForm({ onSubmit }) {
             </CCol>
           </CRow>
 
-          {/* Location + Area */}
           <CRow className="mb-3">
             <CCol md={6} className="mb-3">
               <CFormInput
@@ -98,6 +139,7 @@ export default function ProjectForm({ onSubmit }) {
             <CCol md={6} className="mb-3">
               <CFormInput
                 name="total_area"
+                type="number"
                 value={form.total_area}
                 onChange={handleChange}
                 placeholder="Total Area (sq. ft)"
@@ -106,7 +148,6 @@ export default function ProjectForm({ onSubmit }) {
             </CCol>
           </CRow>
 
-          {/* Start Date + End Date */}
           <CRow className="mb-3">
             <CCol md={6} className="mb-3">
               <label style={{ fontWeight: 500, marginBottom: '5px', display: 'block' }}>
@@ -134,18 +175,17 @@ export default function ProjectForm({ onSubmit }) {
             </CCol>
           </CRow>
 
-          {/* Status Dropdown */}
           <CRow className="mb-4">
-            <CCol md={12}>
-              <CDropdown className="w-100">
-                <CDropdownToggle color="secondary" className="w-100">
+            <CCol>
+              <CDropdown>
+                <CDropdownToggle color="secondary" className="w-100" style={{ textTransform: 'capitalize' }}>
                   {form.status || 'Select Status'}
                 </CDropdownToggle>
                 <CDropdownMenu className="w-100">
-                  <CDropdownItem onClick={() => handleStatusSelect('Ongoing')}>
+                  <CDropdownItem onClick={() => handleStatusSelect('ongoing')}>
                     Ongoing
                   </CDropdownItem>
-                  <CDropdownItem onClick={() => handleStatusSelect('Completed')}>
+                  <CDropdownItem onClick={() => handleStatusSelect('completed')}>
                     Completed
                   </CDropdownItem>
                 </CDropdownMenu>
@@ -153,11 +193,10 @@ export default function ProjectForm({ onSubmit }) {
             </CCol>
           </CRow>
 
-          {/* Submit Button */}
           <CRow>
-            <CCol className="d-grid">
-              <CButton color="success" type="submit" style={{ borderRadius: '25px', padding: '12px 0', fontWeight: 600 }}>
-                Submit
+            <CCol>
+              <CButton type="submit" color="success" disabled={loading} className="w-100 py-2">
+                {loading ? 'Submitting...' : 'Submit'}
               </CButton>
             </CCol>
           </CRow>
