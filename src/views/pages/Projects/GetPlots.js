@@ -102,9 +102,6 @@ export default function PlotsList() {
                     </CTableDataCell>
                   </CTableRow>
                 )) : (
-                  <CTableRow>
-                    <CTableDataCell colSpan="6" className="text-center">No plots found.</CTableDataCell>
-                  </CTableRow>
                 )}
               </CTableBody>
             </CTable>

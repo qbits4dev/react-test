@@ -72,6 +72,7 @@ const GetProjects = React.lazy(() => import('./views/pages/Projects/GetProjects'
 const PostProjects = React.lazy(() => import('./views/pages/Projects/PostProjects'))
 const Getlots = React.lazy(() => import('./views/pages/Projects/GetPlots'))
 const PostPlots = React.lazy(() => import('./views/pages/Projects/PostPlots'))
+const GetTargets = React.lazy(() => import('./views/pages/API/GetTargets'))
 const PostTargets = React.lazy(() => import('./views/pages/API/PostTargets'))
 
 const Widgets = React.lazy(() => import('./views/widgets/Widgets'))
@@ -134,8 +135,10 @@ const routes = [
   { path: '/Projects/skanda', name: 'skandagreenvalley', element: skandagreenvalley },
   { path: '/GetProjects', name: 'Get Projects', element: GetProjects },
   { path: '/PostProjects', name: 'Post Projects', element: PostProjects },
-  {path:'/GetPlots', name:'Get Plots', element:Getlots},
-  {path:'/PostPlots', name:'Post Plots', element:PostPlots},
+  { path: '/GetPlots', name: 'Get Plots', element: Getlots },
+  { path: '/PostPlots', name: 'Post Plots', element: PostPlots },
+  { path: '/PostTargets', name: 'Post Targets', element: PostTargets },
+  {path: '/GetTargets', name: 'Get Targets', element: GetTargets },
 ]
 
 export default routes

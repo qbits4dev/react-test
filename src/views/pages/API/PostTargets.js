@@ -76,7 +76,7 @@ export default function SettingsPage() {
         };
 
         try {
-            const response = await fetch(API_URL, {
+            const response = await fetch('https://api.qbits4dev.com/targets', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
