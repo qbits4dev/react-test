@@ -194,7 +194,7 @@ export default function RegisterAgentWizard() {
       const formData = new FormData()
       Object.entries(form).forEach(([key, value]) => formData.append(key, value))
 
-      const res = await fetch('http://127.0.0.1:5000/test/', {
+      const res = await fetch('https://api.qbits4dev.com/register', {
         method: 'POST',
         body: formData
       })
