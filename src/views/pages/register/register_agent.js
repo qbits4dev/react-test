@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import {
   CCard, CCardBody, CCol, CContainer, CRow, CForm, CInputGroup, CFormInput, CInputGroupText,
-  CButton, CDropdown, CDropdownToggle, CDropdownMenu, CDropdownItem, CFormSelect, CSpinner,CFormLabel
+  CButton, CDropdown, CDropdownToggle, CDropdownMenu, CDropdownItem, CFormSelect, CSpinner, CFormLabel
 } from '@coreui/react'
 import { cilUser, cilCalendar } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
@@ -251,20 +251,25 @@ export default function RegisterAgentWizard() {
                     {/* STEP 2 */}
                     {step === 2 && (
                       <CCard className='mb-4 p-3 bg-white shadow-sm'>
-                        <h5 className='text-info mb-3'>Designation, Nominee/Bank & Files</h5>
-                        <CInputGroup className='mb-3'>
-                          <CDropdown className='flex-grow-1'>
-                            <CInputGroupText><CIcon icon={cilUser} /></CInputGroupText>
-                            <CDropdownToggle color='light' className='text-start w-100'>{loadingDesignations ? <span><CSpinner size="sm" className="me-2" />Loading...</span> : designationName}</CDropdownToggle>
-                            <CDropdownMenu>
-                              {loadingDesignations && <CDropdownItem disabled>Loading...</CDropdownItem>}
-                              {!loadingDesignations && designationError && <CDropdownItem disabled>{designationError}</CDropdownItem>}
-                              {!loadingDesignations && !designationError && designations.map((d, idx) => <CDropdownItem key={idx} onClick={() => handleDesignationSelect(d)}>{d.Role}</CDropdownItem>)}
-                            </CDropdownMenu>
-                          </CDropdown>
-                        </CInputGroup>
-                        {errors.designation && <small className="text-danger">{errors.designation}</small>}
+                        <CCard className='p-3 bg-white shadow-sm mb-3'>
+                          <h5 className='text-info mb-3'>Designation</h5>
+                          <CInputGroup className='mb-3'>
+                            <CDropdown className='flex-grow-1'>
+                              <CDropdownToggle color='light' className='text-start w-100'>{loadingDesignations ? <span><CSpinner size="sm" className="me-2" />Loading...</span> : designationName}</CDropdownToggle>
+                              <CDropdownMenu>
+                                {loadingDesignations && <CDropdownItem disabled>Loading...</CDropdownItem>}
+                                {!loadingDesignations && designationError && <CDropdownItem disabled>{designationError}</CDropdownItem>}
+                                {!loadingDesignations && !designationError && designations.map((d, idx) => <CDropdownItem key={idx} onClick={() => handleDesignationSelect(d)}>{d.Role}</CDropdownItem>)}
+                              </CDropdownMenu>
+                            </CDropdown>
+                          </CInputGroup>
+                          {errors.designation && <small className="text-danger">{errors.designation}</small>}
 
+                          <h5 className='text-info mb-3'>Branch</h5>
+                          <CInputGroup className='mb-3'>
+                            <CFormInput placeholder='Branch' name='branch' />
+                          </CInputGroup>
+                        </CCard>
                         <CRow>
                           <CCol md={6}>
                             <CCard className='p-3 bg-white shadow-sm mb-3'>
@@ -288,25 +293,25 @@ export default function RegisterAgentWizard() {
                           </CCol>
                         </CRow>
                         <CCard className='p-3 bg-white shadow-sm'>
-                        <CRow className="mb-3">
-                          <CCol xs={12} md={4} className="mb-3 mb-md-0">
-                            <CFormLabel>Photo (JPEG only)</CFormLabel>
-                            <CFormInput type="file" name="photoFile" accept="image/jpeg" onChange={handleChange} />
-                            {errors.photoFile && <small className="text-danger">{errors.photoFile}</small>}
-                          </CCol>
+                          <CRow className="mb-3">
+                            <CCol xs={12} md={4} className="mb-3 mb-md-0">
+                              <CFormLabel>Photo (JPEG only)</CFormLabel>
+                              <CFormInput type="file" name="photoFile" accept="image/jpeg" onChange={handleChange} />
+                              {errors.photoFile && <small className="text-danger">{errors.photoFile}</small>}
+                            </CCol>
 
-                          <CCol xs={12} md={4} className="mb-3 mb-md-0">
-                            <CFormLabel>Aadhaar File (PDF only)</CFormLabel>
-                            <CFormInput type="file" name="aadhaarFile" accept="application/pdf" onChange={handleChange} />
-                            {errors.aadhaarFile && <small className="text-danger">{errors.aadhaarFile}</small>}
-                          </CCol>
+                            <CCol xs={12} md={4} className="mb-3 mb-md-0">
+                              <CFormLabel>Aadhaar File (PDF only)</CFormLabel>
+                              <CFormInput type="file" name="aadhaarFile" accept="application/pdf" onChange={handleChange} />
+                              {errors.aadhaarFile && <small className="text-danger">{errors.aadhaarFile}</small>}
+                            </CCol>
 
-                          <CCol xs={12} md={4}>
-                            <CFormLabel>PAN File (PDF only)</CFormLabel>
-                            <CFormInput type="file" name="panFile" accept="application/pdf" onChange={handleChange} />
-                            {errors.panFile && <small className="text-danger">{errors.panFile}</small>}
-                          </CCol>
-                        </CRow>
+                            <CCol xs={12} md={4}>
+                              <CFormLabel>PAN File (PDF only)</CFormLabel>
+                              <CFormInput type="file" name="panFile" accept="application/pdf" onChange={handleChange} />
+                              {errors.panFile && <small className="text-danger">{errors.panFile}</small>}
+                            </CCol>
+                          </CRow>
                         </CCard>
 
                         <div className='d-flex justify-content-between mt-3'>
