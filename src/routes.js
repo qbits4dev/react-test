@@ -67,6 +67,10 @@ const Badges = React.lazy(() => import('./views/notifications/badges/Badges'))
 const Modals = React.lazy(() => import('./views/notifications/modals/Modals'))
 const Toasts = React.lazy(() => import('./views/notifications/toasts/Toasts'))
 
+//API
+const GetProjects = React.lazy(() => import('./views/pages/Projects/GetProjects'))
+const PostProjects = React.lazy(() => import('./views/pages/Projects/PostProjects'))
+
 const Widgets = React.lazy(() => import('./views/widgets/Widgets'))
 
 const routes = [
@@ -124,7 +128,9 @@ const routes = [
   { path: '/Projects', name: 'Projects', element: Projects },
   { path: '/Plots', name: 'Plots', element: Plots },
   { path: '/newProjects', name: 'newProjects', element: newProjects },
-  {path: '/projects/skanda', name: 'skandagreenvalley', element: skandagreenvalley},
+  { path: '/Projects/skanda', name: 'skandagreenvalley', element: skandagreenvalley },
+  { path: '/Projects/GetProjects', name: 'Get Projects', element: GetProjects },
+  { path: '/Projects/PostProjects', name: 'Post Projects', element: PostProjects },
 ]
 
 export default routes
