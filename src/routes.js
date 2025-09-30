@@ -72,6 +72,7 @@ const GetProjects = React.lazy(() => import('./views/pages/Projects/GetProjects'
 const PostProjects = React.lazy(() => import('./views/pages/Projects/PostProjects'))
 const Getlots = React.lazy(() => import('./views/pages/Projects/GetPlots'))
 const PostPlots = React.lazy(() => import('./views/pages/Projects/PostPlots'))
+const PostTargets = React.lazy(() => import('./views/pages/API/PostTargets'))
 
 const Widgets = React.lazy(() => import('./views/widgets/Widgets'))
 

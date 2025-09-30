@@ -132,6 +132,11 @@ const _nav = [
         name: 'Post plots',
         to: '/PostPlots',
       },
+      {
+        component: CNavItem,
+        name: 'Post Targets',
+        to: '/PostTargets',
+      },
     ],
   },
 ]
