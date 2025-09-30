@@ -251,25 +251,25 @@ export default function RegisterAgentWizard() {
                     {/* STEP 2 */}
                     {step === 2 && (
                       <CCard className='mb-4 p-3 bg-white shadow-sm'>
-                        <CCard className='p-3 bg-white shadow-sm mb-3'>
-                          <h5 className='text-info mb-3'>Designation</h5>
-                          <CInputGroup className='mb-3'>
-                            <CDropdown className='flex-grow-1'>
-                              <CDropdownToggle color='light' className='text-start w-100'>{loadingDesignations ? <span><CSpinner size="sm" className="me-2" />Loading...</span> : designationName}</CDropdownToggle>
-                              <CDropdownMenu>
-                                {loadingDesignations && <CDropdownItem disabled>Loading...</CDropdownItem>}
-                                {!loadingDesignations && designationError && <CDropdownItem disabled>{designationError}</CDropdownItem>}
-                                {!loadingDesignations && !designationError && designations.map((d, idx) => <CDropdownItem key={idx} onClick={() => handleDesignationSelect(d)}>{d.Role}</CDropdownItem>)}
-                              </CDropdownMenu>
-                            </CDropdown>
-                          </CInputGroup>
-                          {errors.designation && <small className="text-danger">{errors.designation}</small>}
 
-                          <h5 className='text-info mb-3'>Branch</h5>
-                          <CInputGroup className='mb-3'>
-                            <CFormInput placeholder='Branch' name='branch' />
-                          </CInputGroup>
-                        </CCard>
+                        <h5 className='text-info mb-3'>Designation</h5>
+                        <CInputGroup className='mb-3'>
+                          <CDropdown className='flex-grow-1'>
+                            <CDropdownToggle color='light' className='text-start w-100'>{loadingDesignations ? <span><CSpinner size="sm" className="me-2" />Loading...</span> : designationName}</CDropdownToggle>
+                            <CDropdownMenu>
+                              {loadingDesignations && <CDropdownItem disabled>Loading...</CDropdownItem>}
+                              {!loadingDesignations && designationError && <CDropdownItem disabled>{designationError}</CDropdownItem>}
+                              {!loadingDesignations && !designationError && designations.map((d, idx) => <CDropdownItem key={idx} onClick={() => handleDesignationSelect(d)}>{d.Role}</CDropdownItem>)}
+                            </CDropdownMenu>
+                          </CDropdown>
+                        </CInputGroup>
+                        {errors.designation && <small className="text-danger">{errors.designation}</small>}
+
+                        <h5 className='text-info mb-3'>Branch</h5>
+                        <CInputGroup className='mb-3'>
+                          <CFormInput placeholder='Branch' name='branch' />
+                        </CInputGroup>
+
                         <CRow>
                           <CCol md={6}>
                             <CCard className='p-3 bg-white shadow-sm mb-3'>
