@@ -74,6 +74,7 @@ const Getlots = React.lazy(() => import('./views/pages/Projects/GetPlots'))
 const PostPlots = React.lazy(() => import('./views/pages/Projects/PostPlots'))
 const GetTargets = React.lazy(() => import('./views/pages/API/GetTargets'))
 const PostTargets = React.lazy(() => import('./views/pages/API/PostTargets'))
+const GetAgents = React.lazy(() => import('./views/pages/API/GetAgents'))
 
 const Widgets = React.lazy(() => import('./views/widgets/Widgets'))
 
@@ -138,7 +139,8 @@ const routes = [
   { path: '/GetPlots', name: 'Get Plots', element: Getlots },
   { path: '/PostPlots', name: 'Post Plots', element: PostPlots },
   { path: '/PostTargets', name: 'Post Targets', element: PostTargets },
-  {path: '/GetTargets', name: 'Get Targets', element: GetTargets },
+  { path: '/GetTargets', name: 'Get Targets', element: GetTargets },
+  { path: '/GetAgents', name: 'Get Agents', element: GetAgents },
 ]
 
 export default routes
