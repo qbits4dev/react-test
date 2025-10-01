@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useState } from "react";
 import {
     CCard,
     CCardBody,
@@ -10,7 +10,7 @@ import {
     CFormLabel,
     CFormSelect,
     CButton,
-} from "@coreui/react"
+} from "@coreui/react";
 
 export default function UserProfile() {
     const [profile, setProfile] = useState({
@@ -43,49 +43,49 @@ export default function UserProfile() {
         photoFile: null,
         aadhaarFileName: "dummy_aadhaar.pdf",
         panFileName: "dummy_pan.pdf",
-    })
+    });
 
-    const [errors, setErrors] = useState({ email: "", phone: "", photoFile: "" })
+    const [errors, setErrors] = useState({ email: "", phone: "", photoFile: "" });
 
     const handleChange = (e) => {
-        const { name, value, files } = e.target
+        const { name, value, files } = e.target;
         if (name === "photoFile") {
             if (files.length > 0) {
-                const file = files[0]
+                const file = files[0];
                 if (!["image/jpeg", "image/jpg", "image/png"].includes(file.type)) {
-                    setErrors((prev) => ({ ...prev, photoFile: "Only JPG/PNG allowed" }))
-                    return
+                    setErrors((prev) => ({ ...prev, photoFile: "Only JPG/PNG allowed" }));
+                    return;
                 }
                 setProfile((prev) => ({
                     ...prev,
                     photoFile: file,
                     photoUrl: URL.createObjectURL(file),
-                }))
-                setErrors((prev) => ({ ...prev, photoFile: "" }))
+                }));
+                setErrors((prev) => ({ ...prev, photoFile: "" }));
             }
         } else {
-            setProfile((prev) => ({ ...prev, [name]: value }))
+            setProfile((prev) => ({ ...prev, [name]: value }));
         }
-    }
+    };
 
     const validate = () => {
-        let newErrors = { email: "", phone: "", photoFile: "" }
-        if (!/^[0-9]{10}$/.test(profile.phone)) newErrors.phone = "Enter 10 digit phone number"
+        let newErrors = { email: "", phone: "", photoFile: "" };
+        if (!/^[0-9]{10}$/.test(profile.phone)) newErrors.phone = "Enter 10 digit phone number";
         if (profile.email && !/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(profile.email))
-            newErrors.email = "Invalid email"
-        setErrors(newErrors)
-        return !newErrors.email && !newErrors.phone && !newErrors.photoFile
-    }
+            newErrors.email = "Invalid email";
+        setErrors(newErrors);
+        return !newErrors.email && !newErrors.phone && !newErrors.photoFile;
+    };
 
     const handleSubmit = () => {
-        if (!validate()) return
-        alert("Profile updated successfully! (Dummy)")
-    }
+        if (!validate()) return;
+        alert("Profile updated successfully! (Dummy)");
+    };
 
     const renderField = (label, value, name, type = "text", options = []) => {
         if (type === "select") {
             return (
-                <CFormSelect name={name} value={value} onChange={handleChange} className="mb-2">
+                <CFormSelect name={name} value={value} onChange={handleChange} className="mb-3">
                     <option value="">Select {label}</option>
                     {options.map((opt, idx) => (
                         <option key={idx} value={opt}>
@@ -93,41 +93,54 @@ export default function UserProfile() {
                         </option>
                     ))}
                 </CFormSelect>
-            )
+            );
         }
         if (type === "file") {
             return (
                 <>
-                    <CFormInput type="file" name={name} accept="image/jpeg,image/png" onChange={handleChange} className="mb-2" />
+                    <CFormInput
+                        type="file"
+                        name={name}
+                        accept="image/jpeg,image/png"
+                        onChange={handleChange}
+                        className="mb-3"
+                    />
                     {errors.photoFile && <small className="text-danger">{errors.photoFile}</small>}
                 </>
-            )
+            );
         }
-        return <CFormInput name={name} value={value} onChange={handleChange} readOnly={type === "readonly"} className="mb-2" />
-    }
+        return (
+            <CFormInput
+                name={name}
+                value={value}
+                onChange={handleChange}
+                readOnly={type === "readonly"}
+                className="mb-3"
+            />
+        );
+    };
 
     return (
-        <div className="bg-light min-vh-100 py-5">
+        <div className="bg-white min-vh-100 py-5">
             <CContainer>
-                <CRow className="justify-content-center mb-4">
+                <CRow className="justify-content-center mb-5">
                     <CCol md={12} className="text-center">
-                        {/* Profile Photo Centered */}
                         <img
                             src={profile.photoUrl}
                             alt="Profile"
-                            className="rounded-circle shadow-sm mb-2"
+                            className="rounded-circle shadow-sm mb-3"
                             width={150}
                             height={150}
                         />
-                        <div className="fw-bold mb-3">User ID: {profile.userId}</div>
+                        <div className="fw-bold fs-5">User ID: {profile.userId}</div>
                     </CCol>
                 </CRow>
 
                 <CRow className="justify-content-center">
                     <CCol lg={8}>
                         {/* Personal Details */}
-                        <CCard className="shadow-sm rounded-4 p-4 mb-4">
-                            <h5 className="text-secondary mb-3">Personal Details</h5>
+                        <CCard className="shadow-sm rounded-4 p-4 mb-4 bg-light">
+                            <h5 className="text-primary mb-4">Personal Details</h5>
                             <CFormLabel>First Name</CFormLabel>
                             {renderField("First Name", profile.firstName, "firstName")}
                             <CFormLabel>Last Name</CFormLabel>
@@ -167,8 +180,8 @@ export default function UserProfile() {
                         </CCard>
 
                         {/* Bank Details */}
-                        <CCard className="shadow-sm rounded-4 p-4 mb-4">
-                            <h5 className="text-secondary mb-3">Bank Details</h5>
+                        <CCard className="shadow-sm rounded-4 p-4 mb-4 bg-light">
+                            <h5 className="text-primary mb-4">Bank Details</h5>
                             <CFormLabel>Bank Name</CFormLabel>
                             {renderField("Bank Name", profile.bankName, "bankName")}
                             <CFormLabel>Branch Name</CFormLabel>
@@ -180,8 +193,8 @@ export default function UserProfile() {
                         </CCard>
 
                         {/* Nominee Details */}
-                        <CCard className="shadow-sm rounded-4 p-4 mb-4">
-                            <h5 className="text-secondary mb-3">Nominee Details</h5>
+                        <CCard className="shadow-sm rounded-4 p-4 mb-4 bg-light">
+                            <h5 className="text-primary mb-4">Nominee Details</h5>
                             <CFormLabel>Nominee Name</CFormLabel>
                             {renderField("Nominee Name", profile.nomineeName, "nomineeName")}
                             <CFormLabel>Relation</CFormLabel>
@@ -191,8 +204,8 @@ export default function UserProfile() {
                         </CCard>
 
                         {/* Documents */}
-                        <CCard className="shadow-sm rounded-4 p-4 mb-4">
-                            <h5 className="text-secondary mb-3">Documents</h5>
+                        <CCard className="shadow-sm rounded-4 p-4 mb-5 bg-light">
+                            <h5 className="text-primary mb-4">Documents</h5>
                             <CFormLabel>Photo (JPG/PNG)</CFormLabel>
                             {renderField("Photo", profile.photoFile, "photoFile", "file")}
                             <CFormLabel>Aadhaar Document</CFormLabel>
@@ -210,5 +223,5 @@ export default function UserProfile() {
                 </CRow>
             </CContainer>
         </div>
-    )
+    );
 }
