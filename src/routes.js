@@ -50,6 +50,7 @@ const bookvisit = React.lazy(() => import('./views/pages/bookvisit'))
 const BookSite = React.lazy(() => import('./views/pages/bookSite'))
 const Projects = React.lazy(() => import('./views/pages/register/Projects'))
 const newProjects = React.lazy(() => import('./views/pages/newProjects'))
+const Profile = React.lazy(() => import('./views/pages/Profile'))
 
 //Projects
 const skandagreenvalley = React.lazy(() => import('./views/pages/Projects/Skandagreenvalley'))
@@ -141,6 +142,7 @@ const routes = [
   { path: '/PostTargets', name: 'Post Targets', element: PostTargets },
   { path: '/GetTargets', name: 'Get Targets', element: GetTargets },
   { path: '/GetAgents', name: 'Get Agents', element: GetAgents },
+  { path: '/Profile', name: 'User Profile', element: Profile },
 ]
 
 export default routes

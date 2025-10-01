@@ -147,6 +147,11 @@ const _nav = [
         name: 'Get Agents',
         to: '/GetAgents',
       },
+      {
+        component: CNavItem,
+        name: 'Profile',
+        to: '/Profile',
+      },
     ],
   },
 ]

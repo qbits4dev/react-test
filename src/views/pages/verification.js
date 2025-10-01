@@ -9,31 +9,45 @@ import {
     CForm,
     CInputGroup,
     CFormInput,
-
 } from "@coreui/react"
 
-const verification = () => {
+const Verification = () => {
     return (
-        <div className="bg-body-tertiary min-vh-100 d-flex  align-items-center">
+        <div className="bg-light min-vh-100 d-flex justify-content-center align-items-center">
             <CContainer>
                 <CRow className="justify-content-center">
-                    <CCol md={8}>
-                        <CCard className="text-white bg-primary p-4" style={{width:'55 %'}}>
-                            <CCardBody>
+                    <CCol md={6} lg={5}>
+                        <CCard className="shadow-lg border-0">
+                            <CCardBody className="p-4">
+                                <h2 className="text-center mb-3 text-primary fw-bold">Account Verification</h2>
+                                <p className="text-center text-muted mb-4">
+                                    Enter the 6-digit OTP sent to your email address
+                                </p>
+
                                 <CForm>
-                                    <h1>Verification</h1>
-                                    <p className="text-body-secondary" style={{}}>Please verify your account, 
-                                        Enter the 6 digit otp</p>
-                                    <CInputGroup className="flex mb-3" >
+                                    <CInputGroup className="mb-4">
                                         <CFormInput
                                             name="otp"
                                             placeholder="Enter OTP"
-                                            autoComplete="otp"
+                                            autoComplete="off"
+                                            maxLength={6}
+                                            className="py-2"
                                             required
                                         />
                                     </CInputGroup>
-                                    <CButton color="light" className="mb-3">Verify Now</CButton>
-                                    <p className="text-body-secondary">If you have not received a verification email, please check your spam folder or request a new one.</p>
+
+                                    <div className="d-grid">
+                                        <CButton color="primary" className="py-2 fw-semibold">
+                                            Verify Now
+                                        </CButton>
+                                    </div>
+
+                                    <p className="text-center text-muted mt-4" style={{ fontSize: "0.9rem" }}>
+                                        Didn’t receive the code?{" "}
+                                        <a href="#" className="text-primary fw-semibold" style={{ textDecoration: "none" }}>
+                                            Resend OTP
+                                        </a>
+                                    </p>
                                 </CForm>
                             </CCardBody>
                         </CCard>
@@ -43,4 +57,5 @@ const verification = () => {
         </div>
     )
 }
-export default verification
+
+export default Verification
