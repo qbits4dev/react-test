@@ -1,0 +1,227 @@
+import React, { useState } from "react";
+import {
+    CCard,
+    CCardBody,
+    CContainer,
+    CRow,
+    CCol,
+    CForm,
+    CFormInput,
+    CFormLabel,
+    CFormSelect,
+    CButton,
+} from "@coreui/react";
+
+export default function UserProfile() {
+    const [profile, setProfile] = useState({
+        userId: "Ag1000011",
+        firstName: "Srinivas",
+        lastName: "Athili",
+        fatherName: "raghavendra Athili",
+        spouseName: "uma Athili",
+        dob: "1990-05-10",
+        age: "33",
+        gender: "Male",
+        email: "srinivas.a@example.com",
+        phone: "9876543210",
+        occupation: "Agent",
+        workExperience: "5 years",
+        language: "English",
+        maritalStatus: "Married",
+        education: "Graduate",
+        designation: "Senior Agent",
+        nomineeName: "Amala Athili",
+        nomineeRelation: "Daughter",
+        nomineeContact: "9876543211",
+        bankName: "ABC Bank",
+        branchName: "Kakinada Branch",
+        accountNumber: "123456789012",
+        ifsc: "ABCD0123456",
+        permanentAddress: "athili street, Kakinada, Andhra Pradesh",
+        presentAddress: "athili street, Kakinada, Andhra Pradesh",
+        photoUrl: "src/assets/images/avatars/3.jpg",
+        photoFile: null,
+        aadhaarFileName: "dummy_aadhaar.pdf",
+        panFileName: "dummy_pan.pdf",
+    });
+
+    const [errors, setErrors] = useState({ email: "", phone: "", photoFile: "" });
+
+    const handleChange = (e) => {
+        const { name, value, files } = e.target;
+        if (name === "photoFile") {
+            if (files.length > 0) {
+                const file = files[0];
+                if (!["image/jpeg", "image/jpg", "image/png"].includes(file.type)) {
+                    setErrors((prev) => ({ ...prev, photoFile: "Only JPG/PNG allowed" }));
+                    return;
+                }
+                setProfile((prev) => ({
+                    ...prev,
+                    photoFile: file,
+                    photoUrl: URL.createObjectURL(file),
+                }));
+                setErrors((prev) => ({ ...prev, photoFile: "" }));
+            }
+        } else {
+            setProfile((prev) => ({ ...prev, [name]: value }));
+        }
+    };
+
+    const validate = () => {
+        let newErrors = { email: "", phone: "", photoFile: "" };
+        if (!/^[0-9]{10}$/.test(profile.phone)) newErrors.phone = "Enter 10 digit phone number";
+        if (profile.email && !/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(profile.email))
+            newErrors.email = "Invalid email";
+        setErrors(newErrors);
+        return !newErrors.email && !newErrors.phone && !newErrors.photoFile;
+    };
+
+    const handleSubmit = () => {
+        if (!validate()) return;
+        alert("Profile updated successfully! (Dummy)");
+    };
+
+    const renderField = (label, value, name, type = "text", options = []) => {
+        if (type === "select") {
+            return (
+                <CFormSelect name={name} value={value} onChange={handleChange} className="mb-3">
+                    <option value="">Select {label}</option>
+                    {options.map((opt, idx) => (
+                        <option key={idx} value={opt}>
+                            {opt}
+                        </option>
+                    ))}
+                </CFormSelect>
+            );
+        }
+        if (type === "file") {
+            return (
+                <>
+                    <CFormInput
+                        type="file"
+                        name={name}
+                        accept="image/jpeg,image/png"
+                        onChange={handleChange}
+                        className="mb-3"
+                    />
+                    {errors.photoFile && <small className="text-danger">{errors.photoFile}</small>}
+                </>
+            );
+        }
+        return (
+            <CFormInput
+                name={name}
+                value={value}
+                onChange={handleChange}
+                readOnly={type === "readonly"}
+                className="mb-3"
+            />
+        );
+    };
+
+    return (
+        <div className="bg-white min-vh-100 py-5">
+            <CContainer>
+                <CRow className="justify-content-center mb-5">
+                    <CCol md={12} className="text-center">
+                        <img
+                            src={profile.photoUrl}
+                            alt="Profile"
+                            className="rounded-circle shadow-sm mb-3"
+                            width={150}
+                            height={150}
+                        />
+                        <div className="fw-bold fs-5">User ID: {profile.userId}</div>
+                    </CCol>
+                </CRow>
+
+                <CRow className="justify-content-center">
+                    <CCol lg={8}>
+                        {/* Personal Details */}
+                        <CCard className="shadow-sm rounded-4 p-4 mb-4 bg-light">
+                            <h5 className="text-primary mb-4">Personal Details</h5>
+                            <CFormLabel>First Name</CFormLabel>
+                            {renderField("First Name", profile.firstName, "firstName")}
+                            <CFormLabel>Last Name</CFormLabel>
+                            {renderField("Last Name", profile.lastName, "lastName")}
+                            <CFormLabel>Father Name</CFormLabel>
+                            {renderField("Father Name", profile.fatherName, "fatherName")}
+                            <CFormLabel>Spouse Name</CFormLabel>
+                            {renderField("Spouse Name", profile.spouseName, "spouseName")}
+                            <CFormLabel>Date of Birth</CFormLabel>
+                            {renderField("DOB", profile.dob, "dob", "date")}
+                            <CFormLabel>Age</CFormLabel>
+                            {renderField("Age", profile.age, "age", "readonly")}
+                            <CFormLabel>Gender</CFormLabel>
+                            {renderField("Gender", profile.gender, "gender", "select", ["Male", "Female"])}
+                            <CFormLabel>Email</CFormLabel>
+                            {renderField("Email", profile.email, "email")}
+                            {errors.email && <small className="text-danger">{errors.email}</small>}
+                            <CFormLabel>Phone</CFormLabel>
+                            {renderField("Phone", profile.phone, "phone")}
+                            {errors.phone && <small className="text-danger">{errors.phone}</small>}
+                            <CFormLabel>Occupation</CFormLabel>
+                            {renderField("Occupation", profile.occupation, "occupation")}
+                            <CFormLabel>Work Experience</CFormLabel>
+                            {renderField("Work Experience", profile.workExperience, "workExperience")}
+                            <CFormLabel>Language</CFormLabel>
+                            {renderField("Language", profile.language, "language", "select", ["English", "Telugu", "Hindi"])}
+                            <CFormLabel>Marital Status</CFormLabel>
+                            {renderField("Marital Status", profile.maritalStatus, "maritalStatus", "select", ["Married", "Unmarried"])}
+                            <CFormLabel>Education</CFormLabel>
+                            {renderField("Education", profile.education, "education")}
+                            <CFormLabel>Designation</CFormLabel>
+                            {renderField("Designation", profile.designation, "designation")}
+                            <CFormLabel>Permanent Address</CFormLabel>
+                            {renderField("Permanent Address", profile.permanentAddress, "permanentAddress")}
+                            <CFormLabel>Present Address</CFormLabel>
+                            {renderField("Present Address", profile.presentAddress, "presentAddress")}
+                        </CCard>
+
+                        {/* Bank Details */}
+                        <CCard className="shadow-sm rounded-4 p-4 mb-4 bg-light">
+                            <h5 className="text-primary mb-4">Bank Details</h5>
+                            <CFormLabel>Bank Name</CFormLabel>
+                            {renderField("Bank Name", profile.bankName, "bankName")}
+                            <CFormLabel>Branch Name</CFormLabel>
+                            {renderField("Branch Name", profile.branchName, "branchName")}
+                            <CFormLabel>Account Number</CFormLabel>
+                            {renderField("Account Number", profile.accountNumber, "accountNumber")}
+                            <CFormLabel>IFSC</CFormLabel>
+                            {renderField("IFSC", profile.ifsc, "ifsc")}
+                        </CCard>
+
+                        {/* Nominee Details */}
+                        <CCard className="shadow-sm rounded-4 p-4 mb-4 bg-light">
+                            <h5 className="text-primary mb-4">Nominee Details</h5>
+                            <CFormLabel>Nominee Name</CFormLabel>
+                            {renderField("Nominee Name", profile.nomineeName, "nomineeName")}
+                            <CFormLabel>Relation</CFormLabel>
+                            {renderField("Relation", profile.nomineeRelation, "nomineeRelation")}
+                            <CFormLabel>Contact</CFormLabel>
+                            {renderField("Contact", profile.nomineeContact, "nomineeContact")}
+                        </CCard>
+
+                        {/* Documents */}
+                        <CCard className="shadow-sm rounded-4 p-4 mb-5 bg-light">
+                            <h5 className="text-primary mb-4">Documents</h5>
+                            <CFormLabel>Photo (JPG/PNG)</CFormLabel>
+                            {renderField("Photo", profile.photoFile, "photoFile", "file")}
+                            <CFormLabel>Aadhaar Document</CFormLabel>
+                            {renderField("Aadhaar", profile.aadhaarFileName, "aadhaarFileName", "readonly")}
+                            <CFormLabel>PAN Document</CFormLabel>
+                            {renderField("PAN", profile.panFileName, "panFileName", "readonly")}
+                        </CCard>
+
+                        <div className="d-flex justify-content-center mb-5">
+                            <CButton color="success" size="lg" onClick={handleSubmit}>
+                                Save Changes
+                            </CButton>
+                        </div>
+                    </CCol>
+                </CRow>
+            </CContainer>
+        </div>
+    );
+}

@@ -57,7 +57,7 @@ const _nav = [
       text: 'NEW',
     },
   },
-  
+
   // {
   //   component: CNavTitle,
   //   name: 'Extras',
@@ -88,7 +88,7 @@ const _nav = [
         to: '/500',
       },
       {
-        component:CNavItem,
+        component: CNavItem,
         name: 'Register Agent',
         to: '/register_agent',
       },
@@ -104,13 +104,53 @@ const _nav = [
       },
       {
         component: CNavItem,
-        name:'Projects',
-        to:'/newProjects',
+        name: 'Projects',
+        to: '/newProjects',
       },
       {
         component: CNavItem,
-        name:'Plots',
-        to:'/Plots',
+        name: 'Plots',
+        to: '/Plots',
+      },
+      {
+        component: CNavItem,
+        name: 'Get Projects',
+        to: '/GetProjects',
+      },
+      {
+        component: CNavItem,
+        name: 'Post Projects',
+        to: '/PostProjects',
+      },
+      {
+        component: CNavItem,
+        name: 'Get plots',
+        to: '/GetPlots',
+      },
+      {
+        component: CNavItem,
+        name: 'Post plots',
+        to: '/PostPlots',
+      },
+      {
+        component: CNavItem,
+        name: 'Post Targets',
+        to: '/PostTargets',
+      },
+      {
+        component: CNavItem,
+        name: 'Get Targets',
+        to: '/GetTargets',
+      },
+      {
+        component: CNavItem,
+        name: 'Get Agents',
+        to: '/GetAgents',
+      },
+      {
+        component: CNavItem,
+        name: 'Profile',
+        to: '/Profile',
       },
     ],
   },

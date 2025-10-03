@@ -50,6 +50,7 @@ const bookvisit = React.lazy(() => import('./views/pages/bookvisit'))
 const BookSite = React.lazy(() => import('./views/pages/bookSite'))
 const Projects = React.lazy(() => import('./views/pages/register/Projects'))
 const newProjects = React.lazy(() => import('./views/pages/newProjects'))
+const Profile = React.lazy(() => import('./views/pages/Profile'))
 
 //Projects
 const skandagreenvalley = React.lazy(() => import('./views/pages/Projects/Skandagreenvalley'))
@@ -66,6 +67,15 @@ const Alerts = React.lazy(() => import('./views/notifications/alerts/Alerts'))
 const Badges = React.lazy(() => import('./views/notifications/badges/Badges'))
 const Modals = React.lazy(() => import('./views/notifications/modals/Modals'))
 const Toasts = React.lazy(() => import('./views/notifications/toasts/Toasts'))
+
+//API
+const GetProjects = React.lazy(() => import('./views/pages/Projects/GetProjects'))
+const PostProjects = React.lazy(() => import('./views/pages/Projects/PostProjects'))
+const Getlots = React.lazy(() => import('./views/pages/Projects/GetPlots'))
+const PostPlots = React.lazy(() => import('./views/pages/Projects/PostPlots'))
+const GetTargets = React.lazy(() => import('./views/pages/API/GetTargets'))
+const PostTargets = React.lazy(() => import('./views/pages/API/PostTargets'))
+const GetAgents = React.lazy(() => import('./views/pages/API/GetAgents'))
 
 const Widgets = React.lazy(() => import('./views/widgets/Widgets'))
 
@@ -124,7 +134,15 @@ const routes = [
   { path: '/Projects', name: 'Projects', element: Projects },
   { path: '/Plots', name: 'Plots', element: Plots },
   { path: '/newProjects', name: 'newProjects', element: newProjects },
-  {path: '/projects/skanda', name: 'skandagreenvalley', element: skandagreenvalley},
+  { path: '/Projects/skanda', name: 'skandagreenvalley', element: skandagreenvalley },
+  { path: '/GetProjects', name: 'Get Projects', element: GetProjects },
+  { path: '/PostProjects', name: 'Post Projects', element: PostProjects },
+  { path: '/GetPlots', name: 'Get Plots', element: Getlots },
+  { path: '/PostPlots', name: 'Post Plots', element: PostPlots },
+  { path: '/PostTargets', name: 'Post Targets', element: PostTargets },
+  { path: '/GetTargets', name: 'Get Targets', element: GetTargets },
+  { path: '/GetAgents', name: 'Get Agents', element: GetAgents },
+  { path: '/Profile', name: 'User Profile', element: Profile },
 ]
 
 export default routes

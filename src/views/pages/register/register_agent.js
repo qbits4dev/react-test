@@ -21,8 +21,8 @@ export default function RegisterAgentWizard() {
   // Form State
   const [form, setForm] = useState({
     firstName: '', lastName: '', fatherName: '', spouseName: '', age: '', dob: '', email: '', phone: '',
-    occupation: '', experience: '', language: '', maritalStatus: '', education: '',
-    designation: '', nomineeName: '', nomineeRelation: '', bankName: '', accountNumber: '', ifsc: '',
+    occupation: '', workExperience: '', language: '', maritalStatus: '', education: '',
+    gender: '', designation: '', nomineeName: '', nomineeRelation: '', bankName: '', accountNumber: '', ifsc: '',
     permanentAddress: '', presentAddress: '',
     photoFile: null, aadhaarFile: null, panFile: null
   })
@@ -56,7 +56,7 @@ export default function RegisterAgentWizard() {
     }
 
     // Numbers only where applicable
-    if (['phone', 'experience', 'accountNumber'].includes(name)) {
+    if (['phone', 'workExperience', 'accountNumber'].includes(name)) {
       value = value.replace(/[^0-9]/g, '')
     }
 
@@ -129,7 +129,7 @@ export default function RegisterAgentWizard() {
       case 'email':
         if (value && !/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(value)) return 'Invalid email'
         break
-      case 'experience':
+      case 'workExperience':
         if (value && !/^[0-9]{1,2}$/.test(value)) return 'Only numbers allowed'
         break
       case 'accountNumber':
@@ -141,6 +141,7 @@ export default function RegisterAgentWizard() {
       case 'maritalStatus':
       case 'designation':
       case 'dob':
+      case 'gender':
         if (!value) return 'Required'
         break
       case 'photoFile':
@@ -158,7 +159,7 @@ export default function RegisterAgentWizard() {
   const validateStep = () => {
     let newErrors = {}
     if (step === 1) {
-      ['firstName', 'lastName', 'fatherName', 'spouseName', 'dob', 'email', 'phone', 'experience', 'language', 'maritalStatus', 'education'].forEach(f => {
+      ['firstName', 'lastName', 'fatherName', 'spouseName', 'dob', 'gender', 'email', 'phone','workExperience', 'language', 'maritalStatus', 'education'].forEach(f => {
         const err = validateField(f, form[f])
         if (err) newErrors[f] = err
       })
@@ -188,7 +189,7 @@ export default function RegisterAgentWizard() {
 
   const handleSubmit = async () => {
     if (!validateStep()) return;  // validate inputs for current step
-  
+
     try {
       const formData = new FormData();
       formData.append('first_name', form.firstName);
@@ -201,13 +202,13 @@ export default function RegisterAgentWizard() {
       formData.append('dob', form.dob);
       formData.append('age', form.age);
       formData.append('gender', form.gender);
+      formData.append('work_experience', form.workExperience);
       formData.append('designation', form.designation);
       formData.append('reference_agent', form.referenceAgent);
       formData.append('agent_team', form.agentTeam);
       formData.append('aadhaar', form.aadhaar);
       formData.append('pan', form.pan);
       formData.append('occupation', form.occupation);
-      formData.append('experience', form.experience);
       formData.append('language', form.language);
       formData.append('marital_status', form.maritalStatus);
       formData.append('education', form.education);
@@ -218,29 +219,19 @@ export default function RegisterAgentWizard() {
       formData.append('ifsc', form.ifsc);
       formData.append('permanent_address', form.permanentAddress);
       formData.append('present_address', form.presentAddress);
-  
+
       formData.append('photo_file', form.photoFile);
       formData.append('aadhaar_file', form.aadhaarFile);
       formData.append('pan_file', form.panFile);
-  
-      // Optionally log FormData contents:
-      for (let [key, val] of formData.entries()) {
-        if(val instanceof File) {
-          console.log(`${key}: File, Name: ${val.name}, Type: ${val.type}`)
-        } else {
-          console.log(`${key}: ${val}`)
-        }
-      }
-  
+
       const response = await fetch('https://api.qbits4dev.com/register/agent', {
         method: 'POST',
-        body: formData,  // Content-Type set automatically to multipart/form-data boundary
+        body: formData,
       })
-  
+
       const result = await response.json()
       if (response.ok) {
         alert('Agent registered successfully!')
-        // Redirect or reset form as needed
       } else {
         alert(result.message || 'Registration failed')
       }
@@ -248,7 +239,7 @@ export default function RegisterAgentWizard() {
       alert('Network or server error. Please try again.')
     }
   }
-  
+
   return (
     <div>
       <AppHeader />
@@ -265,6 +256,8 @@ export default function RegisterAgentWizard() {
                     {step === 1 && (
                       <CCard className="mb-4 p-3 bg-white shadow-sm">
                         <h5 className="text-info mb-3">Personal Details</h5>
+
+                        {/* First Name */}
                         <CInputGroup className="mb-3">
                           <CInputGroupText><CIcon icon={cilUser} /></CInputGroupText>
                           <CFormInput
@@ -278,6 +271,7 @@ export default function RegisterAgentWizard() {
                         </CInputGroup>
                         {errors.firstName && <small className="text-danger">{errors.firstName}</small>}
 
+                        {/* Last Name */}
                         <CInputGroup className="mb-3">
                           <CInputGroupText><CIcon icon={cilUser} /></CInputGroupText>
                           <CFormInput
@@ -291,6 +285,7 @@ export default function RegisterAgentWizard() {
                         </CInputGroup>
                         {errors.lastName && <small className="text-danger">{errors.lastName}</small>}
 
+                        {/* Father Name */}
                         <CInputGroup className="mb-3">
                           <CFormInput
                             name="fatherName"
@@ -301,6 +296,7 @@ export default function RegisterAgentWizard() {
                           />
                         </CInputGroup>
 
+                        {/* Spouse Name */}
                         <CInputGroup className="mb-3">
                           <CFormInput
                             name="spouseName"
@@ -311,6 +307,7 @@ export default function RegisterAgentWizard() {
                           />
                         </CInputGroup>
 
+                        {/* DOB */}
                         <CInputGroup className="mb-3">
                           <CInputGroupText><CIcon icon={cilCalendar} /></CInputGroupText>
                           <CFormInput
@@ -323,6 +320,7 @@ export default function RegisterAgentWizard() {
                         </CInputGroup>
                         {errors.dob && <small className="text-danger">{errors.dob}</small>}
 
+                        {/* Age */}
                         <CInputGroup className="mb-3">
                           <CFormInput
                             name="age"
@@ -332,6 +330,34 @@ export default function RegisterAgentWizard() {
                           />
                         </CInputGroup>
 
+                        {/* Gender */}
+                        <CFormSelect
+                          name="gender"
+                          value={form.gender}
+                          onChange={handleChange}
+                          className="mb-3"
+                          invalid={!!errors.gender}
+                        >
+                          <option value="">Select Gender</option>
+                          <option value="Male">Male</option>
+                          <option value="Female">Female</option>
+                        </CFormSelect>
+                        {errors.gender && <small className="text-danger">{errors.gender}</small>}
+
+                        {/* Work Experience */}
+                        <CInputGroup className="mb-3">
+                          <CFormInput
+                            name="workExperience"
+                            placeholder="Work Experience (Years)"
+                            maxLength={2}
+                            value={form.workExperience}
+                            onChange={handleChange}
+                            invalid={!!errors.workExperience}
+                          />
+                        </CInputGroup>
+                        {errors.workExperience && <small className="text-danger">{errors.workExperience}</small>}
+
+                        {/* Email */}
                         <CInputGroup className="mb-3">
                           <CFormInput
                             name="email"
@@ -344,6 +370,7 @@ export default function RegisterAgentWizard() {
                         </CInputGroup>
                         {errors.email && <small className="text-danger">{errors.email}</small>}
 
+                        {/* Phone */}
                         <CInputGroup className="mb-3">
                           <CFormInput
                             name="phone"
@@ -356,6 +383,7 @@ export default function RegisterAgentWizard() {
                         </CInputGroup>
                         {errors.phone && <small className="text-danger">{errors.phone}</small>}
 
+                        {/* Occupation */}
                         <CInputGroup className="mb-3">
                           <CFormInput
                             name="occupation"
@@ -366,18 +394,7 @@ export default function RegisterAgentWizard() {
                           />
                         </CInputGroup>
 
-                        <CInputGroup className="mb-3">
-                          <CFormInput
-                            name="experience"
-                            placeholder="Experience (Years)"
-                            maxLength={2}
-                            value={form.experience}
-                            onChange={handleChange}
-                            invalid={!!errors.experience}
-                          />
-                        </CInputGroup>
-                        {errors.experience && <small className="text-danger">{errors.experience}</small>}
-
+                        {/* Language */}
                         <CFormSelect
                           name="language"
                           value={form.language}
@@ -390,6 +407,7 @@ export default function RegisterAgentWizard() {
                           <option value="Hindi">Hindi</option>
                         </CFormSelect>
 
+                        {/* Marital Status */}
                         <CFormSelect
                           name="maritalStatus"
                           value={form.maritalStatus}
@@ -403,6 +421,7 @@ export default function RegisterAgentWizard() {
                         </CFormSelect>
                         {errors.maritalStatus && <small className="text-danger">{errors.maritalStatus}</small>}
 
+                        {/* Education */}
                         <CInputGroup className="mb-3">
                           <CFormInput
                             name="education"
@@ -423,23 +442,12 @@ export default function RegisterAgentWizard() {
                       </CCard>
                     )}
 
-                    {/* Step 2 */}
                     {step === 2 && (
-                      <CCard className="mb-4 p-3 bg-white shadow-sm">
-                        <h5 className="text-info mb-3">Designation, Nominee/Bank & Files</h5>
-                        <CInputGroup className="mb-3">
-                          <CDropdown className="flex-grow-1">
-                            <CInputGroupText><CIcon icon={cilUser} /></CInputGroupText>
-                            <CDropdownToggle color="light" className="text-start w-100">
-                              {loadingDesignations ? (
-                                <>
-                                  <CSpinner size="sm" className="me-2" />
-                                  Loading...
-                                </>
-                              ) : (
-                                designationName
-                              )}
-                            </CDropdownToggle>
+                      <CCard className='mb-4 p-3 bg-white shadow-sm'>
+                        <h5 className='text-info mb-3'>Designation, Nominee/Bank & Files</h5>
+                        <CInputGroup className='mb-3'>
+                          <CDropdown className='flex-grow-1'>
+                            <CDropdownToggle color='light' className='text-start w-100'>{loadingDesignations ? <span><CSpinner size="sm" className="me-2" />Loading...</span> : designationName}</CDropdownToggle>
                             <CDropdownMenu>
                               {loadingDesignations && (
                                 <CDropdownItem disabled>Loading...</CDropdownItem>
@@ -457,103 +465,195 @@ export default function RegisterAgentWizard() {
                         </CInputGroup>
                         {errors.designation && <small className="text-danger">{errors.designation}</small>}
 
+                        <h5 className='text-info mb-3'>Work Location</h5>
+                        <CInputGroup className='mb-3'>
+                          <CFormInput placeholder='Branch' name='Work Location' />
+                        </CInputGroup>
+
                         <CRow>
-                          <CCol md={6}>
-                            <CCard className="p-3 bg-white shadow-sm mb-3">
-                              <h6 className="text-info mb-3">Nominee Details</h6>
-                              <CFormInput
-                                placeholder="Nominee Name"
-                                name="nomineeName"
-                                value={form.nomineeName}
-                                maxLength={30}
-                                onChange={handleChange}
-                                className="mb-2"
-                              />
-                              {errors.nomineeName && (
-                                <small className="text-danger">{errors.nomineeName}</small>
-                              )}
-                              <CFormInput
-                                placeholder="Relation"
-                                name="nomineeRelation"
-                                value={form.nomineeRelation}
-                                maxLength={20}
-                                onChange={handleChange}
-                              />
-                              {errors.nomineeRelation && (
-                                <small className="text-danger">{errors.nomineeRelation}</small>
-                              )}
-                            </CCard>
-                          </CCol>
-                          <CCol md={6}>
-                            <CCard className="p-3 bg-white shadow-sm mb-3">
-                              <h6 className="text-info mb-3">Bank Details</h6>
-                              <CFormInput
-                                placeholder="Bank Name"
-                                name="bankName"
-                                value={form.bankName}
-                                maxLength={50}
-                                onChange={handleChange}
-                                className="mb-2"
-                              />
-                              {errors.bankName && (
-                                <small className="text-danger">{errors.bankName}</small>
-                              )}
-                              <CFormInput
-                                placeholder="Account Number"
-                                name="accountNumber"
-                                value={form.accountNumber}
-                                maxLength={20}
-                                onChange={handleChange}
-                                className="mb-2"
-                              />
-                              {errors.accountNumber && (
-                                <small className="text-danger">{errors.accountNumber}</small>
-                              )}
-                              <CFormInput
-                                placeholder="IFSC Code"
-                                name="ifsc"
-                                value={form.ifsc}
-                                maxLength={11}
-                                onChange={handleChange}
-                              />
-                              {errors.ifsc && <small className="text-danger">{errors.ifsc}</small>}
+                          {/* Bank Details Section */}
+                          <CCol xs={12} md={12}>
+                            <CCard className="p-3 bg-white shadow-sm mb-3 rounded-3">
+                              <h6 className="text-info mb-3 fw-semibold">Employee Bank Details</h6>
+
+                              {/* Bank Name */}
+                              <div className="mb-3 d-flex flex-column">
+                                <CFormInput
+                                  placeholder="Bank Name"
+                                  name="bankName"
+                                  value={form.bankName}
+                                  maxLength={50}
+                                  onChange={handleChange}
+                                  className="shadow-sm"
+                                />
+                                {errors.bankName && (
+                                  <small className="text-danger mt-1">{errors.bankName}</small>
+                                )}
+                              </div>
+
+                              {/* Branch Name (New Field) */}
+                              <div className="mb-3 d-flex flex-column">
+                                <CFormInput
+                                  placeholder="Branch Name"
+                                  name="branchName"
+                                  value={form.branchName}
+                                  maxLength={50}
+                                  onChange={handleChange}
+                                  className="shadow-sm"
+                                />
+                                {errors.branchName && (
+                                  <small className="text-danger mt-1">{errors.branchName}</small>
+                                )}
+                              </div>
+
+                              {/* Account Number */}
+                              <div className="mb-3 d-flex flex-column">
+                                <CFormInput
+                                  placeholder="Employee bank Account Number"
+                                  name="accountNumber"
+                                  value={form.accountNumber}
+                                  maxLength={20}
+                                  onChange={handleChange}
+                                  className="shadow-sm"
+                                />
+                                {errors.accountNumber && (
+                                  <small className="text-danger mt-1">{errors.accountNumber}</small>
+                                )}
+                              </div>
+
+                              {/* IFSC Code */}
+                              <div className="d-flex flex-column">
+                                <CFormInput
+                                  placeholder="IFSC Code"
+                                  name="ifsc"
+                                  value={form.ifsc}
+                                  maxLength={11}
+                                  onChange={handleChange}
+                                  className="shadow-sm"
+                                />
+                                {errors.ifsc && (
+                                  <small className="text-danger mt-1">{errors.ifsc}</small>
+                                )}
+                              </div>
                             </CCard>
                           </CCol>
                         </CRow>
-                        <CCard className="p-3 bg-white shadow-sm">
-                          <CRow className="mb-3">
-                            <CCol xs={12} md={4} className="mb-3 mb-md-0">
-                              <CFormLabel>Photo (JPEG only)</CFormLabel>
-                              <CFormInput
-                                type="file"
-                                name="photoFile"
-                                accept="image/jpeg"
-                                onChange={handleChange}
-                              />
-                              {errors.photoFile && <small className="text-danger">{errors.photoFile}</small>}
+                        <CRow>
+
+                          {/* Nominee Details Section */}
+                          <CCol xs={12} md={12}>
+                            <CCard className="p-3 bg-white shadow-sm mb-3 rounded-3">
+                              <h6 className="text-info mb-3 fw-semibold">Nominee Details</h6>
+
+                              {/* Nominee Name */}
+                              <div className="mb-3 d-flex flex-column">
+                                <CFormInput
+                                  placeholder="Nominee Name"
+                                  name="nomineeName"
+                                  value={form.nomineeName}
+                                  maxLength={50}
+                                  onChange={handleChange}
+                                  className="shadow-sm"
+                                />
+                                {errors.nomineeName && (
+                                  <small className="text-danger mt-1">{errors.nomineeName}</small>
+                                )}
+                              </div>
+
+                              {/* Nominee Relation */}
+                              <div className="mb-3 d-flex flex-column">
+                                <CFormInput
+                                  placeholder="Relation with Nominee"
+                                  name="nomineeRelation"
+                                  value={form.nomineeRelation}
+                                  maxLength={30}
+                                  onChange={handleChange}
+                                  className="shadow-sm"
+                                />
+                                {errors.nomineeRelation && (
+                                  <small className="text-danger mt-1">{errors.nomineeRelation}</small>
+                                )}
+                              </div>
+
+                              {/* Nominee Contact */}
+                              <div className="d-flex flex-column">
+                                <CFormInput
+                                  placeholder="Nominee Contact Number"
+                                  name="nomineeContact"
+                                  value={form.nomineeContact}
+                                  maxLength={15}
+                                  onChange={handleChange}
+                                  className="shadow-sm"
+                                />
+                                {errors.nomineeContact && (
+                                  <small className="text-danger mt-1">{errors.nomineeContact}</small>
+                                )}
+                              </div>
+                            </CCard>
+                          </CCol>
+
+
+
+                        </CRow>
+                        <CCard className="p-4 border-1 shadow-sm rounded-3">
+                          <h5 className="mb-4 fw-semibold text-info">Upload Documents</h5>
+                          <CRow className="gy-4">
+
+                            {/* Photo Upload */}
+                            <CCol xs={12}>
+                              <div className="d-flex flex-column">
+                                <CFormLabel className="fw-medium mb-2">Photo (JPEG only)</CFormLabel>
+                                <CFormInput
+                                  type="file"
+                                  name="photoFile"
+                                  accept="image/jpeg"
+                                  onChange={handleChange}
+                                  className="shadow-sm"
+                                />
+                                {errors.photoFile && (
+                                  <small className="text-danger mt-1">{errors.photoFile}</small>
+                                )}
+                              </div>
                             </CCol>
-                            <CCol xs={12} md={4} className="mb-3 mb-md-0">
-                              <CFormLabel>Aadhaar File (PDF only)</CFormLabel>
-                              <CFormInput
-                                type="file"
-                                name="aadhaarFile"
-                                accept="application/pdf"
-                                onChange={handleChange}
-                              />
-                              {errors.aadhaarFile && <small className="text-danger">{errors.aadhaarFile}</small>}
+
+                            {/* Aadhaar Upload */}
+                            <CCol xs={12}>
+                              <div className="d-flex flex-column">
+                                <CFormLabel className="fw-medium mb-2">Aadhaar File (PDF only)</CFormLabel>
+                                <CFormInput
+                                  type="file"
+                                  name="aadhaarFile"
+                                  accept="application/pdf"
+                                  onChange={handleChange}
+                                  className="shadow-sm"
+                                />
+                                {errors.aadhaarFile && (
+                                  <small className="text-danger mt-1">{errors.aadhaarFile}</small>
+                                )}
+                              </div>
                             </CCol>
-                            <CCol xs={12} md={4}>
-                              <CFormLabel>PAN File (PDF only)</CFormLabel>
-                              <CFormInput
-                                type="file"
-                                name="panFile"
-                                accept="application/pdf"
-                                onChange={handleChange}
-                              />
-                              {errors.panFile && <small className="text-danger">{errors.panFile}</small>}
+
+                            {/* PAN Upload */}
+                            <CCol xs={12}>
+                              <div className="d-flex flex-column">
+                                <CFormLabel className="fw-medium mb-2">PAN File (PDF only)</CFormLabel>
+                                <CFormInput
+                                  type="file"
+                                  name="panFile"
+                                  accept="application/pdf"
+                                  onChange={handleChange}
+                                  className="shadow-sm"
+                                />
+                                {errors.panFile && (
+                                  <small className="text-danger mt-1">{errors.panFile}</small>
+                                )}
+                              </div>
                             </CCol>
+
                           </CRow>
                         </CCard>
+
+
 
                         <div className="d-flex justify-content-between mt-3">
                           <CButton color="secondary" onClick={prevStep}>
@@ -566,6 +666,7 @@ export default function RegisterAgentWizard() {
                       </CCard>
                     )}
 
+                    {/* Step 3 */}
                     {/* Step 3 */}
                     {step === 3 && (
                       <CCard className="mb-4 p-3 bg-white shadow-sm">
@@ -609,3 +710,4 @@ export default function RegisterAgentWizard() {
     </div>
   )
 }
+

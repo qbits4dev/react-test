@@ -238,62 +238,35 @@ const ClientDashboard = () => {
       id: 'leads',
       title: 'Leads Generated',
       value: '500',
-      percentageChange: '15%',
       changeIcon: 'cilArrowTop',
       color: 'primary',
-      chartData: {
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
-        datasets: [
-          {
-            label: 'Leads',
-            backgroundColor: 'transparent',
-            borderColor: 'rgba(255,255,255,.55)',
-            pointBackgroundColor: 'var(--cui-primary)',
-            data: [50, 60, 70, 80, 90, 100, 120], // Agent-specific lead data
-          },
-        ],
-      },
     },
     {
       id: 'conversions',
       title: 'Conversions',
       value: '50',
-      percentageChange: '10%',
       changeIcon: 'cilArrowTop',
       color: 'success',
-      chartData: {
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
-        datasets: [
-          {
-            label: 'Conversions',
-            backgroundColor: 'transparent',
-            borderColor: 'rgba(255,255,255,.55)',
-            pointBackgroundColor: 'var(--cui-success)',
-            data: [5, 8, 10, 12, 15, 18, 20], // Agent-specific conversion data
-          },
-        ],
-      },
     },
-    // Add other agent-specific widget data here
+    {
+      //Card 2: Agent Details with Leads Data (Multiple Internal Links in Dropdown)
+      id: 'agent-details',
+    
+      value: 'View Reports', // Value indicating action
+      color: 'secondary', // Example color
+      to: '/views/pages/Reports',
+      links: [
+        { label: 'All Agents Report', route: '/admin/agent-report/all' },
+        { label: 'Leads Assigned Report', route: '/admin/agent-report/leads' },
+        { label: 'Agent Data Management', route: '/admin/agent-data' },
+      ],
+    },
     {
       id: 'site-visits',
       title: 'Site Visits',
       value: '30', // Replace with actual data
-      percentageChange: '8%', // Replace with actual data
       changeIcon: 'cilArrowTop', // Replace with actual icon
       color: 'warning',
-      chartData: {
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
-        datasets: [
-          {
-            label: 'Conversions',
-            backgroundColor: 'transparent',
-            borderColor: 'rgba(255,255,255,.55)',
-            pointBackgroundColor: 'var(--cui-success)',
-            data: [5, 8, 10, 12, 15, 18, 20], // Agent-specific conversion data
-          },
-        ],
-      },
       // Add a 'buttonLink' property for the booking form
       buttonLink: '/bookvisit', // Replace with the actual route to the booking form
       buttonText: 'Book Visit', // Text for the button
@@ -303,47 +276,9 @@ const ClientDashboard = () => {
       title: 'Book Site',
       value: '40',
       color: 'danger',
-      chartData: {
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
-        datasets: [
-          {
-            label: 'Conversions',
-            backgroundColor: 'transparent',
-            borderColor: 'rgba(255,255,255,.55)',
-            pointBackgroundColor: 'var(--cui-success)',
-            data: [5, 8, 10, 12, 15, 18, 20], // Agent-specific conversion data
-          },
-        ],
-      },
       buttonLink: '/booksite', // Replace with the actual route to the booking form
       buttonText: 'Book Site', // Text for the button
     },
-    {
-      //Card 2: Agent Details with Leads Data (Multiple Internal Links in Dropdown)
-      id: 'agent-details',
-      title: 'Agent Performance',
-      value: 'View Reports', // Value indicating action
-      color: 'secondary', // Example color
-      to: '/views/pages/Reports',
-      chartData: {
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'], // Dummy data labels
-        datasets: [
-          {
-            label: 'Leads Assigned',
-            backgroundColor: 'transparent',
-            borderColor: 'rgba(255,255,255,.55)',
-            pointBackgroundColor: 'var(--cui-secondary)',
-            data: [50, 60, 70, 65, 75, 80], // Dummy data values
-          },
-        ],
-      },
-      links: [
-        { label: 'All Agents Report', route: '/admin/agent-report/all' },
-        { label: 'Leads Assigned Report', route: '/admin/agent-report/leads' },
-        { label: 'Agent Data Management', route: '/admin/agent-data' },
-      ],
-    },
-
   ]
 
 

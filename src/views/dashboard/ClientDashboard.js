@@ -186,18 +186,7 @@ const ClientDashboard = () => {
       percentageChange: '15%',
       changeIcon: 'cilArrowTop',
       color: 'primary',
-      chartData: {
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
-        datasets: [
-          {
-            label: 'Leads',
-            backgroundColor: 'transparent',
-            borderColor: 'rgba(255,255,255,.55)',
-            pointBackgroundColor: 'var(--cui-primary)',
-            data: [50, 60, 70, 80, 90, 100, 120], // Agent-specific lead data
-          },
-        ],
-      },
+
     },
     {
       id: 'conversions',
@@ -206,18 +195,6 @@ const ClientDashboard = () => {
       percentageChange: '10%',
       changeIcon: 'cilArrowTop',
       color: 'success',
-      chartData: {
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
-        datasets: [
-          {
-            label: 'Conversions',
-            backgroundColor: 'transparent',
-            borderColor: 'rgba(255,255,255,.55)',
-            pointBackgroundColor: 'var(--cui-success)',
-            data: [5, 8, 10, 12, 15, 18, 20], // Agent-specific conversion data
-          },
-        ],
-      },
     },
     // Add other agent-specific widget data here
     {
@@ -227,24 +204,12 @@ const ClientDashboard = () => {
       percentageChange: '8%', // Replace with actual data
       changeIcon: 'cilArrowTop', // Replace with actual icon
       color: 'warning',
-      chartData: {
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
-        datasets: [
-          {
-            label: 'Conversions',
-            backgroundColor: 'transparent',
-            borderColor: 'rgba(255,255,255,.55)',
-            pointBackgroundColor: 'var(--cui-success)',
-            data: [5, 8, 10, 12, 15, 18, 20], // Agent-specific conversion data
-          },
-        ],
-      },
       // Add a 'buttonLink' property for the booking form
       buttonLink: '/bookvisit', // Replace with the actual route to the booking form
       buttonText: 'Book Visit', // Text for the button
     },
   ]
-  
+
   return (
     <>
       <WidgetsDropdown widgetsData={agentWidgetsData} className="mb-4" />
