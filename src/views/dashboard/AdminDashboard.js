@@ -242,13 +242,6 @@ const ClientDashboard = () => {
       color: 'primary',
     },
     {
-      id: 'conversions',
-      title: 'Conversions',
-      value: '50',
-      changeIcon: 'cilArrowTop',
-      color: 'success',
-    },
-    {
       //Card 2: Agent Details with Leads Data (Multiple Internal Links in Dropdown)
       id: 'agent-details',
 
@@ -274,13 +267,21 @@ const ClientDashboard = () => {
       buttonLink: '/booksite', // Replace with the actual route to the booking form
       buttonText: 'Book Site', // Text for the button
     },
-        {
+    {
       id: 'targets',
       title: 'Targets',
       value: '50',
       changeIcon: 'cilArrowTop',
       color: 'info',
       buttonLink: '/Targets',
+    },
+    {
+      id: 'Projects',
+      title: 'Projects',
+      value: '10',
+      changeIcon: 'cilArrowTop',
+      color: 'success',
+      buttonLink: '/newProjects',
     },
   ]
 
