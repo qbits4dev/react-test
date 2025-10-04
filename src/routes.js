@@ -12,7 +12,7 @@ const Reports = React.lazy(() => import('./views/pages/Reports'))
 const Invoice = React.lazy(() => import('./views/pages/Invoice'))
 const ForgotUserId = React.lazy(() => import('./views/pages/register/ForgotUID'))
 const ForgotPassword = React.lazy(() => import('./views/pages/register/ForgotPassword'))
-
+const Targets = React.lazy(() => import('./views/pages/API/Targets'))
 
 const Colors = React.lazy(() => import('./views/theme/colors/Colors'))
 const Typography = React.lazy(() => import('./views/theme/typography/Typography'))
@@ -150,6 +150,7 @@ const routes = [
   { path: '/ForgotUId', name: 'Forgot User ID', element: ForgotUserId },
   { path: '/ForgotPassword', name: 'Forgot Password', element: ForgotPassword },
   { path: '/ARegister', name: 'Agent Register', element: ARegister },
+  { path: '/Targets', name: 'Targets', element: Targets },
 ]
 
 export default routes

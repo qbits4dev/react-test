@@ -274,6 +274,14 @@ const ClientDashboard = () => {
       buttonLink: '/booksite', // Replace with the actual route to the booking form
       buttonText: 'Book Site', // Text for the button
     },
+        {
+      id: 'targets',
+      title: 'Targets',
+      value: '50',
+      changeIcon: 'cilArrowTop',
+      color: 'info',
+      buttonLink: '/Targets',
+    },
   ]
 
 

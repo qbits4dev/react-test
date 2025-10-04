@@ -209,7 +209,8 @@ const AgentDashboard = () => {
       title: 'Targets',
       value: '50',
       changeIcon: 'cilArrowTop',
-      color: 'success',
+      color: 'info',
+      buttonLink: '/GetTargets',
     },
   ]
 

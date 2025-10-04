@@ -1,205 +1,108 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react'
 import {
     CContainer,
+    CRow,
+    CCol,
     CCard,
-    CCardBody,
     CCardHeader,
+    CCardBody,
     CForm,
+    CFormLabel,
     CFormInput,
     CFormTextarea,
     CButton,
-    CRow,
-    CCol,
-    CTable,
-    CTableHead,
-    CTableRow,
-    CTableHeaderCell,
-    CTableBody,
-    CTableDataCell,
-    CSpinner,
-    CButtonGroup,
-} from '@coreui/react';
+    CAlert,
+} from '@coreui/react'
 
-// The base URL for the API
-const API_URL = 'https://api.qbits4dev.com/settings/';
-
-export default function SettingsPage() {
-    // State for the list of settings
-    const [settings, setSettings] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
-
-    // State for the form
-    const [form, setForm] = useState({
+const PostTargets = () => {
+    const [formData, setFormData] = useState({
         role_id: '',
         description: '',
         value: '',
-    });
-    const [submitting, setSubmitting] = useState(false);
+    })
+    const [message, setMessage] = useState('')
+    const [error, setError] = useState('')
 
-    // Function to fetch settings from the API
-    const fetchSettings = useCallback(async () => {
-        setLoading(true);
-        try {
-            const res = await fetch(API_URL);
-            if (!res.ok) throw new Error('Failed to fetch data');
-            const data = await res.json();
-            setSettings(Array.isArray(data) ? data : []);
-            setError('');
-        } catch (err) {
-            setError('Error fetching settings: ' + err.message);
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    // Fetch data when the component mounts
-    useEffect(() => {
-        fetchSettings();
-    }, [fetchSettings]);
-
-    // Handler for form input changes
     const handleChange = (e) => {
-        const { name, value } = e.target;
-        setForm((prev) => ({ ...prev, [name]: value }));
-    };
+        const { name, value } = e.target
+        setFormData((prev) => ({ ...prev, [name]: value }))
+    }
 
-    // Handler for form submission
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setSubmitting(true);
+    const handleSubmit = (e) => {
+        e.preventDefault()
+        setMessage('')
+        setError('')
 
-        const payload = {
-            role_id: Number(form.role_id),
-            description: form.description,
-            value: Number(form.value),
-        };
-
-        try {
-            const response = await fetch('https://api.qbits4dev.com/targets', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-            });
-
-            if (!response.ok) throw new Error('Failed to submit the form');
-
-            alert('Setting added successfully!');
-            setForm({ role_id: '', description: '', value: '' }); // Reset form
-            fetchSettings(); // Refresh the list
-        } catch (err) {
-            alert(`Error: ${err.message}`);
-        } finally {
-            setSubmitting(false);
-        }
-    };
-
-    // Placeholder action handlers
-    const handleEdit = (setting) => alert(`Editing Setting ID: ${setting.id}`);
-    const handleDelete = (setting) => alert(`Deleting Setting ID: ${setting.id}`);
+        fetch('http://localhost:5000/api/targets', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData),
+        })
+            .then((res) => {
+                if (!res.ok) throw new Error('Failed to post target')
+                return res.json()
+            })
+            .then(() => setMessage('✅ Target posted successfully!'))
+            .catch((err) => setError(`❌ ${err.message}`))
+    }
 
     return (
-        <CContainer className="my-4">
-            {/* --- FORM CARD --- */}
-            <CCard className="mb-4 shadow-sm">
-                <CCardHeader>
-                    <h5 className="mb-0">Add New Setting</h5>
-                </CCardHeader>
-                <CCardBody>
-                    <CForm onSubmit={handleSubmit}>
-                        <CRow className="g-3">
-                            <CCol md={6}>
-                                <CFormInput
-                                    label="Role ID"
-                                    name="role_id"
-                                    type="number"
-                                    placeholder="e.g., 1"
-                                    value={form.role_id}
-                                    onChange={handleChange}
-                                    required
-                                />
-                            </CCol>
-                            <CCol md={6}>
-                                <CFormInput
-                                    label="Value"
-                                    name="value"
-                                    type="number"
-                                    placeholder="e.g., 100"
-                                    value={form.value}
-                                    onChange={handleChange}
-                                    required
-                                />
-                            </CCol>
-                            <CCol xs={12}>
-                                <CFormTextarea
-                                    label="Description"
-                                    name="description"
-                                    rows={3}
-                                    placeholder="Enter a short description of the setting"
-                                    value={form.description}
-                                    onChange={handleChange}
-                                    required
-                                />
-                            </CCol>
-                            <CCol xs={12} className="text-end">
-                                <CButton color="primary" type="submit" disabled={submitting}>
-                                    {submitting ? <CSpinner size="sm" /> : 'Save Setting'}
-                                </CButton>
-                            </CCol>
-                        </CRow>
-                    </CForm>
-                </CCardBody>
-            </CCard>
+        <CContainer className="py-4">
+            <CRow className="justify-content-center">
+                <CCol md={8}>
+                    <CCard className="shadow-sm border-0 rounded-3">
+                        <CCardHeader className=" text-primary text-center fs-5">
+                            Post Target
+                        </CCardHeader>
+                        <CCardBody>
+                            <CForm onSubmit={handleSubmit}>
+                                <div className="mb-3">
+                                    <CFormLabel>Role ID</CFormLabel>
+                                    <CFormInput
+                                        type="number"
+                                        name="role_id"
+                                        placeholder="Enter Role ID"
+                                        value={formData.role_id}
+                                        onChange={handleChange}
+                                        required
+                                    />
+                                </div>
+                                <div className="mb-3">
+                                    <CFormLabel>Description</CFormLabel>
+                                    <CFormTextarea
+                                        name="description"
+                                        placeholder="Enter target description"
+                                        value={formData.description}
+                                        onChange={handleChange}
+                                        required
+                                    />
+                                </div>
+                                <div className="mb-3">
+                                    <CFormLabel>Value</CFormLabel>
+                                    <CFormInput
+                                        type="number"
+                                        name="value"
+                                        placeholder="Enter value"
+                                        value={formData.value}
+                                        onChange={handleChange}
+                                        required
+                                    />
+                                </div>
+                                <div className="text-center">
+                                    <CButton color="success" type="submit">
+                                        Submit Target
+                                    </CButton>
+                                </div>
+                            </CForm>
 
-            {/* --- TABLE CARD --- */}
-            <CCard className="shadow-sm">
-                <CCardHeader>
-                    <h5 className="mb-0">Existing Settings</h5>
-                </CCardHeader>
-                <CCardBody>
-                    {loading ? (
-                        <div className="text-center"><CSpinner /></div>
-                    ) : error ? (
-                        <div className="text-danger text-center">{error}</div>
-                    ) : (
-                        <CTable hover responsive align="middle">
-                            <CTableHead color="light">
-                                <CTableRow>
-                                    <CTableHeaderCell>ID</CTableHeaderCell>
-                                    <CTableHeaderCell>Role ID</CTableHeaderCell>
-                                    <CTableHeaderCell>Description</CTableHeaderCell>
-                                    <CTableHeaderCell>Value</CTableHeaderCell>
-                                    <CTableHeaderCell className="text-center">Actions</CTableHeaderCell>
-                                </CTableRow>
-                            </CTableHead>
-                            <CTableBody>
-                                {settings.length > 0 ? (
-                                    settings.map((setting) => (
-                                        <CTableRow key={setting.id}>
-                                            <CTableDataCell><strong>{setting.id}</strong></CTableDataCell>
-                                            <CTableDataCell>{setting.role_id}</CTableDataCell>
-                                            <CTableDataCell>{setting.description}</CTableDataCell>
-                                            <CTableDataCell>{setting.value}</CTableDataCell>
-                                            <CTableDataCell className="text-center">
-                                                <CButtonGroup>
-                                                    <CButton color="info" variant="outline" size="sm" onClick={() => handleEdit(setting)}>Edit</CButton>
-                                                    <CButton color="danger" variant="outline" size="sm" onClick={() => handleDelete(setting)}>Delete</CButton>
-                                                </CButtonGroup>
-                                            </CTableDataCell>
-                                        </CTableRow>
-                                    ))
-                                ) : (
-                                    <CTableRow>
-                                        <CTableDataCell colSpan="5" className="text-center">
-                                            No settings found.
-                                        </CTableDataCell>
-                                    </CTableRow>
-                                )}
-                            </CTableBody>
-                        </CTable>
-                    )}
-                </CCardBody>
-            </CCard>
+                            {message && <CAlert color="success" className="mt-3 text-center">{message}</CAlert>}
+                            {error && <CAlert color="danger" className="mt-3 text-center">{error}</CAlert>}
+                        </CCardBody>
+                    </CCard>
+                </CCol>
+            </CRow>
         </CContainer>
-    );
+    )
 }
+
+export default PostTargets

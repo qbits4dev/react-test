@@ -210,7 +210,7 @@ const BookVisit = () => {
                     <CCol md={9} lg={7} xl={6}>
                         <CCard className="p-4 shadow-lg rounded-4">
                             <CCardBody>
-                                <h2 className="mb-3 text-center text-primary">📅 Book a Visit</h2>
+                                <h2 className="mb-3 text-center text-primary">Book a Visit</h2>
                                 <p className="text-center text-muted mb-4">
                                     Schedule your visit with us easily
                                 </p>
