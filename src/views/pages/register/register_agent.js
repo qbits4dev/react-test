@@ -159,7 +159,7 @@ export default function RegisterAgentWizard() {
   const validateStep = () => {
     let newErrors = {}
     if (step === 1) {
-      ['firstName', 'lastName', 'fatherName', 'spouseName', 'dob', 'gender', 'email', 'phone','workExperience', 'language', 'maritalStatus', 'education'].forEach(f => {
+      ['firstName', 'lastName', 'fatherName', 'spouseName', 'dob', 'gender', 'email', 'phone', 'workExperience', 'language', 'maritalStatus', 'education'].forEach(f => {
         const err = validateField(f, form[f])
         if (err) newErrors[f] = err
       })

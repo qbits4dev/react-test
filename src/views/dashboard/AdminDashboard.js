@@ -251,15 +251,10 @@ const ClientDashboard = () => {
     {
       //Card 2: Agent Details with Leads Data (Multiple Internal Links in Dropdown)
       id: 'agent-details',
-    
+
       value: 'View Reports', // Value indicating action
       color: 'secondary', // Example color
-      to: '/views/pages/Reports',
-      links: [
-        { label: 'All Agents Report', route: '/admin/agent-report/all' },
-        { label: 'Leads Assigned Report', route: '/admin/agent-report/leads' },
-        { label: 'Agent Data Management', route: '/admin/agent-data' },
-      ],
+      buttonLink: '/Reports',
     },
     {
       id: 'site-visits',

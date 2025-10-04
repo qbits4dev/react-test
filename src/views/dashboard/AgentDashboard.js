@@ -200,6 +200,7 @@ const AgentDashboard = () => {
       value: '50',
       changeIcon: 'cilArrowTop',
       color: 'success',
+      buttonLink: '/Reports',
 
     },
 

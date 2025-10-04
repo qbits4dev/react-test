@@ -100,7 +100,7 @@ const _nav = [
       {
         component: CNavItem,
         name: 'Invoice',
-        to: '/invoiceApp',
+        to: '/Invoice',
       },
       {
         component: CNavItem,
@@ -151,6 +151,21 @@ const _nav = [
         component: CNavItem,
         name: 'Profile',
         to: '/Profile',
+      },
+      {
+        component: CNavItem,
+        name: 'Forgot User ID',
+        to: '/ForgotUID',
+      },
+      {
+        component: CNavItem,
+        name: 'Forgot Password',
+        to: '/ForgotPassword',
+      },
+      {
+        component: CNavItem,
+        name: 'Registration for all users',
+        to: '/ARegister',
       },
     ],
   },
