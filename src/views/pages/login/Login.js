@@ -155,14 +155,9 @@ const Login = () => {
                   <div>
                     <h2 className="mb-4">Sign up</h2>
                     <p>If you don't have an account, you can register here.</p>
-                    <Link to="/register_agent">
+                    <Link to="/ARegister">
                       <CButton color="info" className="mt-3 w-100">
-                        Agent Register
-                      </CButton>
-                    </Link>
-                    <Link to="/cilent_register">
-                      <CButton color="danger" className="mt-3 w-100">
-                        Client Register
+                        Register
                       </CButton>
                     </Link>
                   </div>
