@@ -23,8 +23,8 @@ const AgentDashboard = () => {
       title: 'Book Site',
       value: '40',
       color: 'danger',
-      buttonLink: '/booksite',
-      buttonText: 'Book Site',
+      buttonLink: '/bookvisit',
+      buttonText: 'Book Site visit',
     },
     {
       id: 'Reports',
