@@ -43,6 +43,8 @@ export default function UserProfile() {
         photoFile: null,
         aadhaarFileName: "dummy_aadhaar.pdf",
         panFileName: "dummy_pan.pdf",
+        referenceagent: "alpha",
+        agentteam: "beta",
     });
 
     const [errors, setErrors] = useState({ email: "", phone: "", photoFile: "" });
@@ -206,7 +208,9 @@ export default function UserProfile() {
                         <CCard className="shadow-sm rounded-4 p-4 mb-4 bg-light">
                             <h5 className="text-primary mb-4">Reference Details</h5>
                             <CFormLabel>Reference Agent</CFormLabel>
+                            {renderField("Reference Agent", profile.referenceagent, "referenceagent")}
                             <CFormLabel>Agent Team</CFormLabel>
+                            {renderField("Agent Team", profile.agentteam, "agentteam")}
                         </CCard>
 
                         {/* Documents */}
