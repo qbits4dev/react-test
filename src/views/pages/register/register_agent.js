@@ -5,6 +5,8 @@ import {
 } from '@coreui/react';
 import { useNavigate } from 'react-router-dom';
 import { AppFooter, AppHeader } from '../../../components/index';
+import { CAlert } from '@coreui/react';
+
 
 export default function RegisterAgentWizard() {
   const navigate = useNavigate();
@@ -147,6 +149,9 @@ export default function RegisterAgentWizard() {
     return '';
   };
 
+  const [alert, setAlert] = useState({ visible: false, message: '', color: 'success' });
+
+
   const validateStep = () => {
     let newErrors = {};
     const fieldsToValidate = {
@@ -204,7 +209,7 @@ export default function RegisterAgentWizard() {
     formData.append('nominiee', form.nomineeName);
     formData.append('relationship', form.nomineeRelation);
     formData.append('nominee_mobile', form.nomineeMobile);
-    
+
     if (form.photoFile) formData.append('photo', form.photoFile);
     if (form.aadhaarFile) formData.append('aadhaar_file', form.aadhaarFile);
     if (form.panFile) formData.append('pan_file', form.panFile);
@@ -216,20 +221,20 @@ export default function RegisterAgentWizard() {
     console.log("--------------------------");
 
     try {
-      const response = await fetch('https://api.qbits4dev.com/register/agent', {
+      const response = await fetch('https://api.qbits4dev.com/auth/register', {
         method: 'POST',
         body: formData,
       });
       const result = await response.json();
       if (response.ok) {
-        alert('Agent registered successfully!');
-        navigate('/login');
+        setAlert({ visible: true, message: 'Registration successful! Redirecting to login...', color: 'success' });
+        setTimeout(() => navigate('/login'), 3000);
       } else {
-        alert(result.message || 'Registration failed');
+        setAlert({ visible: true, message: result.message || 'Registration failed. Please try again.', color: 'danger' });
       }
     } catch (error) {
       console.error("Submission error:", error);
-      alert('Network or server error. Please try again.');
+      setAlert({ visible: true, message: 'Network or server error. Please try again.', color: 'danger' });
     }
   };
 
@@ -243,7 +248,14 @@ export default function RegisterAgentWizard() {
           <CRow className="justify-content-center">
             <CCol md={12} lg={8}>
               <CCard className="shadow-sm rounded-4">
+
                 <CCardBody className="p-5">
+                  {alert.visible && (
+                    <CAlert color={alert.color} dismissible onClose={() => setAlert(prev => ({ ...prev, visible: false }))}>
+                      {alert.message}
+                    </CAlert>
+                  )}
+
                   <CForm noValidate>
                     <h1 className="mb-4 text-primary" style={{ fontWeight: 'bold' }}>Agent Registration</h1>
                     {step === 1 && (
@@ -270,15 +282,15 @@ export default function RegisterAgentWizard() {
                           {renderError('maritalStatus')}
                         </div>
                         <CRow>
-                            <CCol xs={12} md={6} className="mb-3">
-                                <CFormLabel>Date of Birth</CFormLabel>
-                                <CFormInput type="date" name="dob" value={form.dob} onChange={handleChange} invalid={!!errors.dob} />
-                                {renderError('dob')}
-                            </CCol>
-                            <CCol xs={12} md={6} className="mb-3">
-                                <CFormLabel>Age</CFormLabel>
-                                <CFormInput name="age" placeholder="Age" value={form.age} readOnly />
-                            </CCol>
+                          <CCol xs={12} md={6} className="mb-3">
+                            <CFormLabel>Date of Birth</CFormLabel>
+                            <CFormInput type="date" name="dob" value={form.dob} onChange={handleChange} invalid={!!errors.dob} />
+                            {renderError('dob')}
+                          </CCol>
+                          <CCol xs={12} md={6} className="mb-3">
+                            <CFormLabel>Age</CFormLabel>
+                            <CFormInput name="age" placeholder="Age" value={form.age} readOnly />
+                          </CCol>
                         </CRow>
                         <div className="mb-3">
                           <CFormSelect name="gender" value={form.gender} onChange={handleChange} invalid={!!errors.gender}>
@@ -287,39 +299,39 @@ export default function RegisterAgentWizard() {
                           {renderError('gender')}
                         </div>
                         <CRow>
-                            <CCol xs={12} md={6} className="mb-3">
-                                <CFormInput name="email" placeholder="Email" autoComplete="email" value={form.email} onChange={handleChange} invalid={!!errors.email} />
-                                {renderError('email')}
-                            </CCol>
-                            <CCol xs={12} md={6} className="mb-3">
-                                <CFormInput name="phone" placeholder="Phone Number" maxLength={10} value={form.phone} onChange={handleChange} invalid={!!errors.phone} />
-                                {renderError('phone')}
-                            </CCol>
+                          <CCol xs={12} md={6} className="mb-3">
+                            <CFormInput name="email" placeholder="Email" autoComplete="email" value={form.email} onChange={handleChange} invalid={!!errors.email} />
+                            {renderError('email')}
+                          </CCol>
+                          <CCol xs={12} md={6} className="mb-3">
+                            <CFormInput name="phone" placeholder="Phone Number" maxLength={10} value={form.phone} onChange={handleChange} invalid={!!errors.phone} />
+                            {renderError('phone')}
+                          </CCol>
                         </CRow>
                         <CRow>
-                            <CCol xs={12} md={6} className="mb-3">
-                                <CFormInput name="occupation" placeholder="Occupation" value={form.occupation} onChange={handleChange} invalid={!!errors.occupation}/>
-                                {renderError('occupation')}
-                            </CCol>
-                             <CCol xs={12} md={6} className="mb-3">
-                                <CFormInput name="workExperience" placeholder="Work Experience (Years)" maxLength={2} value={form.workExperience} onChange={handleChange} invalid={!!errors.workExperience}/>
-                                {renderError('workExperience')}
-                            </CCol>
+                          <CCol xs={12} md={6} className="mb-3">
+                            <CFormInput name="occupation" placeholder="Occupation" value={form.occupation} onChange={handleChange} invalid={!!errors.occupation} />
+                            {renderError('occupation')}
+                          </CCol>
+                          <CCol xs={12} md={6} className="mb-3">
+                            <CFormInput name="workExperience" placeholder="Work Experience (Years)" maxLength={2} value={form.workExperience} onChange={handleChange} invalid={!!errors.workExperience} />
+                            {renderError('workExperience')}
+                          </CCol>
                         </CRow>
                         <CRow>
-                            <CCol xs={12} md={6} className="mb-3">
-                                <CFormSelect name="language" value={form.language} onChange={handleChange} invalid={!!errors.language}>
-                                  <option value="">Select Language</option><option value="English">English</option><option value="Hindi">Hindi</option><option value="Telugu">Telugu</option>
-                                </CFormSelect>
-                                {renderError('language')}
-                            </CCol>
-                            <CCol xs={12} md={6} className="mb-3">
-                                <CFormInput name="education" placeholder="Education" value={form.education} onChange={handleChange} invalid={!!errors.education}/>
-                                {renderError('education')}
-                            </CCol>
+                          <CCol xs={12} md={6} className="mb-3">
+                            <CFormSelect name="language" value={form.language} onChange={handleChange} invalid={!!errors.language}>
+                              <option value="">Select Language</option><option value="English">English</option><option value="Hindi">Hindi</option><option value="Telugu">Telugu</option>
+                            </CFormSelect>
+                            {renderError('language')}
+                          </CCol>
+                          <CCol xs={12} md={6} className="mb-3">
+                            <CFormInput name="education" placeholder="Education" value={form.education} onChange={handleChange} invalid={!!errors.education} />
+                            {renderError('education')}
+                          </CCol>
                         </CRow>
                         <div className="mb-3">
-                          <CFormInput name="password" type="password" placeholder="Password" autoComplete="new-password" value={form.password} onChange={handleChange} invalid={!!errors.password}/>
+                          <CFormInput name="password" type="password" placeholder="Password" autoComplete="new-password" value={form.password} onChange={handleChange} invalid={!!errors.password} />
                           {renderError('password')}
                         </div>
                         <div className="mb-3">
@@ -327,7 +339,7 @@ export default function RegisterAgentWizard() {
                           {renderError('income')}
                         </div>
                         <div className="mb-3">
-                          <CFormInput name="adhar" placeholder="Aadhaar Number" maxLength={12} value={form.adhar} onChange={handleChange} invalid={!!errors.adhar}/>
+                          <CFormInput name="adhar" placeholder="Aadhaar Number" maxLength={12} value={form.adhar} onChange={handleChange} invalid={!!errors.adhar} />
                           {renderError('adhar')}
                         </div>
                         <div className="mb-3">
@@ -344,49 +356,49 @@ export default function RegisterAgentWizard() {
                         <h5 className='text-info mb-4'>Designation, Bank & Nominee Details</h5>
                         <div className="mb-3">
                           <CDropdown className='w-100'>
-                              <CDropdownToggle color='light' className='text-start w-100 d-flex justify-content-between align-items-center'>
-                                {loadingDesignations ? <span><CSpinner size="sm" className="me-2" />Loading...</span> : designationName}
-                              </CDropdownToggle>
-                              <CDropdownMenu className="w-100">
-                                {loadingDesignations && <CDropdownItem disabled>Loading...</CDropdownItem>}
-                                {!loadingDesignations && designationError && <CDropdownItem disabled>{designationError}</CDropdownItem>}
-                                {!loadingDesignations && !designationError && designations.map((d, idx) => (
-                                  <CDropdownItem key={idx} onClick={() => handleDesignationSelect(d)}>{d.name}</CDropdownItem>
-                                ))}
-                              </CDropdownMenu>
+                            <CDropdownToggle color='light' className='text-start w-100 d-flex justify-content-between align-items-center'>
+                              {loadingDesignations ? <span><CSpinner size="sm" className="me-2" />Loading...</span> : designationName}
+                            </CDropdownToggle>
+                            <CDropdownMenu className="w-100">
+                              {loadingDesignations && <CDropdownItem disabled>Loading...</CDropdownItem>}
+                              {!loadingDesignations && designationError && <CDropdownItem disabled>{designationError}</CDropdownItem>}
+                              {!loadingDesignations && !designationError && designations.map((d, idx) => (
+                                <CDropdownItem key={idx} onClick={() => handleDesignationSelect(d)}>{d.name}</CDropdownItem>
+                              ))}
+                            </CDropdownMenu>
                           </CDropdown>
                           {renderError('designation')}
                         </div>
                         <div className="mb-3">
-                            <CFormInput name="referenceAgent" placeholder="Reference Agent Code" value={form.referenceAgent} onChange={handleChange} invalid={!!errors.referenceAgent} />
-                            {renderError('referenceAgent')}
+                          <CFormInput name="referenceAgent" placeholder="Reference Agent Code" value={form.referenceAgent} onChange={handleChange} invalid={!!errors.referenceAgent} />
+                          {renderError('referenceAgent')}
                         </div>
                         <div className="mb-3">
-                            <CFormInput name="agentTeam" placeholder="Agent Team" value={form.agentTeam} onChange={handleChange} invalid={!!errors.agentTeam} />
-                            {renderError('agentTeam')}
+                          <CFormInput name="agentTeam" placeholder="Agent Team" value={form.agentTeam} onChange={handleChange} invalid={!!errors.agentTeam} />
+                          {renderError('agentTeam')}
                         </div>
                         <div className="mb-3">
-                            <CFormInput name="workLocation" placeholder="Work Location" value={form.workLocation} onChange={handleChange} invalid={!!errors.workLocation} />
-                            {renderError('workLocation')}
+                          <CFormInput name="workLocation" placeholder="Work Location" value={form.workLocation} onChange={handleChange} invalid={!!errors.workLocation} />
+                          {renderError('workLocation')}
                         </div>
                         <CCard className="p-3 bg-light shadow-sm mb-3 rounded-3">
-                            <h6 className="text-primary mb-3 fw-semibold">Bank Details</h6>
-                            <div className="mb-3"><CFormInput name="bankName" placeholder="Bank Name" value={form.bankName} onChange={handleChange} invalid={!!errors.bankName}/>{renderError('bankName')}</div>
-                            <div className="mb-3"><CFormInput name="branch" placeholder="Branch Name" value={form.branch} onChange={handleChange} invalid={!!errors.branch}/>{renderError('branch')}</div>
-                            <div className="mb-3"><CFormInput name="accountNumber" placeholder="Account Number" value={form.accountNumber} onChange={handleChange} invalid={!!errors.accountNumber}/>{renderError('accountNumber')}</div>
-                            <div className="mb-3"><CFormInput name="ifscCode" placeholder="IFSC Code" maxLength={11} value={form.ifscCode} onChange={handleChange} invalid={!!errors.ifscCode}/>{renderError('ifscCode')}</div>
+                          <h6 className="text-primary mb-3 fw-semibold">Bank Details</h6>
+                          <div className="mb-3"><CFormInput name="bankName" placeholder="Bank Name" value={form.bankName} onChange={handleChange} invalid={!!errors.bankName} />{renderError('bankName')}</div>
+                          <div className="mb-3"><CFormInput name="branch" placeholder="Branch Name" value={form.branch} onChange={handleChange} invalid={!!errors.branch} />{renderError('branch')}</div>
+                          <div className="mb-3"><CFormInput name="accountNumber" placeholder="Account Number" value={form.accountNumber} onChange={handleChange} invalid={!!errors.accountNumber} />{renderError('accountNumber')}</div>
+                          <div className="mb-3"><CFormInput name="ifscCode" placeholder="IFSC Code" maxLength={11} value={form.ifscCode} onChange={handleChange} invalid={!!errors.ifscCode} />{renderError('ifscCode')}</div>
                         </CCard>
                         <CCard className="p-3 bg-light shadow-sm mb-4 rounded-3">
-                            <h6 className="text-primary mb-3 fw-semibold">Nominee Details</h6>
-                            <div className="mb-3"><CFormInput name="nomineeName" placeholder="Nominee Name" value={form.nomineeName} onChange={handleChange} invalid={!!errors.nomineeName}/>{renderError('nomineeName')}</div>
-                            <div className="mb-3"><CFormInput name="nomineeRelation" placeholder="Relation with Nominee" value={form.nomineeRelation} onChange={handleChange} invalid={!!errors.nomineeRelation}/>{renderError('nomineeRelation')}</div>
-                            <div className="mb-3"><CFormInput name="nomineeMobile" placeholder="Nominee Mobile" maxLength={10} value={form.nomineeMobile} onChange={handleChange} invalid={!!errors.nomineeMobile}/>{renderError('nomineeMobile')}</div>
+                          <h6 className="text-primary mb-3 fw-semibold">Nominee Details</h6>
+                          <div className="mb-3"><CFormInput name="nomineeName" placeholder="Nominee Name" value={form.nomineeName} onChange={handleChange} invalid={!!errors.nomineeName} />{renderError('nomineeName')}</div>
+                          <div className="mb-3"><CFormInput name="nomineeRelation" placeholder="Relation with Nominee" value={form.nomineeRelation} onChange={handleChange} invalid={!!errors.nomineeRelation} />{renderError('nomineeRelation')}</div>
+                          <div className="mb-3"><CFormInput name="nomineeMobile" placeholder="Nominee Mobile" maxLength={10} value={form.nomineeMobile} onChange={handleChange} invalid={!!errors.nomineeMobile} />{renderError('nomineeMobile')}</div>
                         </CCard>
                         <CCard className="p-4 border-0 shadow-sm rounded-3">
-                            <h5 className="mb-4 fw-semibold text-info">Upload Documents</h5>
-                            <div className="mb-3"><CFormLabel>Photo (JPEG/JPG only, max 2MB)</CFormLabel><CFormInput type="file" name="photoFile" accept="image/jpeg,image/jpg" onChange={handleChange} invalid={!!errors.photoFile}/>{renderError('photoFile')}</div>
-                            <div className="mb-3"><CFormLabel>Aadhaar File (PDF only, max 2MB)</CFormLabel><CFormInput type="file" name="aadhaarFile" accept="application/pdf" onChange={handleChange} invalid={!!errors.aadhaarFile} />{renderError('aadhaarFile')}</div>
-                            <div><CFormLabel>PAN File (PDF only, max 2MB)</CFormLabel><CFormInput type="file" name="panFile" accept="application/pdf" onChange={handleChange} invalid={!!errors.panFile}/>{renderError('panFile')}</div>
+                          <h5 className="mb-4 fw-semibold text-info">Upload Documents</h5>
+                          <div className="mb-3"><CFormLabel>Photo (JPEG/JPG only, max 2MB)</CFormLabel><CFormInput type="file" name="photoFile" accept="image/jpeg,image/jpg" onChange={handleChange} invalid={!!errors.photoFile} />{renderError('photoFile')}</div>
+                          <div className="mb-3"><CFormLabel>Aadhaar File (PDF only, max 2MB)</CFormLabel><CFormInput type="file" name="aadhaarFile" accept="application/pdf" onChange={handleChange} invalid={!!errors.aadhaarFile} />{renderError('aadhaarFile')}</div>
+                          <div><CFormLabel>PAN File (PDF only, max 2MB)</CFormLabel><CFormInput type="file" name="panFile" accept="application/pdf" onChange={handleChange} invalid={!!errors.panFile} />{renderError('panFile')}</div>
                         </CCard>
                         <div className="d-flex justify-content-between mt-4">
                           <CButton color="secondary" onClick={prevStep}>Back</CButton>
