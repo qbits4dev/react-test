@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import {
   CContainer,
@@ -33,6 +33,7 @@ const AppHeader = () => {
   const { colorMode, setColorMode } = useColorModes('coreui-free-react-admin-template-theme')
 
   const dispatch = useDispatch()
+  const navigate = useNavigate()
   const sidebarShow = useSelector((state) => state.sidebarShow)
 
   useEffect(() => {
@@ -41,6 +42,19 @@ const AppHeader = () => {
         headerRef.current.classList.toggle('shadow-sm', document.documentElement.scrollTop > 0)
     })
   }, [])
+
+  const handleDashboardClick = () => {
+    const userRole = localStorage.getItem('user_role')
+    if (userRole === 'admin') {
+      navigate('/AdminDashboard')
+    } else if (userRole === 'agent') {
+      navigate('/AgentDashboard')
+    } else if (userRole === 'customer') {
+      navigate('/ClientDashboard')
+    } else {
+      navigate('/dashboard') // Fallback route
+    }
+  }
 
   return (
     <CHeader position="sticky" className="mb-4 p-0" ref={headerRef}>
@@ -51,20 +65,24 @@ const AppHeader = () => {
         >
           <CIcon icon={cilMenu} size="lg" />
         </CHeaderToggler>
-        <CHeaderNav className="d-none d-md-flex">
+
+        <AppBreadcrumb />
+
+        <CHeaderNav className="d-none d-md-flex mx-auto">
           <CNavItem>
-            <CNavLink to="/dashboard" as={NavLink}>
+            <CNavLink onClick={handleDashboardClick} style={{ cursor: 'pointer' }}>
               Dashboard
             </CNavLink>
           </CNavItem>
-          <CNavItem>
+          {/* <CNavItem>
             <CNavLink href="#">Users</CNavLink>
           </CNavItem>
           <CNavItem>
             <CNavLink href="#">Settings</CNavLink>
-          </CNavItem>
+          </CNavItem> */}
         </CHeaderNav>
-        <CHeaderNav className="ms-auto">
+
+        {/* <CHeaderNav className="ms-auto">
           <CNavItem>
             <CNavLink href="#">
               <CIcon icon={cilBell} size="lg" />
@@ -80,7 +98,7 @@ const AppHeader = () => {
               <CIcon icon={cilEnvelopeOpen} size="lg" />
             </CNavLink>
           </CNavItem>
-        </CHeaderNav>
+        </CHeaderNav> */}
         <CHeaderNav>
           <li className="nav-item py-1">
             <div className="vr h-100 mx-2 text-body text-opacity-75"></div>
@@ -130,9 +148,6 @@ const AppHeader = () => {
           </li>
           <AppHeaderDropdown />
         </CHeaderNav>
-      </CContainer>
-      <CContainer className="px-4" fluid>
-        <AppBreadcrumb />
       </CContainer>
     </CHeader>
   )

@@ -5,7 +5,7 @@ const AppFooter = () => {
   return (
     <CFooter className="px-4">
       <div>
-        <a href="https://coreui.io" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.sriadityadevelopers.com/" target="_blank" rel="noopener noreferrer">
           {/* CoreUI */}
           AdityaDevelopers
         </a>
@@ -13,8 +13,8 @@ const AppFooter = () => {
       </div>
       <div className="ms-auto">
         <span className="me-1">Powered by</span>
-        <a href="https://coreui.io/react" target="_blank" rel="noopener noreferrer">
-          QBITS4DEV &amp; Software
+        <a href="https://qbits4dev.com/" target="_blank" rel="noopener noreferrer">
+          QBITS4DEVELOPERS PVT LTD; 
         </a>
       </div>
     </CFooter>
