@@ -69,9 +69,7 @@ export default function RegisterAgentWizard() {
 
   useEffect(() => {
     fetch('https://api.qbits4dev.com/register/?key=designation', { headers: { accept: 'application/json' } })
-    // fetch('https://api.qbits4dev.com/register/?key=role', { headers: { accept: 'application/json' } })
-
-    .then(res => res.json())
+      .then(res => res.json())
       .then(data => {
         if (data.status === 'ok' && Array.isArray(data.designation)) setDesignations(data.designation);
         else setDesignationError('No designations found');
@@ -218,10 +216,8 @@ export default function RegisterAgentWizard() {
     console.log("--------------------------");
 
     try {
-      // const response = await fetch('https://api.qbits4dev.com/register/agent', {
-        const response = await fetch('https://api.qbits4dev.com/auth/register', {
-       
-      method: 'POST',
+      const response = await fetch('https://api.qbits4dev.com/register/agent', {
+        method: 'POST',
         body: formData,
       });
       const result = await response.json();
@@ -359,195 +355,38 @@ export default function RegisterAgentWizard() {
                                 ))}
                               </CDropdownMenu>
                           </CDropdown>
-                        </CInputGroup>
-                        {errors.designation && <small className="text-danger">{errors.designation}</small>}
-
-                        <h5 className='text-info mb-3'>Work Location</h5>
-                        <CInputGroup className='mb-3'>
-                          <CFormInput placeholder='Branch' name='Work Location' />
-                        </CInputGroup>
-
-                        <CRow>
-                          {/* Bank Details Section */}
-                          <CCol xs={12} md={12}>
-                            <CCard className="p-3 bg-white shadow-sm mb-3 rounded-3">
-                              <h6 className="text-info mb-3 fw-semibold">Employee Bank Details</h6>
-
-                              {/* Bank Name */}
-                              <div className="mb-3 d-flex flex-column">
-                                <CFormInput
-                                  placeholder="Bank Name"
-                                  name="bankName"
-                                  value={form.bankName}
-                                  maxLength={50}
-                                  onChange={handleChange}
-                                  className="shadow-sm"
-                                />
-                                {errors.bankName && (
-                                  <small className="text-danger mt-1">{errors.bankName}</small>
-                                )}
-                              </div>
-
-                              {/* Branch Name (New Field) */}
-                              <div className="mb-3 d-flex flex-column">
-                                <CFormInput
-                                  placeholder="Branch Name"
-                                  name="branchName"
-                                  value={form.branchName}
-                                  maxLength={50}
-                                  onChange={handleChange}
-                                  className="shadow-sm"
-                                />
-                                {errors.branchName && (
-                                  <small className="text-danger mt-1">{errors.branchName}</small>
-                                )}
-                              </div>
-
-                              {/* Account Number */}
-                              <div className="mb-3 d-flex flex-column">
-                                <CFormInput
-                                  placeholder="Employee bank Account Number"
-                                  name="accountNumber"
-                                  value={form.accountNumber}
-                                  maxLength={20}
-                                  onChange={handleChange}
-                                  className="shadow-sm"
-                                />
-                                {errors.accountNumber && (
-                                  <small className="text-danger mt-1">{errors.accountNumber}</small>
-                                )}
-                              </div>
-
-                              {/* IFSC Code */}
-                              <div className="d-flex flex-column">
-                                <CFormInput
-                                  placeholder="IFSC Code"
-                                  name="ifsc"
-                                  value={form.ifsc}
-                                  maxLength={11}
-                                  onChange={handleChange}
-                                  className="shadow-sm"
-                                />
-                                {errors.ifsc && (
-                                  <small className="text-danger mt-1">{errors.ifsc}</small>
-                                )}
-                              </div>
-                            </CCard>
-                          </CCol>
-                        </CRow>
-                        <CRow>
-
-                          {/* Nominee Details Section */}
-                          <CCol xs={12} md={12}>
-                            <CCard className="p-3 bg-white shadow-sm mb-3 rounded-3">
-                              <h6 className="text-info mb-3 fw-semibold">Nominee Details</h6>
-
-                              {/* Nominee Name */}
-                              <div className="mb-3 d-flex flex-column">
-                                <CFormInput
-                                  placeholder="Nominee Name"
-                                  name="nomineeName"
-                                  value={form.nomineeName}
-                                  maxLength={50}
-                                  onChange={handleChange}
-                                  className="shadow-sm"
-                                />
-                                {errors.nomineeName && (
-                                  <small className="text-danger mt-1">{errors.nomineeName}</small>
-                                )}
-                              </div>
-
-                              {/* Nominee Relation */}
-                              <div className="mb-3 d-flex flex-column">
-                                <CFormInput
-                                  placeholder="Relation with Nominee"
-                                  name="nomineeRelation"
-                                  value={form.nomineeRelation}
-                                  maxLength={30}
-                                  onChange={handleChange}
-                                  className="shadow-sm"
-                                />
-                                {errors.nomineeRelation && (
-                                  <small className="text-danger mt-1">{errors.nomineeRelation}</small>
-                                )}
-                              </div>
-
-                              {/* Nominee Contact */}
-                              <div className="d-flex flex-column">
-                                <CFormInput
-                                  placeholder="Nominee Contact Number"
-                                  name="nomineeContact"
-                                  value={form.nomineeContact}
-                                  maxLength={15}
-                                  onChange={handleChange}
-                                  className="shadow-sm"
-                                />
-                                {errors.nomineeContact && (
-                                  <small className="text-danger mt-1">{errors.nomineeContact}</small>
-                                )}
-                              </div>
-                            </CCard>
-                          </CCol>
-
-
-
-                        </CRow>
-                        <CCard className="p-4 border-1 shadow-sm rounded-3">
-                          <h5 className="mb-4 fw-semibold text-info">Upload Documents</h5>
-                          <CRow className="gy-4">
-
-                            {/* Photo Upload */}
-                            <CCol xs={12}>
-                              <div className="d-flex flex-column">
-                                <CFormLabel className="fw-medium mb-2">Photo (JPEG only)</CFormLabel>
-                                <CFormInput
-                                  type="file"
-                                  name="photoFile"
-                                  accept="image/jpeg"
-                                  onChange={handleChange}
-                                  className="shadow-sm"
-                                />
-                                {errors.photoFile && (
-                                  <small className="text-danger mt-1">{errors.photoFile}</small>
-                                )}
-                              </div>
-                            </CCol>
-
-                            {/* Aadhaar Upload */}
-                            <CCol xs={12}>
-                              <div className="d-flex flex-column">
-                                <CFormLabel className="fw-medium mb-2">Aadhaar File (PDF only)</CFormLabel>
-                                <CFormInput
-                                  type="file"
-                                  name="aadhaarFile"
-                                  accept="application/pdf"
-                                  onChange={handleChange}
-                                  className="shadow-sm"
-                                />
-                                {errors.aadhaarFile && (
-                                  <small className="text-danger mt-1">{errors.aadhaarFile}</small>
-                                )}
-                              </div>
-                            </CCol>
-
-                            {/* PAN Upload */}
-                            <CCol xs={12}>
-                              <div className="d-flex flex-column">
-                                <CFormLabel className="fw-medium mb-2">PAN File (PDF only)</CFormLabel>
-                                <CFormInput
-                                  type="file"
-                                  name="panFile"
-                                  accept="application/pdf"
-                                  onChange={handleChange}
-                                  className="shadow-sm"
-                                />
-                                {errors.panFile && (
-                                  <small className="text-danger mt-1">{errors.panFile}</small>
-                                )}
-                              </div>
-                            </CCol>
-
-                          </CRow>
+                          {renderError('designation')}
+                        </div>
+                        <div className="mb-3">
+                            <CFormInput name="referenceAgent" placeholder="Reference Agent Code" value={form.referenceAgent} onChange={handleChange} invalid={!!errors.referenceAgent} />
+                            {renderError('referenceAgent')}
+                        </div>
+                        <div className="mb-3">
+                            <CFormInput name="agentTeam" placeholder="Agent Team" value={form.agentTeam} onChange={handleChange} invalid={!!errors.agentTeam} />
+                            {renderError('agentTeam')}
+                        </div>
+                        <div className="mb-3">
+                            <CFormInput name="workLocation" placeholder="Work Location" value={form.workLocation} onChange={handleChange} invalid={!!errors.workLocation} />
+                            {renderError('workLocation')}
+                        </div>
+                        <CCard className="p-3 bg-light shadow-sm mb-3 rounded-3">
+                            <h6 className="text-primary mb-3 fw-semibold">Bank Details</h6>
+                            <div className="mb-3"><CFormInput name="bankName" placeholder="Bank Name" value={form.bankName} onChange={handleChange} invalid={!!errors.bankName}/>{renderError('bankName')}</div>
+                            <div className="mb-3"><CFormInput name="branch" placeholder="Branch Name" value={form.branch} onChange={handleChange} invalid={!!errors.branch}/>{renderError('branch')}</div>
+                            <div className="mb-3"><CFormInput name="accountNumber" placeholder="Account Number" value={form.accountNumber} onChange={handleChange} invalid={!!errors.accountNumber}/>{renderError('accountNumber')}</div>
+                            <div className="mb-3"><CFormInput name="ifscCode" placeholder="IFSC Code" maxLength={11} value={form.ifscCode} onChange={handleChange} invalid={!!errors.ifscCode}/>{renderError('ifscCode')}</div>
+                        </CCard>
+                        <CCard className="p-3 bg-light shadow-sm mb-4 rounded-3">
+                            <h6 className="text-primary mb-3 fw-semibold">Nominee Details</h6>
+                            <div className="mb-3"><CFormInput name="nomineeName" placeholder="Nominee Name" value={form.nomineeName} onChange={handleChange} invalid={!!errors.nomineeName}/>{renderError('nomineeName')}</div>
+                            <div className="mb-3"><CFormInput name="nomineeRelation" placeholder="Relation with Nominee" value={form.nomineeRelation} onChange={handleChange} invalid={!!errors.nomineeRelation}/>{renderError('nomineeRelation')}</div>
+                            <div className="mb-3"><CFormInput name="nomineeMobile" placeholder="Nominee Mobile" maxLength={10} value={form.nomineeMobile} onChange={handleChange} invalid={!!errors.nomineeMobile}/>{renderError('nomineeMobile')}</div>
+                        </CCard>
+                        <CCard className="p-4 border-0 shadow-sm rounded-3">
+                            <h5 className="mb-4 fw-semibold text-info">Upload Documents</h5>
+                            <div className="mb-3"><CFormLabel>Photo (JPEG/JPG only, max 2MB)</CFormLabel><CFormInput type="file" name="photoFile" accept="image/jpeg,image/jpg" onChange={handleChange} invalid={!!errors.photoFile}/>{renderError('photoFile')}</div>
+                            <div className="mb-3"><CFormLabel>Aadhaar File (PDF only, max 2MB)</CFormLabel><CFormInput type="file" name="aadhaarFile" accept="application/pdf" onChange={handleChange} invalid={!!errors.aadhaarFile} />{renderError('aadhaarFile')}</div>
+                            <div><CFormLabel>PAN File (PDF only, max 2MB)</CFormLabel><CFormInput type="file" name="panFile" accept="application/pdf" onChange={handleChange} invalid={!!errors.panFile}/>{renderError('panFile')}</div>
                         </CCard>
                         <div className="d-flex justify-content-between mt-4">
                           <CButton color="secondary" onClick={prevStep}>Back</CButton>
