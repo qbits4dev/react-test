@@ -4,7 +4,6 @@ import {
   CButton,
   CCard,
   CCardBody,
-  CCardGroup,
   CCol,
   CContainer,
   CForm,
@@ -39,65 +38,62 @@ const Login = () => {
     }
 
     const payload = {
-      grant_type: 'password', // fixed, per spec
-      username: username,
-      password: password,
+      grant_type: 'password',
+      username,
+      password,
       scope: '',
       client_id: '',
       client_secret: '',
     }
 
     try {
-      const formBody = new URLSearchParams();
-      formBody.append('grant_type', 'password');
-      formBody.append('username', payload.username);  
-      formBody.append('password', payload.password);  
-      formBody.append('scope', payload.scope || ''); 
-      formBody.append('client_id', payload.client_id || '');
-      formBody.append('client_secret', payload.client_secret || '');
-    
+      const formBody = new URLSearchParams()
+      formBody.append('grant_type', 'password')
+      formBody.append('username', payload.username)
+      formBody.append('password', payload.password)
+      formBody.append('scope', payload.scope || '')
+      formBody.append('client_id', payload.client_id || '')
+      formBody.append('client_secret', payload.client_secret || '')
+
       const response = await fetch('https://api.qbits4dev.com/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: formBody.toString(),
-      });
-    
-      const data = await response.json();
+      })
+
+      const data = await response.json()
+
       if (response.ok) {
-        localStorage.setItem('access_token', data.access_token);
-        localStorage.setItem('refresh_token', data.refresh_token);
-        setErrors({});
-        navigate('/dashboard'); // redirect to protected page
+        localStorage.setItem('access_token', data.access_token)
+        localStorage.setItem('refresh_token', data.refresh_token)
+        localStorage.setItem('user_role', data.role)
+        localStorage.setItem('user_id', data.u_id)
+        setErrors({})
+        console.log(data.role)
+        // Role-based navigation
+        if (data.role === 'admin') {
+          navigate('/AdminDashboard')
+        } else if (data.role === 'agent') {
+          navigate('/AgentDashboard')
+        } else if (data.role === 'customer') {
+          navigate('/ClientDashboard')
+        } else {
+          navigate('/dashboard') // fallback default
+        }
       } else {
-        setErrors({ form: data.message || 'Invalid credentials' });
+        setErrors({ form: data.message || 'Invalid credentials' })
       }
     } catch (error) {
-      setErrors({ form: error.message || 'Request failed' });
+      setErrors({ form: error.message || 'Request failed' })
     }
-    
   }
-  //   if (username === 'testuser' && password === 'testpass') {
-  //     // Simulate a successful login response
-  //     localStorage.setItem('access_token', 'dummy_access_token');
-  //     localStorage.setItem('refresh_token', 'dummy_refresh_token');
-  //     setErrors({});
-  //     navigate('/dashboard'); // redirect to protected page
-  //     return;
-  //   } else {
-  //     // Simulate an error
-  //     setErrors({ form: 'Invalid credentials (dummy data)' });
-  //     return;
-  //   }
-  // }
 
   return (
     <div className="bg-body-tertiary min-vh-100 d-flex flex-row align-items-center">
       <CContainer>
         <CRow className="justify-content-center">
           <CCol xs={12} sm={10} md={8} lg={7}>
-            {/* Stack on mobile, side-by-side on desktop */}
             <div className="d-flex flex-column flex-md-row">
-              {/* Login Card */}
               <CCard className="p-4 flex-fill">
                 <CCardBody>
                   <CForm onSubmit={handleLogin} noValidate>
@@ -149,7 +145,6 @@ const Login = () => {
                 </CCardBody>
               </CCard>
 
-              {/* Register Card */}
               <CCard className="text-white bg-primary py-5 flex-fill mt-3 mt-md-0 md-3">
                 <CCardBody className="text-center d-flex flex-column justify-content-center">
                   <div>
@@ -173,7 +168,6 @@ const Login = () => {
         </CRow>
       </CContainer>
     </div>
-
   )
 }
 
