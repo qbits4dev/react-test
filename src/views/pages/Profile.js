@@ -203,6 +203,12 @@ export default function UserProfile() {
                             {renderField("Contact", profile.nomineeContact, "nomineeContact")}
                         </CCard>
 
+                        <CCard className="shadow-sm rounded-4 p-4 mb-4 bg-light">
+                            <h5 className="text-primary mb-4">Reference Details</h5>
+                            <CFormLabel>Reference Agent</CFormLabel>
+                            <CFormLabel>Agent Team</CFormLabel>
+                        </CCard>
+
                         {/* Documents */}
                         <CCard className="shadow-sm rounded-4 p-4 mb-5 bg-light">
                             <h5 className="text-primary mb-4">Documents</h5>

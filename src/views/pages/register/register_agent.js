@@ -539,6 +539,10 @@ export default function RegisterAgentWizard() {
                           </CCol>
                         </CRow>
                         <CRow>
+                          <CCol>
+                            <CCard className="p-3 bg-white shadow-sm mb-3 rounded-3">
+                            </CCard>
+                          </CCol>
 
                           {/* Nominee Details Section */}
                           <CCol xs={12} md={12}>

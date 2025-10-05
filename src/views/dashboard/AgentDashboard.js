@@ -55,7 +55,7 @@ const AgentDashboard = () => {
       <WidgetsDropdown widgetsData={agentWidgetsData} className="mb-4" />
 
       {/* Targets Table Section */}
-      <CRow className="justify-content-center">
+      <CRow className="justify-content-center ">
         <CCol md={12}>
           <CCard className="shadow-sm border-0 rounded-3">
             <CCardHeader className="bg-primary text-white text-center fs-5">
@@ -68,9 +68,9 @@ const AgentDashboard = () => {
                 </p>
               ) : (
                 <CTable striped hover responsive>
-                  <CTableHead color="dark">
+                  <CTableHead color="">
                     <CTableRow>
-                      <CTableHeaderCell>#</CTableHeaderCell>
+                      <CTableHeaderCell>S.no</CTableHeaderCell>
                       <CTableHeaderCell>Role ID</CTableHeaderCell>
                       <CTableHeaderCell>Description</CTableHeaderCell>
                       <CTableHeaderCell>Value</CTableHeaderCell>
