@@ -19,7 +19,7 @@ const AgentDashboard = () => {
   // Sample widget data
   const agentWidgetsData = [
     {
-      id: 'Book Site',
+      id: 'Book Site Visit',
       title: 'Book Site',
       value: '40',
       color: 'danger',
@@ -46,7 +46,7 @@ const AgentDashboard = () => {
 
   // Targets state (same as in Targets component)
   const [targets, setTargets] = useState([
-    { role_id: 1, description: 'Initial Target Example', value: 100 },
+    { role_id: 1, description: 'Initial Target Example', value: 15 },
   ])
 
   return (
@@ -73,7 +73,7 @@ const AgentDashboard = () => {
                       <CTableHeaderCell>S.no</CTableHeaderCell>
                       <CTableHeaderCell>Role ID</CTableHeaderCell>
                       <CTableHeaderCell>Description</CTableHeaderCell>
-                      <CTableHeaderCell>Value</CTableHeaderCell>
+                      <CTableHeaderCell>Plots</CTableHeaderCell>
                     </CTableRow>
                   </CTableHead>
                   <CTableBody>
