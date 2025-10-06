@@ -1,247 +1,239 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import {
-    CContainer,
+    CCard,
+    CCardBody,
+    CCardHeader,
+    CForm,
+    CFormInput,
+    CFormLabel,
+    CFormSelect,
+    CButton,
     CRow,
     CCol,
-    CButton,
-    CCardBody,
-    CForm,
-    CCard,
-    CInputGroup,
-    CInputGroupText,
-    CFormInput,
-    CDropdown,
-    CDropdownToggle,
-    CDropdownMenu,
-    CDropdownItem,
-    CFormLabel,
 } from '@coreui/react'
 
-const BookVisit = () => {
+export default function LeadForm() {
+    const [leadType, setLeadType] = useState('')
     const [formData, setFormData] = useState({
-        name: '',
-        firstname: '',
-        lastname: '',
+        customerId: '',
+        agentId: '',
         phone: '',
-        plotNumber: '',
-        interestedIn: 'Interested In',
+        firstName: '',
+        lastName: '',
+        interestedIn: '',
+        plot: '',
         dateOfVisit: '',
-        lead: 'Lead',
     })
+    const [errors, setErrors] = useState({})
 
-    const [lead, setLead] = useState('Lead')
-    const [leadsList, setLeadsList] = useState([])
-    const [interestedIn, setInterestedIn] = useState('Interested In')
-    const [interestedInList, setInterestedInList] = useState([])
-
-    // GET data for dropdowns
-    useEffect(() => {
-        fetch('https://api.qbits4dev.com/visits/')
-            .then((res) => res.json())
-            .then((data) => {
-                if (data && Array.isArray(data.Lead)) {
-                    setLeadsList(data.Lead)
-                }
-            })
-            .catch(() => {
-                setLeadsList([])
-            })
-
-        fetch('http://127.0.0.1:5000/test?key=InterestedIn')
-            .then((res) => res.json())
-            .then((data) => {
-                if (data && Array.isArray(data.InterestedIn)) {
-                    setInterestedInList(data.InterestedIn)
-                }
-            })
-            .catch(() => {
-                setInterestedInList([])
-            })
-    }, [])
-
-    const handleLead = (value) => {
-        setLead(value)
-        setFormData((prev) => ({ ...prev, lead: value }))
+    const projects = {
+        'Aditya Heights': ['Plot 101 - East - 200sqyd', 'Plot 102 - West - 300sqyd'],
+        'Aditya Medows': ['Plot 201 - North - 250sqyd', 'Plot 202 - South - 400sqyd'],
     }
 
-    const handleChange = (e) => {
-        const { name, value } = e.target
-        setFormData((prev) => ({
-            ...prev,
-            [name]: value,
-        }))
-    }
+    // validations
+    const validate = () => {
+        let errs = {}
 
-    const handleDropdown = (value) => {
-        setInterestedIn(value)
-        setFormData((prev) => ({
-            ...prev,
-            interestedIn: value,
-        }))
-    }
-
-    // POST form data
-    const handleSubmit = async (e) => {
-        e.preventDefault()
-        try {
-            const res = await fetch('http://127.0.0.1:5000/test', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData),
-            })
-            if (res.ok) {
-                alert('Visit Booked Successfully')
-            } else {
-                alert('Booking failed. Please try again.')
+        if (leadType === 'Existing') {
+            if (!/^[A-Za-z]{2}[0-9]{6}$/.test(formData.customerId)) {
+                errs.customerId = 'Customer ID must be 2 letters followed by 6 digits'
             }
-        } catch (error) {
-            alert('Network Error. Please try again later.')
+        }
+
+        if (!/^[A-Za-z]{2}[0-9]{6}$/.test(formData.agentId)) {
+            errs.agentId = 'Agent ID must be 2 letters followed by 6 digits'
+        }
+
+        if (!/^[0-9]{10}$/.test(formData.phone)) {
+            errs.phone = 'Phone must be 10 digits'
+        }
+
+        if (leadType === 'New') {
+            if (!/^[A-Za-z]+$/.test(formData.firstName)) {
+                errs.firstName = 'First name must contain only alphabets'
+            }
+            if (!/^[A-Za-z]+$/.test(formData.lastName)) {
+                errs.lastName = 'Last name must contain only alphabets'
+            }
+        }
+
+        if (!formData.interestedIn) {
+            errs.interestedIn = 'Please select a project'
+        } else if (!formData.plot) {
+            errs.plot = 'Please select a plot'
+        }
+
+        // date must be 2 days before
+        if (formData.dateOfVisit) {
+            const selected = new Date(formData.dateOfVisit)
+            const today = new Date()
+            const diff = (selected - today) / (1000 * 60 * 60 * 24)
+            if (diff < 2) {
+                errs.dateOfVisit = 'Date must be at least 2 days from today'
+            }
+        } else {
+            errs.dateOfVisit = 'Date of visit required'
+        }
+
+        setErrors(errs)
+        return Object.keys(errs).length === 0
+    }
+
+    const handleSubmit = (e) => {
+        e.preventDefault()
+        if (validate()) {
+            alert('Form Submitted Successfully ✅')
         }
     }
 
-    const LeadForm = () => {
-        return (
-            <CForm onSubmit={handleSubmit} className="mt-3">
-                {lead === 'New Lead' && (
-                    <>
-                        <CFormLabel>First Name</CFormLabel>
-                        <CInputGroup className="mb-3">
-                            <CFormInput
-                                name="firstname"
-                                placeholder="First Name"
-                                value={formData.firstname}
-                                onChange={handleChange}
-                                required
-                            />
-                        </CInputGroup>
-
-                        <CFormLabel>Last Name</CFormLabel>
-                        <CInputGroup className="mb-3">
-                            <CFormInput
-                                name="lastname"
-                                placeholder="Last Name"
-                                value={formData.lastname}
-                                onChange={handleChange}
-                                required
-                            />
-                        </CInputGroup>
-                    </>
-                )}
-
-                {lead === 'Existing Lead' && (
-                    <>
-                        <CFormLabel>Full Name</CFormLabel>
-                        <CInputGroup className="mb-3">
-                            <CFormInput
-                                name="name"
-                                placeholder="Full Name"
-                                value={formData.name}
-                                onChange={handleChange}
-                                required
-                            />
-                        </CInputGroup>
-                    </>
-                )}
-
-                <CFormLabel>Phone Number</CFormLabel>
-                <CInputGroup className="mb-3">
-                    <CFormInput
-                        name="phone"
-                        placeholder="Phone Number"
-                        value={formData.phone}
-                        onChange={handleChange}
-                        required
-                    />
-                </CInputGroup>
-
-                <CFormLabel>Plot Number</CFormLabel>
-                <CInputGroup className="mb-3">
-                    <CFormInput
-                        name="plotNumber"
-                        placeholder="Plot Number"
-                        value={formData.plotNumber}
-                        onChange={handleChange}
-                        required
-                    />
-                </CInputGroup>
-
-                <CFormLabel>Interested In</CFormLabel>
-                <CDropdown className="mb-3 w-100">
-                    <CDropdownToggle color="secondary" className="w-100 text-start">
-                        {interestedIn}
-                    </CDropdownToggle>
-                    <CDropdownMenu className="w-100">
-                        {interestedInList.map((item, index) => (
-                            <CDropdownItem
-                                key={item.id || index}
-                                onClick={() => handleDropdown(item.name)}
-                            >
-                                {item.name}
-                            </CDropdownItem>
-                        ))}
-                    </CDropdownMenu>
-                </CDropdown>
-
-                <CFormLabel>Date of Visit</CFormLabel>
-                <CInputGroup className="mb-4">
-                    <CFormInput
-                        name="dateOfVisit"
-                        type="date"
-                        placeholder="Date of visit"
-                        required
-                        value={formData.dateOfVisit}
-                        onChange={handleChange}
-                    />
-                </CInputGroup>
-
-                <div className="d-grid">
-                    <CButton color="primary" type="submit">
-                        Book Visit
-                    </CButton>
-                </div>
-            </CForm>
-        )
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value })
     }
 
     return (
-        <div className="bg-light min-vh-100 d-flex flex-row align-items-center">
-            <CContainer>
-                <CRow className="justify-content-center">
-                    <CCol md={9} lg={7} xl={6}>
-                        <CCard className="p-4 shadow-lg rounded-4">
-                            <CCardBody>
-                                <h2 className="mb-3 text-center text-primary">Book a Visit</h2>
-                                <p className="text-center text-muted mb-4">
-                                    Schedule your visit with us easily
-                                </p>
+        <CRow className="justify-content-center mt-4">
+            <CCol md={10} lg={6}>
+                <CCard className="shadow-lg border-0 rounded-4">
+                    <CCardHeader className="text-primary text-center fw-bold fs-1">
+                        Book Site Visit
+                    </CCardHeader>
+                    <CCardBody>
+                        <CForm onSubmit={handleSubmit}>
+                            {/* Lead Type */}
+                            <CFormLabel>Lead Type</CFormLabel>
+                            <CFormSelect
+                                name="leadType"
+                                value={leadType}
+                                onChange={(e) => setLeadType(e.target.value)}
+                            >
+                                <option value="">Select Lead Type</option>
+                                <option value="New">New Lead</option>
+                                <option value="Existing">Existing Lead</option>
+                            </CFormSelect>
+                            <br />
 
-                                <CForm>
-                                    <CFormLabel>Select Lead Type</CFormLabel>
-                                    <CDropdown className="mb-3 w-100">
-                                        <CDropdownToggle color="primary" className="w-100 text-start">
-                                            {lead}
-                                        </CDropdownToggle>
-                                        <CDropdownMenu className="w-100">
-                                            {leadsList.map((item, index) => (
-                                                <CDropdownItem
-                                                    key={index}
-                                                    onClick={() => handleLead(item.name)}
-                                                >
-                                                    {item.name}
-                                                </CDropdownItem>
-                                            ))}
-                                        </CDropdownMenu>
-                                    </CDropdown>
-                                </CForm>
+                            {leadType === 'Existing' && (
+                                <>
+                                    <CFormLabel>Customer ID</CFormLabel>
+                                    <CFormInput
+                                        name="customerId"
+                                        value={formData.customerId}
+                                        onChange={handleChange}
+                                        placeholder="Ex: AB123456"
+                                        invalid={!!errors.customerId}
+                                    />
+                                    <small className="text-danger">{errors.customerId}</small>
+                                    <br />
+                                </>
+                            )}
 
-                                {LeadForm()}
-                            </CCardBody>
-                        </CCard>
-                    </CCol>
-                </CRow>
-            </CContainer>
-        </div>
+                            {leadType === 'New' && (
+                                <>
+                                    <CFormLabel>First Name</CFormLabel>
+                                    <CFormInput
+                                        name="firstName"
+                                        value={formData.firstName}
+                                        onChange={handleChange}
+                                        placeholder="Enter first name"
+                                        invalid={!!errors.firstName}
+                                    />
+                                    <small className="text-danger">{errors.firstName}</small>
+                                    <br />
+
+                                    <CFormLabel>Last Name</CFormLabel>
+                                    <CFormInput
+                                        name="lastName"
+                                        value={formData.lastName}
+                                        onChange={handleChange}
+                                        placeholder="Enter last name"
+                                        invalid={!!errors.lastName}
+                                    />
+                                    <small className="text-danger">{errors.lastName}</small>
+                                    <br />
+                                </>
+                            )}
+
+                            {/* Agent ID */}
+                            <CFormLabel>Agent ID</CFormLabel>
+                            <CFormInput
+                                name="agentId"
+                                value={formData.agentId}
+                                onChange={handleChange}
+                                placeholder="Ex: AG123456"
+                                invalid={!!errors.agentId}
+                            />
+                            <small className="text-danger">{errors.agentId}</small>
+                            <br />
+
+                            {/* Phone */}
+                            <CFormLabel>Phone Number</CFormLabel>
+                            <CFormInput
+                                name="phone"
+                                value={formData.phone}
+                                onChange={handleChange}
+                                placeholder="10-digit phone number"
+                                invalid={!!errors.phone}
+                            />
+                            <small className="text-danger">{errors.phone}</small>
+                            <br />
+
+                            {/* Interested In */}
+                            <CFormLabel>Interested In</CFormLabel>
+                            <CFormSelect
+                                name="interestedIn"
+                                value={formData.interestedIn}
+                                onChange={handleChange}
+                            >
+                                <option value="">Select Project</option>
+                                {Object.keys(projects).map((proj, i) => (
+                                    <option key={i} value={proj}>
+                                        {proj}
+                                    </option>
+                                ))}
+                            </CFormSelect>
+                            <small className="text-danger">{errors.interestedIn}</small>
+                            <br />
+
+                            {formData.interestedIn && (
+                                <>
+                                    <CFormLabel>Plot Number & Facing</CFormLabel>
+                                    <CFormSelect
+                                        name="plot"
+                                        value={formData.plot}
+                                        onChange={handleChange}
+                                    >
+                                        <option value="">Select Plot</option>
+                                        {projects[formData.interestedIn].map((p, i) => (
+                                            <option key={i} value={p}>
+                                                {p}
+                                            </option>
+                                        ))}
+                                    </CFormSelect>
+                                    <small className="text-danger">{errors.plot}</small>
+                                    <br />
+                                </>
+                            )}
+
+                            {/* Date of Visit */}
+                            <CFormLabel>Date of Visit</CFormLabel>
+                            <CFormInput
+                                type="date"
+                                name="dateOfVisit"
+                                value={formData.dateOfVisit}
+                                onChange={handleChange}
+                                invalid={!!errors.dateOfVisit}
+                            />
+                            <small className="text-danger">{errors.dateOfVisit}</small>
+                            <br />
+
+                            <CButton color="primary" type="submit" className="mt-3">
+                                Submit
+                            </CButton>
+                        </CForm>
+                    </CCardBody>
+                </CCard>
+            </CCol>
+        </CRow>
     )
 }
-
-export default BookVisit
