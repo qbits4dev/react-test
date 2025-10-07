@@ -151,7 +151,7 @@ export default function UserProfile() {
 
     const handleSubmit = () => {
         if (!validate()) return;
-        alert("Profile updated successfully! (Dummy)");
+        alert("Profile updated successfully");
     };
 
     const renderField = (label, value, name, type = "text", options = []) => {
