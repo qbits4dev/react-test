@@ -218,7 +218,6 @@ export default function LeadForm() {
                 onChange={handleChange}
                 placeholder="Ex: AG123456"
                 invalid={!!errors.agentId}
-                readOnly
               />
               <small className="text-danger">{errors.agentId}</small>
               <br />
