@@ -20,7 +20,7 @@ const AgentDashboard = () => {
   const agentWidgetsData = [
     {
       id: 'Book Site Visit',
-      title: 'Book Site',
+      title: 'Book Site Visit',
       value: '40',
       color: 'danger',
       buttonLink: '/bookvisit',
