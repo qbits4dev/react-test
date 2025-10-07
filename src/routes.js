@@ -14,6 +14,7 @@ const ForgotUserId = React.lazy(() => import('./views/pages/register/ForgotUID')
 const ForgotPassword = React.lazy(() => import('./views/pages/register/ForgotPassword'))
 const Targets = React.lazy(() => import('./views/pages/API/Targets'))
 
+
 const Colors = React.lazy(() => import('./views/theme/colors/Colors'))
 const Typography = React.lazy(() => import('./views/theme/typography/Typography'))
 
@@ -79,6 +80,7 @@ const PostPlots = React.lazy(() => import('./views/pages/Projects/PostPlots'))
 const GetTargets = React.lazy(() => import('./views/pages/API/GetTargets'))
 const PostTargets = React.lazy(() => import('./views/pages/API/PostTargets'))
 const GetAgents = React.lazy(() => import('./views/pages/API/GetAgents'))
+const GetBookVisit = React.lazy(() => import('./views/pages/register/GetBookVisit'))
 
 const Widgets = React.lazy(() => import('./views/widgets/Widgets'))
 
@@ -151,6 +153,7 @@ const routes = [
   { path: '/ForgotPassword', name: 'Forgot Password', element: ForgotPassword },
   { path: '/ARegister', name: 'Agent Register', element: ARegister },
   { path: '/Targets', name: 'Targets', element: Targets },
+  { path: '/GetBookVisit', name: 'Get Book Visit', element: GetBookVisit },
 ]
 
 export default routes

@@ -12,7 +12,10 @@ import {
     CCol,
 } from '@coreui/react'
 
+import {useNavigate } from 'react-router-dom'
+
 export default function LeadForm() {
+    const navigate = useNavigate()
     const [leadType, setLeadType] = useState('')
     const [formData, setFormData] = useState({
         customerId: '',
@@ -227,7 +230,7 @@ export default function LeadForm() {
                             <small className="text-danger">{errors.dateOfVisit}</small>
                             <br />
 
-                            <CButton color="primary" type="submit" className="mt-3">
+                            <CButton color="primary" type="submit" className="mt-3" onClick={() => navigate('/GetBookVisit')}>
                                 Submit
                             </CButton>
                         </CForm>

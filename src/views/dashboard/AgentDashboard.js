@@ -27,6 +27,14 @@ const AgentDashboard = () => {
       buttonText: 'Book Site visit',
     },
     {
+      id: 'Site Visits',
+      title: 'Site Visits',
+      value: '20',
+      changeIcon: 'cilArrowTop',
+      color: 'warning',
+      buttonLink: '/GetBookVisit',
+    },
+    {
       id: 'Reports',
       title: 'Reports',
       value: '50',
