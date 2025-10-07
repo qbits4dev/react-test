@@ -103,7 +103,7 @@ const AgentDashboard = () => {
 
       {/* Upcoming Visits Widget Section */}
       <CRow className="justify-content-center">
-        <CCol md={10}>
+        <CCol md={6}>
           <CCard className="shadow-sm border-0 rounded-3">
             <CCardHeader className="bg-info text-white text-center fs-5">
               Upcoming Client Visits
