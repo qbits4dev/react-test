@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
     CCard,
     CCardBody,
@@ -15,37 +15,107 @@ import {
 export default function UserProfile() {
     const [profile, setProfile] = useState({
         userId: "Ag1000011",
-        firstName: "Srinivas",
-        lastName: "Athili",
-        fatherName: "raghavendra Athili",
-        spouseName: "uma Athili",
-        dob: "1990-05-10",
-        age: "33",
-        gender: "Male",
-        email: "srinivas.a@example.com",
-        phone: "9876543210",
-        occupation: "Agent",
-        workExperience: "5 years",
-        language: "English",
-        maritalStatus: "Married",
-        education: "Graduate",
-        designation: "Senior Agent",
-        nomineeName: "Amala Athili",
-        nomineeRelation: "Daughter",
-        nomineeContact: "9876543211",
-        bankName: "ABC Bank",
-        branchName: "Kakinada Branch",
-        accountNumber: "123456789012",
-        ifsc: "ABCD0123456",
-        permanentAddress: "athili street, Kakinada, Andhra Pradesh",
-        presentAddress: "athili street, Kakinada, Andhra Pradesh",
+        // firstName: "Srinivas",
+        // lastName: "Athili",
+        // fatherName: "raghavendra Athili",
+        // spouseName: "uma Athili",
+        // dob: "1990-05-10",
+        // age: "33",
+        // gender: "Male",
+        // email: "srinivas.a@example.com",
+        // phone: "9876543210",
+        // occupation: "Agent",
+        // workExperience: "5 years",
+        // language: "English",
+        // maritalStatus: "Married",
+        // education: "Graduate",
+        // designation: "Senior Agent",
+        // nomineeName: "Amala Athili",
+        // nomineeRelation: "Daughter",
+        // nomineeContact: "9876543211",
+        // bankName: "ABC Bank",
+        // branchName: "Kakinada Branch",
+        // accountNumber: "123456789012",
+        // ifsc: "ABCD0123456",
+        // permanentAddress: "athili street, Kakinada, Andhra Pradesh",
+        // presentAddress: "athili street, Kakinada, Andhra Pradesh",
         photoUrl: "src/assets/images/avatars/3.jpg",
         photoFile: null,
         aadhaarFileName: "dummy_aadhaar.pdf",
         panFileName: "dummy_pan.pdf",
-        referenceagent: "alpha",
-        agentteam: "beta",
+        // referenceagent: "alpha",
+        // agentteam: "beta",
+        firstName: '',
+    lastName: '',
+    fatherName: '',
+    spouseName: '',
+    dob: '',
+    age: '',
+    gender: '',
+    email: '',
+    phone: '',
+    occupation: '',
+    workExperience: '',
+    language: 'English', // default
+    maritalStatus: '',
+    education: '',
+    designation: '',
+    nomineeName: '',
+    nomineeRelation: '',
+    nomineeContact: '',
+    bankName: '',
+    branchName: '',
+    accountNumber: '',
+    ifsc: '',
+    permanentAddress: '',
+    presentAddress: '',
+    photoUrl: '', 
+    referenceagent: '',
+    agentteam: '',
     });
+
+    useEffect(() => {
+        console.log("working")
+        const userId = localStorage.getItem('user_id'); // e.g. "ag000007"
+        if (!userId) return;
+        const apiUrl = `https://api.qbits4dev.com/users/${userId}`;
+        fetch(apiUrl)
+          .then((response) => response.json())
+          .then((data) => {
+            setProfile((prev) => ({
+              ...prev,
+              firstName: data.first_name || '',
+              lastName: data.last_name || '',
+              fatherName: data.father_name || '',
+              dob: data.dob || '',
+            //   age: calculateAge(data.dob),
+              gender: data.gender || '',
+              email: data.email || '',
+              phone: data.mobile || '',
+              occupation: data.role || '',
+              workExperience: data.work_experience || '',
+              language: 'English',
+              maritalStatus: data.marital_status || '',
+              education: data.education || '',
+              designation: data.designation || '',
+              nomineeName: data.nominiee || '',
+              nomineeRelation: data.relationship || '',
+              nomineeContact: data.nominee_mobile || '',
+              bankName: data.bank_name || '',
+              branchName: data.branch || '',
+              accountNumber: data.account_number || '',
+              ifsc: data.ifsc_code || '',
+              permanentAddress: data.address || '',
+              presentAddress: data.address || '',
+              photoUrl: 'src/assets/images/avatars/3.jpg', // Static or fetch from API if available
+              referenceagent: data.reference_agent || '',
+              agentteam: data.agent_team || '',
+            }));
+          })
+          .catch((error) => {
+            console.error('Error fetching user data:', error);
+          });
+      }, []);
 
     const [errors, setErrors] = useState({ email: "", phone: "", photoFile: "" });
 
