@@ -14,6 +14,7 @@ import {
   CTableDataCell,
 } from '@coreui/react'
 import WidgetsDropdown from '../widgets/WidgetsCardsAd'
+import UpcomingVisitsWidget from '../pages/register/VisitCalender'
 
 const AgentDashboard = () => {
   // Sample widget data
@@ -52,7 +53,6 @@ const AgentDashboard = () => {
     },
   ]
 
-  // Targets state (same as in Targets component)
   const [targets, setTargets] = useState([
     { role_id: 1, description: 'Initial Target Example', value: 15 },
   ])
@@ -62,8 +62,8 @@ const AgentDashboard = () => {
       {/* Widgets Section */}
       <WidgetsDropdown widgetsData={agentWidgetsData} className="mb-4" />
 
-      {/* Targets Table Section */}
-      <CRow className="justify-content-center ">
+      {/* Targets Section */}
+      <CRow className="justify-content-center mb-4">
         <CCol md={12}>
           <CCard className="shadow-sm border-0 rounded-3">
             <CCardHeader className="bg-primary text-white text-center fs-5">
@@ -76,7 +76,7 @@ const AgentDashboard = () => {
                 </p>
               ) : (
                 <CTable striped hover responsive>
-                  <CTableHead color="">
+                  <CTableHead>
                     <CTableRow>
                       <CTableHeaderCell>S.no</CTableHeaderCell>
                       <CTableHeaderCell>Role ID</CTableHeaderCell>
@@ -96,6 +96,20 @@ const AgentDashboard = () => {
                   </CTableBody>
                 </CTable>
               )}
+            </CCardBody>
+          </CCard>
+        </CCol>
+      </CRow>
+
+      {/* Upcoming Visits Widget Section */}
+      <CRow className="justify-content-center">
+        <CCol md={10}>
+          <CCard className="shadow-sm border-0 rounded-3">
+            <CCardHeader className="bg-info text-white text-center fs-5">
+              Upcoming Client Visits
+            </CCardHeader>
+            <CCardBody>
+              <UpcomingVisitsWidget />
             </CCardBody>
           </CCard>
         </CCol>
