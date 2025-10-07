@@ -16,7 +16,10 @@ import { useNavigate } from 'react-router-dom'
 export default function LeadForm() {
   const navigate = useNavigate()
 
-  const agentIdFromStorage = localStorage.getItem('u_id') || ''
+  // Get agent ID from localStorage using possible keys
+  const agentIdFromStorage =
+    localStorage.getItem('user_id') || localStorage.getItem('u_id') || ''
+
   const [leadType, setLeadType] = useState('')
   const [formData, setFormData] = useState({
     customerId: '',
@@ -39,16 +42,16 @@ export default function LeadForm() {
       name: 'Aditya Heights',
       id: 1,
       plots: [
-        { label: 'Plot 101 - East - 200sqyd', id: 101 },
-        { label: 'Plot 102 - West - 300sqyd', id: 102 },
+        { label: 'Plot 101 - East - 200sqyd', id: 1 },
+        { label: 'Plot 102 - West - 300sqyd', id: 2 },
       ],
     },
     {
       name: 'Aditya Medows',
       id: 2,
       plots: [
-        { label: 'Plot 201 - North - 250sqyd', id: 201 },
-        { label: 'Plot 202 - South - 400sqyd', id: 202 },
+        { label: 'Plot 201 - North - 250sqyd', id: 1 },
+        { label: 'Plot 202 - South - 400sqyd', id: 2 },
       ],
     },
   ]
@@ -123,9 +126,9 @@ export default function LeadForm() {
       status: 'scheduled',
       project_id: projectId,
     }
-
+    console.log(apiBody)
     try {
-      const res = await fetch('https://api.qbits4dev.com/visits', {
+      const res = await fetch('https://api.qbits4dev.com/visits/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(apiBody),
@@ -216,6 +219,7 @@ export default function LeadForm() {
                 name="agentId"
                 value={formData.agentId}
                 onChange={handleChange}
+                readOnly
                 placeholder="Ex: AG123456"
                 invalid={!!errors.agentId}
               />
