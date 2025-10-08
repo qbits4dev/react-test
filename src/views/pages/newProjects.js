@@ -1,5 +1,5 @@
 // src/views/projects/AvailableProjects.js
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
     CContainer,
     CCard,
@@ -10,8 +10,11 @@ import {
     CCardImage,
     CCardTitle,
     CCardText,
+    CFormSelect,
+    CButton,
+    CInputGroup,
 } from "@coreui/react";
-import { cilLocationPin } from "@coreui/icons";
+import { cilLocationPin, cilFilter, cilSortAlphaDown, cilSortNumericDown } from "@coreui/icons";
 import CIcon from "@coreui/icons-react";
 
 // Helper function to determine progress bar color based on availability
@@ -23,75 +26,8 @@ const getAvailabilityColor = (percentage) => {
 
 export default function AvailableProjects() {
     const [hoveredCardId, setHoveredCardId] = useState(null);
-
-    // --- Internal CSS Styles ---
-    const styles = {
-        mainCard: {
-            borderRadius: "15px",
-        },
-        header: {
-            background: "linear-gradient(135deg, #6a11cb, #2575fc)",
-            borderRadius: "12px",
-            padding: "25px",
-            fontWeight: "bold",
-            fontSize: "2.5rem",
-            boxShadow: "0 4px 10px rgba(0,0,0,0.15)",
-        },
-        projectCard: {
-            borderRadius: "15px",
-            transition: "all 0.3s ease",
-            boxShadow: "0 4px 10px rgba(0,0,0,0.08)",
-            cursor: "pointer",
-            overflow: "hidden",
-        },
-        projectCardHover: {
-            transform: "scale(1.02)",
-            boxShadow: "0 8px 20px rgba(0,0,0,0.15)",
-        },
-        projectImage: {
-            width: "100px",
-            height: "100px",
-            borderRadius: "12px",
-            objectFit: "cover",
-        },
-        projectTitle: {
-            fontSize: "1.1rem",
-            fontWeight: "700",
-            color: "#000",
-            textTransform: "uppercase",
-            marginBottom: "0.25rem",
-        },
-        projectLocation: {
-            display: "flex",
-            alignItems: "center",
-            fontSize: "0.9rem",
-            marginBottom: "0.75rem",
-        },
-        statTextTotal: {
-            color: "#D32F2F",
-            fontWeight: "600",
-        },
-        statTextAvailable: {
-            color: "#388E3C",
-            fontWeight: "600",
-        },
-        // Style for the new "Occupied" text
-        statTextOccupied: {
-            color: "#FF9800", // Amber color
-            fontWeight: "600",
-        },
-        availabilityBar: {
-            height: "8px",
-            backgroundColor: "#e0e0e0",
-            borderRadius: "4px",
-            overflow: "hidden",
-        },
-        availabilityBarInner: {
-            height: "100%",
-            borderRadius: "4px",
-            transition: "width 0.5s ease-in-out",
-        },
-    };
+    const [filterLocation, setFilterLocation] = useState('');
+    const [sortBy, setSortBy] = useState(null); // Can be 'name' or 'availability'
 
     // Data with unique IDs
     const projects = [
@@ -111,6 +47,45 @@ export default function AvailableProjects() {
         { id: 14, image: "src/assets/images/iconic13.png", title: "ICONIC 13", location: "KOTHUR", total: 85, available: 33 },
     ];
 
+    // Memoized logic for filtering and sorting
+    const displayedProjects = useMemo(() => {
+        let processedProjects = [...projects];
+
+        // 1. Apply Filter
+        if (filterLocation) {
+            processedProjects = processedProjects.filter(p => p.location === filterLocation);
+        }
+
+        // 2. Apply Sort
+        if (sortBy === 'name') {
+            processedProjects.sort((a, b) => a.title.localeCompare(b.title));
+        } else if (sortBy === 'availability') {
+            processedProjects.sort((a, b) => (b.available / b.total) - (a.available / a.total));
+        }
+
+        return processedProjects;
+    }, [projects, filterLocation, sortBy]);
+
+    // Get unique locations for the dropdown
+    const uniqueLocations = [...new Set(projects.map(p => p.location))];
+
+    // --- Internal CSS Styles ---
+    const styles = {
+        mainCard: { borderRadius: "15px" },
+        header: { background: "linear-gradient(135deg, #6a11cb, #2575fc)", borderRadius: "12px", padding: "25px", fontWeight: "bold", fontSize: "2.5rem", boxShadow: "0 4px 10px rgba(0,0,0,0.15)" },
+        projectCard: { borderRadius: "15px", transition: "all 0.3s ease", boxShadow: "0 4px 10px rgba(0,0,0,0.08)", cursor: "pointer", overflow: "hidden" },
+        projectCardHover: { transform: "scale(1.02)", boxShadow: "0 8px 20px rgba(0,0,0,0.15)" },
+        projectImage: { width: "100px", height: "100px", borderRadius: "12px", objectFit: "cover" },
+        projectTitle: { fontSize: "1.1rem", fontWeight: "700", color: "#000", textTransform: "uppercase", marginBottom: "0" },
+        projectLocation: { display: "flex", alignItems: "center", fontSize: "0.9rem", marginBottom: "0.5rem" }, // <-- CORRECTED LINE
+        statTextTotal: { color: "#D32F2F", fontWeight: "600" },
+        statTextAvailable: { color: "#388E3C", fontWeight: "600" },
+        statTextOccupied: { color: "#FF9800", fontWeight: "600" },
+        availabilityBar: { position: 'relative', height: '20px', backgroundColor: '#e9ecef', borderRadius: '10px', overflow: 'hidden' },
+        availabilityBarInner: { height: '100%', borderRadius: '10px', transition: 'width 0.5s ease-in-out' },
+        availabilityBarText: { position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', color: '#fff', fontWeight: 'bold', fontSize: '0.8rem', textShadow: '1px 1px 2px rgba(0,0,0,0.5)', zIndex: 1, pointerEvents: 'none' },
+    };
+
     return (
         <CContainer className="py-5">
             <CCard className="p-4 shadow-sm mb-4" style={styles.mainCard}>
@@ -119,7 +94,45 @@ export default function AvailableProjects() {
                 </CCardHeader>
 
                 <CCardBody>
-                    {projects.map((p) => {
+                    {/* --- UI Controls for Filtering and Sorting --- */}
+                    <CRow className="mb-4 p-3 bg-light rounded">
+                        <CCol md={6}>
+                            <CInputGroup>
+                                <CButton type="button" color="secondary" variant="outline">
+                                    <CIcon icon={cilFilter} className="me-1" /> Filter
+                                </CButton>
+                                <CFormSelect
+                                    aria-label="Filter by location"
+                                    onChange={(e) => setFilterLocation(e.target.value)}
+                                    value={filterLocation}
+                                >
+                                    <option value="">All Locations</option>
+                                    {uniqueLocations.map(loc => <option key={loc} value={loc}>{loc}</option>)}
+                                </CFormSelect>
+                            </CInputGroup>
+                        </CCol>
+                        <CCol md={6} className="d-flex justify-content-md-end mt-2 mt-md-0">
+                            <span className="me-3 text-muted d-flex align-items-center">Sort by:</span>
+                            <CButton
+                                color={sortBy === 'name' ? 'primary' : 'secondary'}
+                                variant="outline"
+                                className="me-2"
+                                onClick={() => setSortBy('name')}
+                            >
+                                <CIcon icon={cilSortAlphaDown} className="me-1" /> Name
+                            </CButton>
+                            <CButton
+                                color={sortBy === 'availability' ? 'primary' : 'secondary'}
+                                variant="outline"
+                                onClick={() => setSortBy('availability')}
+                            >
+                                <CIcon icon={cilSortNumericDown} className="me-1" /> Availability
+                            </CButton>
+                        </CCol>
+                    </CRow>
+
+                    {/* --- Use the 'displayedProjects' array for mapping --- */}
+                    {displayedProjects.map((p) => {
                         const occupiedPlots = p.total - p.available;
                         const availablePercentage = (p.available / p.total) * 100;
                         const barColor = getAvailabilityColor(availablePercentage);
@@ -145,39 +158,26 @@ export default function AvailableProjects() {
 
                                 <div className="flex-grow-1 w-100">
                                     <CCardTitle as="h5" style={styles.projectTitle}>{p.title}</CCardTitle>
-
                                     <CCardText className="text-muted" style={styles.projectLocation}>
                                         <CIcon icon={cilLocationPin} className="me-1" style={{ color: "#C2185B" }} />
                                         {p.location}
                                     </CCardText>
-
                                     <CRow className="align-items-center g-2">
                                         <CCol xs={12} sm={5} style={{ fontSize: "0.95rem" }}>
-                                            <span style={styles.statTextTotal}>Total: {p.total}</span>
-                                            <br />
-                                            <span style={styles.statTextAvailable}>Available: {p.available}</span>
-                                            <br />
-                                            {/* Displaying the new Occupied plots count */}
+                                            <span style={styles.statTextTotal}>Total: {p.total}</span><br />
+                                            <span style={styles.statTextAvailable}>Available: {p.available}</span><br />
                                             <span style={styles.statTextOccupied}>Occupied: {occupiedPlots}</span>
                                         </CCol>
-                                        <CCol xs={12} sm={7} className="d-flex align-items-center">
+                                        <CCol xs={12} sm={7}>
                                             <div className="flex-grow-1" style={styles.availabilityBar}>
                                                 <div
-                                                    style={{
-                                                        ...styles.availabilityBarInner,
-                                                        width: `${availablePercentage}%`,
-                                                        backgroundColor: barColor,
-                                                    }}
+                                                    style={{ ...styles.availabilityBarInner, width: `${availablePercentage}%`, backgroundColor: barColor }}
                                                     title={`${Math.round(availablePercentage)}% Available`}
                                                 ></div>
+                                                <span style={styles.availabilityBarText}>
+                                                    {`${Math.round(availablePercentage)}% Available`}
+                                                </span>
                                             </div>
-                                            {/* Displaying the available percentage as text */}
-                                            <span
-                                                className="ms-2 fw-bold"
-                                                style={{ color: barColor, minWidth: '55px', textAlign: 'right' }}
-                                            >
-                                                {`${Math.round(availablePercentage)}%`}
-                                            </span>
                                         </CCol>
                                     </CRow>
                                 </div>
