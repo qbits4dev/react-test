@@ -26,7 +26,7 @@ const GetTargets = () => {
                 <CCol md={10}>
                     <CCard className="shadow-lg border-0 rounded-4">
                         <CCardHeader className="bg-gradient-primary text-primary rounded-top-4">
-                            <h4 className="m-2 text-center fw-bold"> Targets</h4>
+                            <h4 className="m-2 text-center fw-bold">v Targets</h4>
                         </CCardHeader>
                         <CCardBody>
                             {loading ? (
