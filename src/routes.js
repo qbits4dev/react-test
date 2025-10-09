@@ -14,6 +14,7 @@ const ForgotUserId = React.lazy(() => import('./views/pages/register/ForgotUID')
 const ForgotPassword = React.lazy(() => import('./views/pages/register/ForgotPassword'))
 const Targets = React.lazy(() => import('./views/pages/API/Targets'))
 const VisitCalender = React.lazy(() => import('./views/pages/register/VisitCalender'))
+const Loginheader = React.lazy(() => import('../src/components/LoginHeader.js/LoginHeader.js'))
 
 
 const Colors = React.lazy(() => import('./views/theme/colors/Colors'))
@@ -156,6 +157,7 @@ const routes = [
   { path: '/Targets', name: 'Targets', element: Targets },
   { path: '/GetBookVisit', name: 'Get Book Visit', element: GetBookVisit },
   { path: '/VisitCalender', name: 'Visit Calender', element: VisitCalender },
+  { path: '/Loginheader', name: 'Loginheader', element: Loginheader },
 ]
 
 export default routes
