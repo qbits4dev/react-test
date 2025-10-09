@@ -17,46 +17,46 @@ import {
 import { CNavGroup, CNavItem, CNavTitle } from '@coreui/react'
 
 const _nav = [
-  {
-    component: CNavItem,
-    name: 'Dashboard',
-    to: '/dashboard',
-    icon: <CIcon icon={cilSpeedometer} customClassName="nav-icon" />,
-    badge: {
-      color: 'info',
-      text: 'NEW',
-    },
-  },
-  {
-    component: CNavItem,
-    name: 'AgentDashboard',
-    to: '/Agentdashboard',
-    icon: <CIcon icon={cilSpeedometer} customClassName="nav-icon" />,
-    badge: {
-      color: 'info',
-      text: 'NEW',
-    },
-  },
-  {
-    component: CNavItem,
-    name: 'ClientDashboard',
-    to: '/Clientdashboard',
-    icon: <CIcon icon={cilSpeedometer} customClassName="nav-icon" />,
-    badge: {
-      color: 'info',
-      text: 'NEW',
-    },
-  },
-  {
-    component: CNavItem,
-    name: 'AdminDashboard',
-    to: '/Admindashboard',
-    icon: <CIcon icon={cilSpeedometer} customClassName="nav-icon" />,
-    badge: {
-      color: 'info',
-      text: 'NEW',
-    },
-  },
+  // {
+  //   component: CNavItem,
+  //   name: 'Dashboard',
+  //   to: '/dashboard',
+  //   icon: <CIcon icon={cilSpeedometer} customClassName="nav-icon" />,
+  //   badge: {
+  //     color: 'info',
+  //     text: 'NEW',
+  //   },
+  // },
+  // {
+  //   component: CNavItem,
+  //   name: 'AgentDashboard',
+  //   to: '/Agentdashboard',
+  //   icon: <CIcon icon={cilSpeedometer} customClassName="nav-icon" />,
+  //   badge: {
+  //     color: 'info',
+  //     text: 'NEW',
+  //   },
+  // },
+  // {
+  //   component: CNavItem,
+  //   name: 'ClientDashboard',
+  //   to: '/Clientdashboard',
+  //   icon: <CIcon icon={cilSpeedometer} customClassName="nav-icon" />,
+  //   badge: {
+  //     color: 'info',
+  //     text: 'NEW',
+  //   },
+  // },
+  // {
+  //   component: CNavItem,
+  //   name: 'AdminDashboard',
+  //   to: '/Admindashboard',
+  //   icon: <CIcon icon={cilSpeedometer} customClassName="nav-icon" />,
+  //   badge: {
+  //     color: 'info',
+  //     text: 'NEW',
+  //   },
+  // },
 
   // {
   //   component: CNavTitle,
@@ -100,7 +100,7 @@ const _nav = [
       {
         component: CNavItem,
         name: 'Invoice',
-        to: '/invoiceApp',
+        to: '/Invoice',
       },
       {
         component: CNavItem,
@@ -151,6 +151,21 @@ const _nav = [
         component: CNavItem,
         name: 'Profile',
         to: '/Profile',
+      },
+      {
+        component: CNavItem,
+        name: 'Forgot User ID',
+        to: '/ForgotUID',
+      },
+      {
+        component: CNavItem,
+        name: 'Forgot Password',
+        to: '/ForgotPassword',
+      },
+      {
+        component: CNavItem,
+        name: 'Registration for all users',
+        to: '/ARegister',
       },
     ],
   },

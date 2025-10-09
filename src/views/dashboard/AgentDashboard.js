@@ -1,198 +1,39 @@
-import React from 'react'
-import classNames from 'classnames'
-
+import React, { useState } from 'react'
 import {
-  CAvatar,
-  CButton,
-  CButtonGroup,
-  CCard,
-  CCardBody,
-  CCardFooter,
-  CCardHeader,
-  CCol,
-  CProgress,
+  CContainer,
   CRow,
+  CCol,
+  CCard,
+  CCardHeader,
+  CCardBody,
   CTable,
+  CTableHead,
+  CTableRow,
+  CTableHeaderCell,
   CTableBody,
   CTableDataCell,
-  CTableHead,
-  CTableHeaderCell,
-  CTableRow,
 } from '@coreui/react'
-import CIcon from '@coreui/icons-react'
-import {
-  cibCcAmex,
-  cibCcApplePay,
-  cibCcMastercard,
-  cibCcPaypal,
-  cibCcStripe,
-  cibCcVisa,
-  cibGoogle,
-  cibFacebook,
-  cibLinkedin,
-  cifBr,
-  cifEs,
-  cifFr,
-  cifIn,
-  cifPl,
-  cifUs,
-  cibTwitter,
-  cilCloudDownload,
-  cilPeople,
-  cilUser,
-  cilUserFemale,
-} from '@coreui/icons'
-
-import avatar1 from 'src/assets/images/avatars/1.jpg'
-import avatar2 from 'src/assets/images/avatars/2.jpg'
-import avatar3 from 'src/assets/images/avatars/3.jpg'
-import avatar4 from 'src/assets/images/avatars/4.jpg'
-import avatar5 from 'src/assets/images/avatars/5.jpg'
-import avatar6 from 'src/assets/images/avatars/6.jpg'
-
-import WidgetsBrand from '../widgets/WidgetsBrand'
-// import WidgetsDropdown from '../widgets/WidgetsDropdown'
 import WidgetsDropdown from '../widgets/WidgetsCardsAd'
-
-import MainChart from './MainChart'
+import UpcomingVisitsWidget from '../pages/register/VisitCalender'
 
 const AgentDashboard = () => {
-  const progressExample = [
-    { title: 'Visits', value: '29.703 Users', percent: 40, color: 'success' },
-    { title: 'Unique', value: '24.093 Users', percent: 20, color: 'info' },
-    { title: 'Pageviews', value: '78.706 Views', percent: 60, color: 'warning' },
-    { title: 'New Users', value: '22.123 Users', percent: 80, color: 'danger' },
-    { title: 'Bounce Rate', value: 'Average Rate', percent: 40.15, color: 'primary' },
-  ]
-
-  const progressGroupExample1 = [
-    { title: 'Monday', value1: 34, value2: 78 },
-    { title: 'Tuesday', value1: 56, value2: 94 },
-    { title: 'Wednesday', value1: 12, value2: 67 },
-    { title: 'Thursday', value1: 43, value2: 91 },
-    { title: 'Friday', value1: 22, value2: 73 },
-    { title: 'Saturday', value1: 53, value2: 82 },
-    { title: 'Sunday', value1: 9, value2: 69 },
-  ]
-
-  const progressGroupExample2 = [
-    { title: 'Male', icon: cilUser, value: 53 },
-    { title: 'Female', icon: cilUserFemale, value: 43 },
-  ]
-
-  const progressGroupExample3 = [
-    { title: 'Organic Search', icon: cibGoogle, percent: 56, value: '191,235' },
-    { title: 'Targets', icon: cibFacebook, percent: 15, value: '51,223' },
-    { title: 'Twitter', icon: cibTwitter, percent: 11, value: '37,564' },
-    { title: 'LinkedIn', icon: cibLinkedin, percent: 8, value: '27,319' },
-  ]
-
-  const tableExample = [
-    {
-      avatar: { src: avatar1, status: 'success' },
-      user: {
-        name: 'Yiorgos Avraamu',
-        new: true,
-        registered: 'Jan 1, 2023',
-      },
-      country: { name: 'USA', flag: cifUs },
-      usage: {
-        value: 50,
-        period: 'Jun 11, 2023 - Jul 10, 2023',
-        color: 'success',
-      },
-      payment: { name: 'Mastercard', icon: cibCcMastercard },
-      activity: '10 sec ago',
-    },
-    {
-      avatar: { src: avatar2, status: 'danger' },
-      user: {
-        name: 'Avram Tarasios',
-        new: false,
-        registered: 'Jan 1, 2023',
-      },
-      country: { name: 'Brazil', flag: cifBr },
-      usage: {
-        value: 22,
-        period: 'Jun 11, 2023 - Jul 10, 2023',
-        color: 'info',
-      },
-      payment: { name: 'Visa', icon: cibCcVisa },
-      activity: '5 minutes ago',
-    },
-    {
-      avatar: { src: avatar3, status: 'warning' },
-      user: { name: 'Quintin Ed', new: true, registered: 'Jan 1, 2023' },
-      country: { name: 'India', flag: cifIn },
-      usage: {
-        value: 74,
-        period: 'Jun 11, 2023 - Jul 10, 2023',
-        color: 'warning',
-      },
-      payment: { name: 'Stripe', icon: cibCcStripe },
-      activity: '1 hour ago',
-    },
-    {
-      avatar: { src: avatar4, status: 'secondary' },
-      user: { name: 'Enéas Kwadwo', new: true, registered: 'Jan 1, 2023' },
-      country: { name: 'France', flag: cifFr },
-      usage: {
-        value: 98,
-        period: 'Jun 11, 2023 - Jul 10, 2023',
-        color: 'danger',
-      },
-      payment: { name: 'PayPal', icon: cibCcPaypal },
-      activity: 'Last month',
-    },
-    {
-      avatar: { src: avatar5, status: 'success' },
-      user: {
-        name: 'Agapetus Tadeáš',
-        new: true,
-        registered: 'Jan 1, 2023',
-      },
-      country: { name: 'Spain', flag: cifEs },
-      usage: {
-        value: 22,
-        period: 'Jun 11, 2023 - Jul 10, 2023',
-        color: 'primary',
-      },
-      payment: { name: 'Google Wallet', icon: cibCcApplePay },
-      activity: 'Last week',
-    },
-    {
-      avatar: { src: avatar6, status: 'danger' },
-      user: {
-        name: 'Friderik Dávid',
-        new: true,
-        registered: 'Jan 1, 2023',
-      },
-      country: { name: 'Poland', flag: cifPl },
-      usage: {
-        value: 43,
-        period: 'Jun 11, 2023 - Jul 10, 2023',
-        color: 'success',
-      },
-      payment: { name: 'Amex', icon: cibCcAmex },
-      activity: 'Last week',
-    },
-  ]
-
+  // Sample widget data
   const agentWidgetsData = [
     {
-      id: 'leads',
-      title: 'Leads Generated',
-      value: '500',
-      changeIcon: 'cilArrowTop',
-      color: 'primary',
-    },
-    {
-      id: 'Book Site',
-      title: 'Book Site',
+      id: 'Book Site Visit',
+      title: 'Book Site Visit',
       value: '40',
       color: 'danger',
-      buttonLink: '/booksite',
-      buttonText: 'Book Site', 
+      buttonLink: '/bookvisit',
+      buttonText: 'Book Site visit',
+    },
+    {
+      id: 'Site Visits',
+      title: 'Site Visits',
+      value: '20',
+      changeIcon: 'cilArrowTop',
+      color: 'warning',
+      buttonLink: '/GetBookVisit',
     },
     {
       id: 'Reports',
@@ -200,25 +41,80 @@ const AgentDashboard = () => {
       value: '50',
       changeIcon: 'cilArrowTop',
       color: 'success',
-
+      buttonLink: '/Reports',
     },
-
     {
       id: 'targets',
       title: 'Targets',
       value: '50',
       changeIcon: 'cilArrowTop',
-      color: 'success',
+      color: 'info',
+      buttonLink: '/GetTargets',
     },
   ]
 
-
+  const [targets, setTargets] = useState([
+    { role_id: 1, description: 'Initial Target Example', value: 15 },
+  ])
 
   return (
-    <>
+    <CContainer className="py-4">
+      {/* Widgets Section */}
       <WidgetsDropdown widgetsData={agentWidgetsData} className="mb-4" />
 
-    </>
+      {/* Targets Section */}
+      <CRow className="justify-content-center mb-4">
+        <CCol md={12}>
+          <CCard className="shadow-sm border-0 rounded-3">
+            <CCardHeader className="bg-primary text-white text-center fs-5">
+              Targets
+            </CCardHeader>
+            <CCardBody>
+              {targets.length === 0 ? (
+                <p className="text-center text-muted py-3">
+                  No targets available.
+                </p>
+              ) : (
+                <CTable striped hover responsive>
+                  <CTableHead>
+                    <CTableRow>
+                      <CTableHeaderCell>S.no</CTableHeaderCell>
+                      <CTableHeaderCell>Role ID</CTableHeaderCell>
+                      <CTableHeaderCell>Description</CTableHeaderCell>
+                      <CTableHeaderCell>Plots</CTableHeaderCell>
+                    </CTableRow>
+                  </CTableHead>
+                  <CTableBody>
+                    {targets.map((target, index) => (
+                      <CTableRow key={index}>
+                        <CTableDataCell>{index + 1}</CTableDataCell>
+                        <CTableDataCell>{target.role_id}</CTableDataCell>
+                        <CTableDataCell>{target.description}</CTableDataCell>
+                        <CTableDataCell>{target.value}</CTableDataCell>
+                      </CTableRow>
+                    ))}
+                  </CTableBody>
+                </CTable>
+              )}
+            </CCardBody>
+          </CCard>
+        </CCol>
+      </CRow>
+
+      {/* Upcoming Visits Widget Section */}
+      <CRow className="justify-content-center">
+        <CCol md={6}>
+          <CCard className="shadow-sm border-0 rounded-3">
+            <CCardHeader className="bg-info text-white text-center fs-5">
+              Upcoming Client Visits
+            </CCardHeader>
+            <CCardBody>
+              <UpcomingVisitsWidget />
+            </CCardBody>
+          </CCard>
+        </CCol>
+      </CRow>
+    </CContainer>
   )
 }
 

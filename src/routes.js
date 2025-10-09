@@ -7,9 +7,13 @@ const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
 const ClientDashboard = React.lazy(() => import('./views/dashboard/ClientDashboard'))
 const AdminDashboard = React.lazy(() => import('./views/dashboard/AdminDashboard'))
 const AgentDashboard = React.lazy(() => import('./views/dashboard/AgentDashboard'))
-const Reports = React.lazy(() => import('./views/pages/Reports'))
 const Plots = React.lazy(() => import('./views/pages/Plots'))
-//const InvoiceApp = React.lazy(() => import('./views/Invoice/InvoiceApp'))
+const Reports = React.lazy(() => import('./views/pages/Reports'))
+const Invoice = React.lazy(() => import('./views/pages/Invoice'))
+const ForgotUserId = React.lazy(() => import('./views/pages/register/ForgotUID'))
+const ForgotPassword = React.lazy(() => import('./views/pages/register/ForgotPassword'))
+const Targets = React.lazy(() => import('./views/pages/API/Targets'))
+const VisitCalender = React.lazy(() => import('./views/pages/register/VisitCalender'))
 
 
 const Colors = React.lazy(() => import('./views/theme/colors/Colors'))
@@ -51,6 +55,7 @@ const BookSite = React.lazy(() => import('./views/pages/bookSite'))
 const Projects = React.lazy(() => import('./views/pages/register/Projects'))
 const newProjects = React.lazy(() => import('./views/pages/newProjects'))
 const Profile = React.lazy(() => import('./views/pages/Profile'))
+const ARegister = React.lazy(() => import('./views/pages/register/ARegister'))
 
 //Projects
 const skandagreenvalley = React.lazy(() => import('./views/pages/Projects/Skandagreenvalley'))
@@ -76,6 +81,7 @@ const PostPlots = React.lazy(() => import('./views/pages/Projects/PostPlots'))
 const GetTargets = React.lazy(() => import('./views/pages/API/GetTargets'))
 const PostTargets = React.lazy(() => import('./views/pages/API/PostTargets'))
 const GetAgents = React.lazy(() => import('./views/pages/API/GetAgents'))
+const GetBookVisit = React.lazy(() => import('./views/pages/register/GetBookVisit'))
 
 const Widgets = React.lazy(() => import('./views/widgets/Widgets'))
 
@@ -129,7 +135,6 @@ const routes = [
   { path: '/notifications/toasts', name: 'Toasts', element: Toasts },
   { path: '/widgets', name: 'Widgets', element: Widgets },
   { path: '/bookvisit', name: 'Book Visit', element: bookvisit },
-  { path: '/Reports', name: 'Reports', element: Reports },
   { path: '/bookSite', name: 'Book Site', element: BookSite },
   { path: '/Projects', name: 'Projects', element: Projects },
   { path: '/Plots', name: 'Plots', element: Plots },
@@ -143,6 +148,14 @@ const routes = [
   { path: '/GetTargets', name: 'Get Targets', element: GetTargets },
   { path: '/GetAgents', name: 'Get Agents', element: GetAgents },
   { path: '/Profile', name: 'User Profile', element: Profile },
+  { path: '/Reports', name: 'Reports', element: Reports },
+  { path: '/Invoice', name: 'Invoice', element: Invoice },
+  { path: '/ForgotUId', name: 'Forgot User ID', element: ForgotUserId },
+  { path: '/ForgotPassword', name: 'Forgot Password', element: ForgotPassword },
+  { path: '/ARegister', name: 'Agent Register', element: ARegister },
+  { path: '/Targets', name: 'Targets', element: Targets },
+  { path: '/GetBookVisit', name: 'Get Book Visit', element: GetBookVisit },
+  { path: '/VisitCalender', name: 'Visit Calender', element: VisitCalender },
 ]
 
 export default routes

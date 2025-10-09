@@ -1,229 +1,321 @@
-import React, { useState, useEffect } from 'react';
-
+import React, { useState } from 'react'
 import {
-    CContainer,
-    CRow,
-    CCol,
-    CButton,
-    CCardBody,
-    CForm,
-    CCard,
-    CInputGroup,
-    CInputGroupText,
-    CFormInput,
-    CDropdown,
-    CDropdownToggle,
-    CDropdownMenu,
-    CDropdownItem,
-} from '@coreui/react';
+  CCard,
+  CCardBody,
+  CCardHeader,
+  CForm,
+  CFormInput,
+  CFormLabel,
+  CFormSelect,
+  CButton,
+  CRow,
+  CCol,
+} from '@coreui/react'
+import { useNavigate } from 'react-router-dom'
 
-const bookvisit = () => {
+export default function LeadForm() {
+  const navigate = useNavigate()
 
-    //formdata for booking visit
-    const [formData, setFormData] = useState({
-        name: '',
-        firstname: '',
-        lastname: '',
-        phone: '',
-        plotNumber: '',
-        interestedIn: 'IntrestedIn',
-        dateOfVisit: '',
-        lead: 'lead',
-    })
+  // Get agent ID from localStorage using possible keys
+  const agentIdFromStorage =
+    localStorage.getItem('user_id') || localStorage.getItem('u_id') || ''
 
-    //Dropdown for selecting leads
-    const [lead, setlead] = useState('Lead')
-    const [leadsList, setleadsList] = useState([])
-    const [InterstedIn, setInterstedIn] = useState('IntrestedIn')
-    const [InterstedInList, setInterstedInList] = useState([])
+  const [leadType, setLeadType] = useState('')
+  const [formData, setFormData] = useState({
+    customerId: '',
+    agentId: agentIdFromStorage,
+    phone: '',
+    firstName: '',
+    lastName: '',
+    interestedIn: '',
+    plot: '',
+    dateOfVisit: '',
+    purpose: '',
+    feedback: '',
+  })
+  const [errors, setErrors] = useState({})
+  const [loading, setLoading] = useState(false)
 
-    //GET leads and interested in data
-    useEffect(() => {
-        fetch('http://127.0.0.1:5000/test?key=Lead')
-            .then(res => res.json())
-            .then((data) => {
-                if (data && Array.isArray(data.Lead)) {
-                    setleadsList(data.Lead)
-                }
-            })
-            .catch(() => {
-                alert('Failed to Fetch Lead. Please try again.')
-                setleadsList([])
-            })
+  // Example projects with plots and IDs - replace with real data
+  const projectsList = [
+    {
+      name: 'Aditya Heights',
+      id: 1,
+      plots: [
+        { label: 'Plot 101 - East - 200sqyd', id: 1 },
+        { label: 'Plot 102 - West - 300sqyd', id: 2 },
+      ],
+    },
+    {
+      name: 'Aditya Medows',
+      id: 2,
+      plots: [
+        { label: 'Plot 201 - North - 250sqyd', id: 1 },
+        { label: 'Plot 202 - South - 400sqyd', id: 2 },
+      ],
+    },
+  ]
 
-        fetch('http://127.0.0.1:5000/test?key=InterstedIn')
-            .then((res) => res.json())
-            .then((data) => {
-                if (data && Array.isArray(data.InterstedIn)) {
-                    setInterstedInList(data.InterstedIn)
-                }
-            })
-            .catch(() => {
-                alert('Failed to Fetch InterstedIn. Please try again.')
-                setInterstedInList([])
-            })
+  const chosenProject = projectsList.find(
+    (p) => p.name === formData.interestedIn
+  )
+  const chosenPlot = chosenProject?.plots.find((pl) => pl.label === formData.plot)
+  const projectId = chosenProject?.id || 0
+  const plotId = chosenPlot?.id || 0
 
-    }, [])
+  const validate = () => {
+    let errs = {}
 
-    const handleLead = (Value) => {
-        setlead(Value)
-        setFormData((prev) => ({ ...prev, lead: Value }))
+    if (leadType === 'Existing') {
+      if (!/^[A-Za-z]{2}[0-9]{6}$/.test(formData.customerId)) {
+        errs.customerId = 'Customer ID must be 2 letters followed by 6 digits'
+      }
     }
 
-    const handleChange = (e) => {
-        const { name, value } = e.target
-        setFormData((prev) => ({
-            ...prev,
-            [name]: value,
-        }))
+    if (!/^[A-Za-z]{2}[0-9]{6}$/.test(formData.agentId)) {
+      errs.agentId = 'Agent ID must be 2 letters followed by 6 digits'
     }
 
-    const handleDropdown = (value) => {
-        setInterstedIn(value)
-        setFormData((prev) => ({
-            ...prev,
-            interestedIn: value,
-        }))
+    if (!/^[0-9]{10}$/.test(formData.phone)) {
+      errs.phone = 'Phone must be 10 digits'
     }
 
-    //POST form data
-    const handlesubmit = async (e) => {
-        e.preventDefault()
-        try {
-            const res = await fetch('http://127.00.0.1:5000/test', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData),
-            })
-            if (res.ok) {
-                alert('Visit Booked Successfully')
-            } else {
-                console.error('Booking failed:', res.statusText)
-                alert(res.statusText)
-            }
-        } catch (error) {
-            alert('Network Error. Please try again later.')
-        }
+    if (leadType === 'New') {
+      if (!/^[A-Za-z]+$/.test(formData.firstName)) {
+        errs.firstName = 'First name must contain only alphabets'
+      }
+      if (!/^[A-Za-z]+$/.test(formData.lastName)) {
+        errs.lastName = 'Last name must contain only alphabets'
+      }
     }
-    const LeadForm = () => {
-        switch (lead) {
-            case 'New Lead':
-                return (
-                    <CForm on onSubmit={handlesubmit}>
-                        <CInputGroup className="mb-3">
-                            <CFormInput name="firstname" placeholder="Firstname" value={formData.firstname} onChange={handleChange} />
-                        </CInputGroup>
-                        <CInputGroup className="mb-3">
-                            <CFormInput name="lastname" placeholder="lastname" value={formData.lastname} onChange={handleChange} />
-                        </CInputGroup>
-                        <CInputGroup className="mb-3">
-                            <CFormInput name="phone" placeholder="Phone Number" value={formData.phone} onChange={handleChange} />
-                        </CInputGroup>
-                        <CInputGroup className="mb-3">
-                            <CFormInput name="plot number" placeholder="plot number" value={formData.plotNumber} onChange={handleChange} />
-                        </CInputGroup>
-                        <CDropdown className='d-flex mb-2'>
-                            <CDropdownToggle color='primary'>{InterstedIn}</CDropdownToggle>
-                            <CDropdownMenu>
-                                {InterstedInList.map((item, index) => (
-                                    <CDropdownItem key={item.id || index}
-                                        onClick={() => handleDropdown(item.name)}>
-                                        {item.name}
-                                    </CDropdownItem>
-                                ))}
 
-                            </CDropdownMenu>
-                        </CDropdown>
-                        <p className='ml-2'>Date of Visit</p>
-                        <CInputGroup className='mb-4'>
-                            <CFormInput
-                                name='dateOfVisit'
-                                type='date'
-                                placeholder='Date of visit'
-                                required
-                                value={formData.dateOfVisit}
-                                onChange={handleChange}
-                            />
-                        </CInputGroup>
-                        <div className="d-grid mb-4" >
-                            <CButton color="primary" onClick={handlesubmit}>Book Visit</CButton>
-                        </div>
-                    </CForm>
-                )
-            case 'Existing Lead':
-                return (
-                    <CForm onSubmit={handlesubmit}>
-                        <CInputGroup className="mb-3">
-                            <CFormInput name="name" placeholder="Name" value={formData.name} onChange={handleChange} />
-                        </CInputGroup>
-                        <CInputGroup className="mb-3">
-                            <CFormInput name="phone" placeholder="Phone Number" value={formData.phone} onChange={handleChange} />
-                        </CInputGroup>
-                        <CInputGroup className="mb-3">
-                            <CFormInput name="plot number" placeholder="plot number" value={formData.dateOfVisit} onChange={handleChange} />
-                        </CInputGroup>
-                        <CDropdown className='d-flex mb-2'>
-                            <CDropdownToggle color='primary'>{InterstedIn}</CDropdownToggle>
-                            <CDropdownMenu>
-                                {InterstedInList.map((item, index) => (
-                                    <CDropdownItem key={item.id || index}
-                                        onClick={() => handleDropdown(item.name)}>
-                                        {item.name}
-                                    </CDropdownItem>
-                                ))}
-
-                            </CDropdownMenu>
-                        </CDropdown>
-                        <p className='ml-2'>Date of Visit</p>
-                        <CInputGroup className='mb-4'>
-                            <CFormInput
-                                name='dateOfVisit'
-                                type='date'
-                                placeholder='Date of visit'
-                                required
-                                value={formData.dateOfVisit}
-                                onChange={handleChange}
-                            />
-                        </CInputGroup>
-                        <div className="d-grid mb-4" >
-                            <CButton color="primary" onClick={handlesubmit}>Book Visit</CButton>
-                        </div>
-                    </CForm>
-
-                )
-            default:
-                return null
-        }
+    if (!formData.interestedIn) {
+      errs.interestedIn = 'Please select a project'
+    } else if (!formData.plot) {
+      errs.plot = 'Please select a plot'
     }
-    return (
-        <div className="bg-body-tertiary min-vh-100 d-flex flex-row align-items-center">
-            <CContainer>
-                <CRow className="justify-content-center">
-                    <CCol md={9} lg={7} xl={6}>
-                        <CCard className='p-4'>
-                            <CCardBody className='mx-4'>
-                                <CForm>
-                                    <h1>Book a Visit</h1>
-                                    <p className="text-body-secondary">Schedule your visit with us</p>
-                                    <CDropdown className=" d-flex mb-2">
-                                        <CDropdownToggle color="primary">{lead}</CDropdownToggle>
-                                        <CDropdownMenu>
-                                            {leadsList.map((item, index) => (
-                                                <CDropdownItem key={index} onClick={() => handleLead(item.name)}>
-                                                    {item.name}
-                                                </CDropdownItem>
-                                            ))}
-                                        </CDropdownMenu>
-                                    </CDropdown>
-                                </CForm>
-                                {LeadForm()}
-                            </CCardBody>
-                        </CCard>
-                    </CCol>
-                </CRow>
-            </CContainer>
-        </div>
-    )
+
+    if (formData.dateOfVisit) {
+      const selected = new Date(formData.dateOfVisit)
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      const diff = (selected - today) / (1000 * 60 * 60 * 24)
+      if (diff < 2) {
+        errs.dateOfVisit = 'Date must be at least 2 days from today'
+      }
+    } else {
+      errs.dateOfVisit = 'Date of visit required'
+    }
+
+    setErrors(errs)
+    return Object.keys(errs).length === 0
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (!validate()) return
+
+    setLoading(true)
+    const apiBody = {
+      customer_id: formData.customerId || '',
+      plot_id: plotId,
+      agent_id: formData.agentId,
+      visit_date: formData.dateOfVisit,
+      purpose: formData.purpose || 'Site Visit',
+      feedback: formData.feedback || '',
+      status: 'scheduled',
+      project_id: projectId,
+    }
+    console.log(apiBody)
+    try {
+      const res = await fetch('https://api.qbits4dev.com/visits/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(apiBody),
+      })
+      if (!res.ok) {
+        const errorText = await res.text()
+        throw new Error(errorText || 'Failed to submit form')
+      }
+      alert('Form Submitted Successfully ✅')
+      navigate('/GetBookVisit')
+    } catch (err) {
+      alert('Submission failed: ' + err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value })
+  }
+
+  return (
+    <CRow className="justify-content-center mt-4">
+      <CCol md={10} lg={6}>
+        <CCard className="shadow-lg border-0 rounded-4">
+          <CCardHeader className="text-primary text-center fw-bold fs-1">
+            Book Site Visit
+          </CCardHeader>
+          <CCardBody>
+            <CForm onSubmit={handleSubmit}>
+              {/* Lead Type */}
+              <CFormLabel>Lead Type</CFormLabel>
+              <CFormSelect
+                name="leadType"
+                value={leadType}
+                onChange={(e) => setLeadType(e.target.value)}
+              >
+                <option value="">Select Lead Type</option>
+                <option value="New">New Lead</option>
+                <option value="Existing">Existing Lead</option>
+              </CFormSelect>
+              <br />
+
+              {leadType === 'Existing' && (
+                <>
+                  <CFormLabel>Customer ID</CFormLabel>
+                  <CFormInput
+                    name="customerId"
+                    value={formData.customerId}
+                    onChange={handleChange}
+                    placeholder="Ex: AB123456"
+                    invalid={!!errors.customerId}
+                  />
+                  <small className="text-danger">{errors.customerId}</small>
+                  <br />
+                </>
+              )}
+
+              {leadType === 'New' && (
+                <>
+                  <CFormLabel>First Name</CFormLabel>
+                  <CFormInput
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={handleChange}
+                    placeholder="Enter first name"
+                    invalid={!!errors.firstName}
+                  />
+                  <small className="text-danger">{errors.firstName}</small>
+                  <br />
+
+                  <CFormLabel>Last Name</CFormLabel>
+                  <CFormInput
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleChange}
+                    placeholder="Enter last name"
+                    invalid={!!errors.lastName}
+                  />
+                  <small className="text-danger">{errors.lastName}</small>
+                  <br />
+                </>
+              )}
+
+              {/* Agent ID (Read-only) */}
+              <CFormLabel>Agent ID</CFormLabel>
+              <CFormInput
+                name="agentId"
+                value={formData.agentId}
+                onChange={handleChange}
+                readOnly
+                placeholder="Ex: AG123456"
+                invalid={!!errors.agentId}
+              />
+              <small className="text-danger">{errors.agentId}</small>
+              <br />
+
+              {/* Phone */}
+              <CFormLabel>Phone Number</CFormLabel>
+              <CFormInput
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                placeholder="10-digit phone number"
+                invalid={!!errors.phone}
+              />
+              <small className="text-danger">{errors.phone}</small>
+              <br />
+
+              {/* Interested In */}
+              <CFormLabel>Interested In</CFormLabel>
+              <CFormSelect
+                name="interestedIn"
+                value={formData.interestedIn}
+                onChange={handleChange}
+                invalid={!!errors.interestedIn}
+              >
+                <option value="">Select Project</option>
+                {projectsList.map((proj) => (
+                  <option key={proj.id} value={proj.name}>
+                    {proj.name}
+                  </option>
+                ))}
+              </CFormSelect>
+              <small className="text-danger">{errors.interestedIn}</small>
+              <br />
+
+              {/* Plot select */}
+              {chosenProject && (
+                <>
+                  <CFormLabel>Plot Number & Facing</CFormLabel>
+                  <CFormSelect
+                    name="plot"
+                    value={formData.plot}
+                    onChange={handleChange}
+                    invalid={!!errors.plot}
+                  >
+                    <option value="">Select Plot</option>
+                    {chosenProject.plots.map((p) => (
+                      <option key={p.id} value={p.label}>
+                        {p.label}
+                      </option>
+                    ))}
+                  </CFormSelect>
+                  <small className="text-danger">{errors.plot}</small>
+                  <br />
+                </>
+              )}
+
+              {/* Date of Visit */}
+              <CFormLabel>Date of Visit</CFormLabel>
+              <CFormInput
+                type="date"
+                name="dateOfVisit"
+                value={formData.dateOfVisit}
+                onChange={handleChange}
+                invalid={!!errors.dateOfVisit}
+              />
+              <small className="text-danger">{errors.dateOfVisit}</small>
+              <br />
+
+              {/* Purpose */}
+              <CFormLabel>Purpose</CFormLabel>
+              <CFormInput
+                name="purpose"
+                value={formData.purpose}
+                onChange={handleChange}
+                placeholder="Purpose of visit"
+              />
+              <br />
+              {/* Feedback */}
+              <CFormLabel>Feedback</CFormLabel>
+              <CFormInput
+                name="feedback"
+                value={formData.feedback}
+                onChange={handleChange}
+                placeholder="Feedback (optional)"
+              />
+              <br />
+
+              <CButton color="primary" type="submit" className="mt-3" disabled={loading}>
+                {loading ? 'Submitting...' : 'Submit'}
+              </CButton>
+            </CForm>
+          </CCardBody>
+        </CCard>
+      </CCol>
+    </CRow>
+  )
 }
-
-export default bookvisit

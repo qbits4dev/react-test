@@ -242,24 +242,12 @@ const ClientDashboard = () => {
       color: 'primary',
     },
     {
-      id: 'conversions',
-      title: 'Conversions',
-      value: '50',
-      changeIcon: 'cilArrowTop',
-      color: 'success',
-    },
-    {
       //Card 2: Agent Details with Leads Data (Multiple Internal Links in Dropdown)
       id: 'agent-details',
-    
+
       value: 'View Reports', // Value indicating action
       color: 'secondary', // Example color
-      to: '/views/pages/Reports',
-      links: [
-        { label: 'All Agents Report', route: '/admin/agent-report/all' },
-        { label: 'Leads Assigned Report', route: '/admin/agent-report/leads' },
-        { label: 'Agent Data Management', route: '/admin/agent-data' },
-      ],
+      buttonLink: '/Reports',
     },
     {
       id: 'site-visits',
@@ -278,6 +266,22 @@ const ClientDashboard = () => {
       color: 'danger',
       buttonLink: '/booksite', // Replace with the actual route to the booking form
       buttonText: 'Book Site', // Text for the button
+    },
+    {
+      id: 'targets',
+      title: 'Targets',
+      value: '50',
+      changeIcon: 'cilArrowTop',
+      color: 'info',
+      buttonLink: '/Targets',
+    },
+    {
+      id: 'Projects',
+      title: 'Projects',
+      value: '10',
+      changeIcon: 'cilArrowTop',
+      color: 'success',
+      buttonLink: '/newProjects',
     },
   ]
 

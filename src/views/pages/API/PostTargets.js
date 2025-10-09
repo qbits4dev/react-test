@@ -1,205 +1,229 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react'
 import {
     CContainer,
+    CRow,
+    CCol,
     CCard,
-    CCardBody,
     CCardHeader,
+    CCardBody,
     CForm,
+    CFormLabel,
     CFormInput,
     CFormTextarea,
     CButton,
-    CRow,
-    CCol,
-    CTable,
-    CTableHead,
-    CTableRow,
-    CTableHeaderCell,
-    CTableBody,
-    CTableDataCell,
+    CAlert,
+    CDropdown,
+    CDropdownToggle,
+    CDropdownMenu,
+    CDropdownItem,
     CSpinner,
-    CButtonGroup,
-} from '@coreui/react';
+} from '@coreui/react'
 
-// The base URL for the API
-const API_URL = 'https://api.qbits4dev.com/settings/';
+const PostTargets = () => {
+    const [designations, setDesignations] = useState([])
+    const [designationName, setDesignationName] = useState('Select Designation')
+    const [loadingDesignations, setLoadingDesignations] = useState(true)
+    const [designationError, setDesignationError] = useState('')
 
-export default function SettingsPage() {
-    // State for the list of settings
-    const [settings, setSettings] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
-
-    // State for the form
-    const [form, setForm] = useState({
-        role_id: '',
+    const [formData, setFormData] = useState({
+        designation: '',
         description: '',
-        value: '',
-    });
-    const [submitting, setSubmitting] = useState(false);
+        sqyards: '',
+        Units: '',
+        Amount: '',
+        Time: '', // Added Time to formData state
+    })
 
-    // Function to fetch settings from the API
-    const fetchSettings = useCallback(async () => {
-        setLoading(true);
-        try {
-            const res = await fetch(API_URL);
-            if (!res.ok) throw new Error('Failed to fetch data');
-            const data = await res.json();
-            setSettings(Array.isArray(data) ? data : []);
-            setError('');
-        } catch (err) {
-            setError('Error fetching settings: ' + err.message);
-        } finally {
-            setLoading(false);
-        }
-    }, []);
+    const [message, setMessage] = useState('')
+    const [error, setError] = useState('')
+    const [selectedTarget, setSelectedTarget] = useState('Select Target Type')
 
-    // Fetch data when the component mounts
-    useEffect(() => {
-        fetchSettings();
-    }, [fetchSettings]);
+    const handleSelect = (targetType) => {
+        setSelectedTarget(targetType)
+    }
 
-    // Handler for form input changes
     const handleChange = (e) => {
-        const { name, value } = e.target;
-        setForm((prev) => ({ ...prev, [name]: value }));
-    };
+        const { name, value } = e.target
+        setFormData((prev) => ({ ...prev, [name]: value }))
+    }
 
-    // Handler for form submission
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setSubmitting(true);
+    const handleDesignationSelect = (designation) => {
+        setDesignationName(designation.name)
+        setFormData((prev) => ({ ...prev, designation: designation.name }))
+    }
 
-        const payload = {
-            role_id: Number(form.role_id),
-            description: form.description,
-            value: Number(form.value),
-        };
+    const handleSubmit = (e) => {
+        e.preventDefault()
+        setMessage('')
+        setError('')
 
-        try {
-            const response = await fetch('https://api.qbits4dev.com/targets', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-            });
-
-            if (!response.ok) throw new Error('Failed to submit the form');
-
-            alert('Setting added successfully!');
-            setForm({ role_id: '', description: '', value: '' }); // Reset form
-            fetchSettings(); // Refresh the list
-        } catch (err) {
-            alert(`Error: ${err.message}`);
-        } finally {
-            setSubmitting(false);
+        if (selectedTarget === 'Select Target Type' || !formData.designation) {
+            setError('Please select a Target Type and a Designation before submitting.')
+            return
         }
-    };
 
-    // Placeholder action handlers
-    const handleEdit = (setting) => alert(`Editing Setting ID: ${setting.id}`);
-    const handleDelete = (setting) => alert(`Deleting Setting ID: ${setting.id}`);
+        fetch('http://localhost:5000/api/targets', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                ...formData,
+                targetType: selectedTarget, // Include target type in submission
+            }),
+        })
+            .then((res) => {
+                if (!res.ok) throw new Error('Network response was not ok')
+                return res.json()
+            })
+            .then(() => {
+                setMessage('✅ Target posted successfully!')
+                // Reset form after successful submission
+                setFormData({
+                    designation: '',
+                    description: '',
+                    sqyards: '',
+                    Units: '',
+                    Amount: '',
+                    Time: '',
+                })
+                setDesignationName('Select Designation')
+                setSelectedTarget('Select Target Type')
+            })
+            .catch((err) => setError(`Submission failed: ${err.message}`))
+    }
+
+    useEffect(() => {
+        fetch('https://api.qbits4dev.com/register/?key=designation', {
+            headers: { accept: 'application/json' },
+        })
+            .then((res) => res.json())
+            .then((data) => {
+                if (data.status === 'ok' && Array.isArray(data.designation)) {
+                    setDesignations(data.designation)
+                } else {
+                    setDesignationError('No designations found')
+                }
+            })
+            .catch(() => setDesignationError('Failed to fetch designations'))
+            .finally(() => setLoadingDesignations(false))
+    }, [])
 
     return (
-        <CContainer className="my-4">
-            {/* --- FORM CARD --- */}
-            <CCard className="mb-4 shadow-sm">
-                <CCardHeader>
-                    <h5 className="mb-0">Add New Setting</h5>
-                </CCardHeader>
-                <CCardBody>
-                    <CForm onSubmit={handleSubmit}>
-                        <CRow className="g-3">
-                            <CCol md={6}>
-                                <CFormInput
-                                    label="Role ID"
-                                    name="role_id"
-                                    type="number"
-                                    placeholder="e.g., 1"
-                                    value={form.role_id}
-                                    onChange={handleChange}
-                                    required
-                                />
-                            </CCol>
-                            <CCol md={6}>
-                                <CFormInput
-                                    label="Value"
-                                    name="value"
-                                    type="number"
-                                    placeholder="e.g., 100"
-                                    value={form.value}
-                                    onChange={handleChange}
-                                    required
-                                />
-                            </CCol>
-                            <CCol xs={12}>
-                                <CFormTextarea
-                                    label="Description"
-                                    name="description"
-                                    rows={3}
-                                    placeholder="Enter a short description of the setting"
-                                    value={form.description}
-                                    onChange={handleChange}
-                                    required
-                                />
-                            </CCol>
-                            <CCol xs={12} className="text-end">
-                                <CButton color="primary" type="submit" disabled={submitting}>
-                                    {submitting ? <CSpinner size="sm" /> : 'Save Setting'}
-                                </CButton>
-                            </CCol>
-                        </CRow>
-                    </CForm>
-                </CCardBody>
-            </CCard>
+        // Added background color and vertical alignment for a better page layout
+        <CContainer fluid className="bg-light py-5 d-flex align-items-center min-vh-100">
+            <CRow className="justify-content-center w-100">
+                <CCol md={9} lg={7} xl={6}>
+                    {/* Enhanced card with shadow, border, and rounded corners */}
+                    <CCard className="shadow-lg border-0 rounded-4">
+                        {/* A vibrant, gradient header */}
+                        <CCardHeader className=" bg-gradient text-primary text-center p-4 rounded-top-4">
+                            <h4 className="mb-0">Post New Target</h4>
+                        </CCardHeader>
+                        <CCardBody className="p-4 p-md-5">
+                            <CForm onSubmit={handleSubmit}>
+                                {/* Target Type Dropdown */}
+                                <div className="mb-4">
+                                    <CFormLabel className="fw-semibold text-muted">Target Type</CFormLabel>
+                                    <CDropdown className="w-100">
+                                        <CDropdownToggle
+                                            variant="outline"
+                                            color="secondary"
+                                            className="text-start w-100 d-flex justify-content-between align-items-center"
+                                        >
+                                            {selectedTarget}
+                                        </CDropdownToggle>
+                                        <CDropdownMenu className="w-100">
+                                            <CDropdownItem onClick={() => handleSelect('Team Target')}>
+                                                Team Target
+                                            </CDropdownItem>
+                                            <CDropdownItem onClick={() => handleSelect('Individual Target')}>
+                                                Individual Target
+                                            </CDropdownItem>
+                                        </CDropdownMenu>
+                                    </CDropdown>
+                                </div>
 
-            {/* --- TABLE CARD --- */}
-            <CCard className="shadow-sm">
-                <CCardHeader>
-                    <h5 className="mb-0">Existing Settings</h5>
-                </CCardHeader>
-                <CCardBody>
-                    {loading ? (
-                        <div className="text-center"><CSpinner /></div>
-                    ) : error ? (
-                        <div className="text-danger text-center">{error}</div>
-                    ) : (
-                        <CTable hover responsive align="middle">
-                            <CTableHead color="light">
-                                <CTableRow>
-                                    <CTableHeaderCell>ID</CTableHeaderCell>
-                                    <CTableHeaderCell>Role ID</CTableHeaderCell>
-                                    <CTableHeaderCell>Description</CTableHeaderCell>
-                                    <CTableHeaderCell>Value</CTableHeaderCell>
-                                    <CTableHeaderCell className="text-center">Actions</CTableHeaderCell>
-                                </CTableRow>
-                            </CTableHead>
-                            <CTableBody>
-                                {settings.length > 0 ? (
-                                    settings.map((setting) => (
-                                        <CTableRow key={setting.id}>
-                                            <CTableDataCell><strong>{setting.id}</strong></CTableDataCell>
-                                            <CTableDataCell>{setting.role_id}</CTableDataCell>
-                                            <CTableDataCell>{setting.description}</CTableDataCell>
-                                            <CTableDataCell>{setting.value}</CTableDataCell>
-                                            <CTableDataCell className="text-center">
-                                                <CButtonGroup>
-                                                    <CButton color="info" variant="outline" size="sm" onClick={() => handleEdit(setting)}>Edit</CButton>
-                                                    <CButton color="danger" variant="outline" size="sm" onClick={() => handleDelete(setting)}>Delete</CButton>
-                                                </CButtonGroup>
-                                            </CTableDataCell>
-                                        </CTableRow>
-                                    ))
-                                ) : (
-                                    <CTableRow>
-                                        <CTableDataCell colSpan="5" className="text-center">
-                                            No settings found.
-                                        </CTableDataCell>
-                                    </CTableRow>
-                                )}
-                            </CTableBody>
-                        </CTable>
-                    )}
-                </CCardBody>
-            </CCard>
+                                {/* Designation Dropdown */}
+                                <div className="mb-4">
+                                    <CFormLabel className="fw-semibold text-muted">Designation</CFormLabel>
+                                    <CDropdown className="w-100">
+                                        <CDropdownToggle
+                                            variant="outline"
+                                            color="secondary"
+                                            className="text-start w-100 d-flex justify-content-between align-items-center"
+                                        >
+                                            {loadingDesignations ? (
+                                                <span>
+                                                    <CSpinner size="sm" className="me-2" />
+                                                    Loading...
+                                                </span>
+                                            ) : (
+                                                designationName
+                                            )}
+                                        </CDropdownToggle>
+                                        <CDropdownMenu className="w-100">
+                                            {/* Logic for loading/error/data states */}
+                                            {!loadingDesignations && !designationError ? (
+                                                designations.map((d) => (
+                                                    <CDropdownItem key={d.id} onClick={() => handleDesignationSelect(d)}>
+                                                        {d.name}
+                                                    </CDropdownItem>
+                                                ))
+                                            ) : (
+                                                <CDropdownItem disabled>
+                                                    {loadingDesignations ? 'Loading...' : designationError}
+                                                </CDropdownItem>
+                                            )}
+                                        </CDropdownMenu>
+                                    </CDropdown>
+                                </div>
+
+                                {/* Form Fields */}
+                                <div className="mb-3">
+                                    <CFormLabel className="fw-semibold text-muted">Description</CFormLabel>
+                                    <CFormTextarea name="description" value={formData.description} onChange={handleChange} required />
+                                </div>
+
+                                <CRow>
+                                    <CCol sm={6} className="mb-3">
+                                        <CFormLabel className="fw-semibold text-muted">Sq Yards</CFormLabel>
+                                        <CFormInput type="number" name="sqyards" value={formData.sqyards} onChange={handleChange} required />
+                                    </CCol>
+                                    <CCol sm={6} className="mb-3">
+                                        <CFormLabel className="fw-semibold text-muted">Units</CFormLabel>
+                                        <CFormInput type="number" name="Units" value={formData.Units} onChange={handleChange} required />
+                                    </CCol>
+                                </CRow>
+
+                                <div className="mb-4">
+                                    <CFormLabel className="fw-semibold text-muted">Time (Month)</CFormLabel>
+                                    <CFormInput type="number" name="Time" placeholder="e.g., 2 months" value={formData.Time} onChange={handleChange} required />
+                                </div>
+
+                                {/* Submit Button */}
+                                <div className="d-grid mt-4">
+                                    <CButton color="primary" type="submit" size="lg" className="fw-semibold">
+                                        Submit Target
+                                    </CButton>
+                                </div>
+                            </CForm>
+
+                            {/* Alerts with solid variant for better visibility */}
+                            {message && (
+                                <CAlert color="success" variant="solid" className="mt-4 text-center">
+                                    {message}
+                                </CAlert>
+                            )}
+                            {error && (
+                                <CAlert color="danger" variant="solid" className="mt-4 text-center">
+                                    {error}
+                                </CAlert>
+                            )}
+                        </CCardBody>
+                    </CCard>
+                </CCol>
+            </CRow>
         </CContainer>
-    );
+    )
 }
+
+export default PostTargets
