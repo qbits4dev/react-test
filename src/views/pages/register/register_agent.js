@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import {
   CCard, CCardBody, CCol, CContainer, CRow, CForm, CFormInput, CFormSelect, CSpinner, CFormLabel,
-  CButton, CDropdown, CDropdownToggle, CDropdownMenu, CDropdownItem
+  CButton, CDropdown, CDropdownToggle, CDropdownMenu, CDropdownItem, CAlert, CInputGroup
 } from '@coreui/react';
 import { useNavigate } from 'react-router-dom';
 import { AppFooter, AppHeader } from '../../../components/index';
-import { CAlert } from '@coreui/react';
-
+import CoreUIProfileCropper from './CoreUIProfileCropper';
 
 export default function RegisterAgentWizard() {
   const navigate = useNavigate();
@@ -24,51 +23,55 @@ export default function RegisterAgentWizard() {
     bankName: '', branch: '', accountNumber: '', ifscCode: '',
     permanentAddress: '', presentAddress: '',
     password: '', income: '', adhar: '', pan: '', referenceAgent: '', agentTeam: '', workLocation: '',
-    photoFile: null, aadhaarFile: null, panFile: null
+    photo: null, aadhaarFile: null, panFile: null
   });
   const [errors, setErrors] = useState({});
+  const [alert, setAlert] = useState({ visible: false, message: '', color: 'success' });
 
+  // Handle text input changes and file inputs
   const handleChange = (e) => {
     let { name, value, files } = e.target;
 
-    if (['photoFile', 'aadhaarFile', 'panFile'].includes(name)) {
-      const file = files.length > 0 ? files[0] : null;
-      setForm(prev => ({ ...prev, [name]: file }));
-      setErrors(prev => ({ ...prev, [name]: '' }));
+    if (['aadhaarFile', 'panFile'].includes(name)) {
+      handleFileChange(e);
       return;
     }
 
-    if (name === 'pan') {
-      value = value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-    } else if (['firstName', 'lastName', 'fatherName', 'nomineeName', 'nomineeRelation', 'language', 'education', 'occupation', 'workLocation'].includes(name)) {
-      value = value.replace(/[^A-Za-z ]/g, '');
-    } else if (['phone', 'workExperience', 'accountNumber', 'income', 'adhar', 'nomineeMobile'].includes(name)) {
-      value = value.replace(/[^0-9]/g, '');
-    } else if (name === 'ifscCode') {
-      value = value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-    } else if (['permanentAddress', 'presentAddress', 'bankName', 'branch'].includes(name)) {
-      value = value.replace(/[^A-Za-z0-9 ,-]/g, '');
-    }
+    if (name === 'pan') value = value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    else if (['firstName', 'lastName', 'fatherName', 'nomineeName', 'nomineeRelation', 'language', 'education', 'occupation', 'workLocation'].includes(name)) value = value.replace(/[^A-Za-z ]/g, '');
+    else if (['phone', 'workExperience', 'accountNumber', 'income', 'adhar', 'nomineeMobile'].includes(name)) value = value.replace(/[^0-9]/g, '');
+    else if (name === 'ifscCode') value = value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    else if (['permanentAddress', 'presentAddress', 'bankName', 'branch'].includes(name)) value = value.replace(/[^A-Za-z0-9 ,/-]/g, '');
 
     setForm(prev => ({ ...prev, [name]: value }));
+    setErrors(prev => ({ ...prev, [name]: '' }));
 
+    // Auto-calculate age
     if (name === 'dob' && value) {
       const birthDate = new Date(value);
       const today = new Date();
       let age = today.getFullYear() - birthDate.getFullYear();
       const m = today.getMonth() - birthDate.getMonth();
       if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
-
-      if (age >= 18) {
-        setForm(prev => ({ ...prev, age: age.toString() }));
-        setErrors(prev => ({ ...prev, dob: '' }));
-      } else {
-        setForm(prev => ({ ...prev, age: '' }));
-        setErrors(prev => ({ ...prev, dob: 'You must be at least 18 years old.' }));
-      }
+      setForm(prev => ({ ...prev, age: age >= 18 ? age.toString() : '' }));
     }
   };
 
+  // File change handler
+  const handleFileChange = (e) => {
+    const { name, files } = e.target;
+    if (files.length === 0) return;
+    const file = files[0];
+    if (file.size > 2 * 1024 * 1024) {
+      setErrors(prev => ({ ...prev, [name]: 'File size must be less than 2MB' }));
+      setForm(prev => ({ ...prev, [name]: null }));
+    } else {
+      setForm(prev => ({ ...prev, [name]: file }));
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  // Fetch designations
   useEffect(() => {
     fetch('https://api.qbits4dev.com/register/?key=designation', { headers: { accept: 'application/json' } })
       .then(res => res.json())
@@ -83,25 +86,18 @@ export default function RegisterAgentWizard() {
   const handleDesignationSelect = (designation) => {
     setDesignationName(designation.name);
     setForm(prev => ({ ...prev, designation: designation.name }));
+    setErrors(prev => ({ ...prev, designation: '' }));
   };
+
+  const renderError = (field) => errors[field] && <small className="text-danger d-block mt-1">{errors[field]}</small>;
 
   const validateField = (name, value) => {
     switch (name) {
-      case 'firstName':
-      case 'lastName':
-      case 'fatherName':
-      case 'nomineeName':
-      case 'nomineeRelation':
-      case 'referenceAgent':
-      case 'agentTeam':
-      case 'branch':
-      case 'bankName':
-      case 'workLocation':
+      case 'firstName': case 'lastName': case 'fatherName': case 'nomineeName': case 'nomineeRelation':
+      case 'referenceAgent': case 'agentTeam': case 'branch': case 'bankName': case 'workLocation':
         if (!value) return 'This field is required';
-        if (!/^[A-Za-z0-9 ,]+$/.test(value)) return 'Invalid characters';
         break;
-      case 'phone':
-      case 'nomineeMobile':
+      case 'phone': case 'nomineeMobile':
         if (!/^[0-9]{10}$/.test(value)) return 'Enter a valid 10-digit phone number';
         break;
       case 'email':
@@ -114,131 +110,79 @@ export default function RegisterAgentWizard() {
         if (!/^[0-9]{9,18}$/.test(value)) return 'Enter a valid account number (9-18 digits)';
         break;
       case 'ifscCode':
-        if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(value)) return 'Invalid IFSC code format (e.g., SBIN0123456)';
+        if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(value)) return 'Invalid IFSC code format';
         break;
       case 'adhar':
         if (!/^[0-9]{12}$/.test(value)) return 'Aadhaar must be 12 digits';
         break;
       case 'pan':
-        if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(value)) return 'Invalid PAN format (e.g., ABCDE1234F)';
+        if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(value)) return 'Invalid PAN format';
         break;
       case 'income':
-        if (!/^[0-9]+$/.test(value)) return 'Income must be a numeric value';
+        if (!/^[0-9]+$/.test(value)) return 'Income must be numeric';
         break;
       case 'password':
         if (!value) return 'Password is required';
         if (value.length < 6) return 'Password must be at least 6 characters';
         break;
-      case 'maritalStatus':
-      case 'designation':
-      case 'dob':
-      case 'gender':
-      case 'language':
-      case 'education':
-      case 'occupation':
+      case 'maritalStatus': case 'designation': case 'dob': case 'gender': case 'language': case 'education': case 'occupation':
         if (!value) return 'This field is required';
         break;
-      case 'photoFile':
-      case 'aadhaarFile':
-      case 'panFile':
+      case 'photo': case 'aadhaarFile': case 'panFile':
         if (!value) return 'A file is required';
         break;
-      default:
-        return '';
+      default: return '';
     }
     return '';
   };
-
-  const [alert, setAlert] = useState({ visible: false, message: '', color: 'success' });
-
 
   const validateStep = () => {
     let newErrors = {};
     const fieldsToValidate = {
       1: ['firstName', 'lastName', 'fatherName', 'maritalStatus', 'dob', 'gender', 'email', 'phone', 'occupation', 'workExperience', 'language', 'education', 'password', 'income', 'adhar', 'pan'],
-      2: ['designation', 'referenceAgent', 'agentTeam', 'workLocation', 'bankName', 'branch', 'accountNumber', 'ifscCode', 'nomineeName', 'nomineeRelation', 'nomineeMobile', 'photoFile', 'aadhaarFile', 'panFile'],
+      2: ['designation', 'referenceAgent', 'agentTeam', 'workLocation', 'bankName', 'branch', 'accountNumber', 'ifscCode', 'nomineeName', 'nomineeRelation', 'nomineeMobile', 'photo', 'aadhaarFile', 'panFile'],
       3: ['permanentAddress', 'presentAddress']
     };
-
     fieldsToValidate[step]?.forEach(f => {
       const err = validateField(f, form[f]);
       if (err) newErrors[f] = err;
     });
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const nextStep = () => {
-    if (!validateStep()) return;
-    setStep(prev => prev + 1);
-  };
-
+  const nextStep = () => { if (validateStep()) setStep(prev => prev + 1); };
   const prevStep = () => setStep(prev => prev - 1);
 
   const handleSubmit = async () => {
     if (!validateStep()) return;
 
     const formData = new FormData();
-    formData.append('first_name', form.firstName);
-    formData.append('last_name', form.lastName);
-    formData.append('email', form.email);
-    formData.append('password', form.password);
-    formData.append('dob', form.dob);
-    formData.append('gender', form.gender.toLowerCase());
-    formData.append('adhar', form.adhar);
-    formData.append('pan', form.pan);
-    formData.append('designation', form.designation);
-    formData.append('role', 'agent');
-    formData.append('reference_agent', form.referenceAgent);
-    formData.append('agent_team', form.agentTeam);
-    formData.append('mobile', form.phone);
-    formData.append('address', form.presentAddress);
-    formData.append('father_name', form.fatherName);
-    formData.append('marital_status', form.maritalStatus.toLowerCase());
-    formData.append('education', form.education);
-    formData.append('language', form.language);
-    formData.append('occupation', form.occupation);
-    formData.append('work_experience', form.workExperience);
-    formData.append('income', form.income);
-    formData.append('bank_name', form.bankName);
-    formData.append('account_number', form.accountNumber);
-    formData.append('ifsc_code', form.ifscCode);
-    formData.append('branch', form.branch);
-    formData.append('work_location', form.workLocation);
-    formData.append('nominiee', form.nomineeName);
-    formData.append('relationship', form.nomineeRelation);
-    formData.append('nominee_mobile', form.nomineeMobile);
-
-    if (form.photoFile) formData.append('photo', form.photoFile);
-    if (form.aadhaarFile) formData.append('aadhaar_file', form.aadhaarFile);
-    if (form.panFile) formData.append('pan_file', form.panFile);
-
-    console.log("--- Form Data Being Sent ---");
-    for (let [key, value] of formData.entries()) {
-      console.log(`${key}:`, value);
+    for (let key in form) {
+      if (key === 'photo' && form.photo) {
+        const res = await fetch(form.photo);
+        const blob = await res.blob();
+        formData.append('photo', blob, 'photo.png');
+      } else if (form[key] instanceof File) {
+        formData.append(key, form[key]);
+      } else {
+        formData.append(key, form[key]);
+      }
     }
-    console.log("--------------------------");
 
     try {
-      const response = await fetch('https://api.qbits4dev.com/auth/register', {
-        method: 'POST',
-        body: formData,
-      });
+      const response = await fetch('https://api.qbits4dev.com/auth/register', { method: 'POST', body: formData });
       const result = await response.json();
       if (response.ok) {
         setAlert({ visible: true, message: 'Registration successful! Redirecting to login...', color: 'success' });
         setTimeout(() => navigate('/login'), 3000);
       } else {
-        setAlert({ visible: true, message: result.message || 'Registration failed. Please try again.', color: 'danger' });
+        setAlert({ visible: true, message: result.message || 'Registration failed.', color: 'danger' });
       }
     } catch (error) {
-      console.error("Submission error:", error);
-      setAlert({ visible: true, message: 'Network or server error. Please try again.', color: 'danger' });
+      setAlert({ visible: true, message: 'Network error.', color: 'danger' });
     }
   };
-
-  const renderError = (field) => errors[field] && <small className="text-danger d-block mt-1">{errors[field]}</small>;
 
   return (
     <div>
@@ -248,16 +192,16 @@ export default function RegisterAgentWizard() {
           <CRow className="justify-content-center">
             <CCol md={10} lg={8}>
               <CCard className="shadow-sm rounded-4">
-
                 <CCardBody className="p-5">
                   {alert.visible && (
                     <CAlert color={alert.color} dismissible onClose={() => setAlert(prev => ({ ...prev, visible: false }))}>
                       {alert.message}
                     </CAlert>
                   )}
-
                   <CForm noValidate>
-                    <h1 className="mb-4 text-primary" style={{ fontWeight: 'bold' }}>Agent Registration</h1>
+                    <h1 className="mb-4 text-primary fw-bold">Agent Registration</h1>
+
+                    {/* Step 1 - Personal Details */}
                     {step === 1 && (
                       <CCard className="mb-4 p-4 bg-white shadow-sm border-0">
                         <h5 className="text-info mb-4">Personal Details</h5>
@@ -277,7 +221,9 @@ export default function RegisterAgentWizard() {
                         </div>
                         <div className="mb-3">
                           <CFormSelect name="maritalStatus" value={form.maritalStatus} onChange={handleChange} invalid={!!errors.maritalStatus}>
-                            <option value="">Select Marital Status</option><option value="Single">Single</option><option value="Married">Married</option>
+                            <option value="">Select Marital Status</option>
+                            <option value="Single">Single</option>
+                            <option value="Married">Married</option>
                           </CFormSelect>
                           {renderError('maritalStatus')}
                         </div>
@@ -294,7 +240,9 @@ export default function RegisterAgentWizard() {
                         </CRow>
                         <div className="mb-3">
                           <CFormSelect name="gender" value={form.gender} onChange={handleChange} invalid={!!errors.gender}>
-                            <option value="">Select Gender</option><option value="Male">Male</option><option value="Female">Female</option>
+                            <option value="">Select Gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
                           </CFormSelect>
                           {renderError('gender')}
                         </div>
@@ -321,7 +269,10 @@ export default function RegisterAgentWizard() {
                         <CRow>
                           <CCol xs={12} md={6} className="mb-3">
                             <CFormSelect name="language" value={form.language} onChange={handleChange} invalid={!!errors.language}>
-                              <option value="">Select Language</option><option value="English">English</option><option value="Hindi">Hindi</option><option value="Telugu">Telugu</option>
+                              <option value="">Select Language</option>
+                              <option value="English">English</option>
+                              <option value="Hindi">Hindi</option>
+                              <option value="Telugu">Telugu</option>
                             </CFormSelect>
                             {renderError('language')}
                           </CCol>
@@ -346,14 +297,19 @@ export default function RegisterAgentWizard() {
                           <CFormInput name="pan" placeholder="PAN Number" maxLength={10} value={form.pan} onChange={handleChange} invalid={!!errors.pan} />
                           {renderError('pan')}
                         </div>
+
                         <div className="d-flex justify-content-end mt-3">
                           <CButton color="primary" onClick={nextStep}>Next</CButton>
                         </div>
                       </CCard>
                     )}
+
+                    {/* Step 2 - Designation, Bank & Nominee Details */}
                     {step === 2 && (
                       <CCard className='mb-4 p-4 bg-white shadow-sm border-0'>
                         <h5 className='text-info mb-4'>Designation, Bank & Nominee Details</h5>
+
+                        {/* Designation Dropdown */}
                         <div className="mb-3">
                           <CDropdown className='w-100'>
                             <CDropdownToggle color='light' className='text-start w-100 d-flex justify-content-between align-items-center'>
@@ -369,6 +325,7 @@ export default function RegisterAgentWizard() {
                           </CDropdown>
                           {renderError('designation')}
                         </div>
+
                         <div className="mb-3">
                           <CFormInput name="referenceAgent" placeholder="Reference Agent Code" value={form.referenceAgent} onChange={handleChange} invalid={!!errors.referenceAgent} />
                           {renderError('referenceAgent')}
@@ -381,6 +338,8 @@ export default function RegisterAgentWizard() {
                           <CFormInput name="workLocation" placeholder="Work Location" value={form.workLocation} onChange={handleChange} invalid={!!errors.workLocation} />
                           {renderError('workLocation')}
                         </div>
+
+                        {/* Bank Details */}
                         <CCard className="p-3 bg-light shadow-sm mb-3 rounded-3">
                           <h6 className="text-primary mb-3 fw-semibold">Bank Details</h6>
                           <div className="mb-3"><CFormInput name="bankName" placeholder="Bank Name" value={form.bankName} onChange={handleChange} invalid={!!errors.bankName} />{renderError('bankName')}</div>
@@ -388,24 +347,87 @@ export default function RegisterAgentWizard() {
                           <div className="mb-3"><CFormInput name="accountNumber" placeholder="Account Number" value={form.accountNumber} onChange={handleChange} invalid={!!errors.accountNumber} />{renderError('accountNumber')}</div>
                           <div className="mb-3"><CFormInput name="ifscCode" placeholder="IFSC Code" maxLength={11} value={form.ifscCode} onChange={handleChange} invalid={!!errors.ifscCode} />{renderError('ifscCode')}</div>
                         </CCard>
+
+                        {/* Nominee Details */}
                         <CCard className="p-3 bg-light shadow-sm mb-4 rounded-3">
                           <h6 className="text-primary mb-3 fw-semibold">Nominee Details</h6>
                           <div className="mb-3"><CFormInput name="nomineeName" placeholder="Nominee Name" value={form.nomineeName} onChange={handleChange} invalid={!!errors.nomineeName} />{renderError('nomineeName')}</div>
                           <div className="mb-3"><CFormInput name="nomineeRelation" placeholder="Relation with Nominee" value={form.nomineeRelation} onChange={handleChange} invalid={!!errors.nomineeRelation} />{renderError('nomineeRelation')}</div>
                           <div className="mb-3"><CFormInput name="nomineeMobile" placeholder="Nominee Mobile" maxLength={10} value={form.nomineeMobile} onChange={handleChange} invalid={!!errors.nomineeMobile} />{renderError('nomineeMobile')}</div>
                         </CCard>
-                        <CCard className="p-4 border-0 shadow-sm rounded-3">
-                          <h5 className="mb-4 fw-semibold text-info">Upload Documents</h5>
-                          <div className="mb-3"><CFormLabel>Photo (JPEG/JPG only, max 2MB)</CFormLabel><CFormInput type="file" name="photoFile" accept="image/jpeg,image/jpg" onChange={handleChange} invalid={!!errors.photoFile} />{renderError('photoFile')}</div>
-                          <div className="mb-3"><CFormLabel>Aadhaar File (PDF only, max 2MB)</CFormLabel><CFormInput type="file" name="aadhaarFile" accept="application/pdf" onChange={handleChange} invalid={!!errors.aadhaarFile} />{renderError('aadhaarFile')}</div>
-                          <div><CFormLabel>PAN File (PDF only, max 2MB)</CFormLabel><CFormInput type="file" name="panFile" accept="application/pdf" onChange={handleChange} invalid={!!errors.panFile} />{renderError('panFile')}</div>
+
+                        {/* Upload Files */}
+                        <CCard className="p-4 border-0 shadow-sm rounded-3 mb-3">
+                          <h5 className="mb-4 fw-semibold text-info">Upload Profile Photo & Documents</h5>
+
+                          {/* Profile Photo Upload */}
+                          <div className="mb-4 text-center">
+                            <CFormLabel className="fw-semibold mb-2 d-block">Profile Photo</CFormLabel>
+                            {form.photo ? (
+                              <>
+                                <img
+                                  src={form.photo}
+                                  alt="Profile Preview"
+                                  className="rounded-circle mb-3 shadow-sm"
+                                  style={{ width: '150px', height: '150px', objectFit: 'cover', border: '3px solid #0d6efd' }}
+                                />
+                                <CButton
+                                  color="danger"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setForm(prev => ({ ...prev, photo: null }))}
+                                >
+                                  Remove Photo
+                                </CButton>
+                              </>
+                            ) : (
+                              <CoreUIProfileCropper
+                                onChange={(croppedImage) => {
+                                  setForm(prev => ({ ...prev, photo: croppedImage }));
+                                  setErrors(prev => ({ ...prev, photo: '' }));
+                                }}
+                              />
+                            )}
+                            {renderError('photo')}
+                          </div>
+
+                          {/* Aadhaar File Upload */}
+                          <div className="mb-3">
+                            <CFormLabel htmlFor="aadhaarFile">Aadhaar File (PDF only, max 2MB)</CFormLabel>
+                            {form.aadhaarFile ? (
+                              <CInputGroup>
+                                <CFormInput value={form.aadhaarFile.name} readOnly />
+                                <CButton type="button" color="danger" variant="outline" onClick={() => setForm(prev => ({ ...prev, aadhaarFile: null }))}>Clear</CButton>
+                              </CInputGroup>
+                            ) : (
+                              <CFormInput type="file" name="aadhaarFile" accept="application/pdf" onChange={handleFileChange} invalid={!!errors.aadhaarFile} />
+                            )}
+                            {renderError('aadhaarFile')}
+                          </div>
+
+                          {/* PAN File Upload */}
+                          <div className="mb-3">
+                            <CFormLabel htmlFor="panFile">PAN File (PDF only, max 2MB)</CFormLabel>
+                            {form.panFile ? (
+                              <CInputGroup>
+                                <CFormInput value={form.panFile.name} readOnly />
+                                <CButton type="button" color="danger" variant="outline" onClick={() => setForm(prev => ({ ...prev, panFile: null }))}>Clear</CButton>
+                              </CInputGroup>
+                            ) : (
+                              <CFormInput type="file" name="panFile" accept="application/pdf" onChange={handleFileChange} invalid={!!errors.panFile} />
+                            )}
+                            {renderError('panFile')}
+                          </div>
                         </CCard>
+
                         <div className="d-flex justify-content-between mt-4">
                           <CButton color="secondary" onClick={prevStep}>Back</CButton>
                           <CButton color="primary" onClick={nextStep}>Next</CButton>
                         </div>
                       </CCard>
                     )}
+
+                    {/* Step 3 - Address */}
                     {step === 3 && (
                       <CCard className="mb-4 p-4 bg-white shadow-sm border-0">
                         <h5 className="text-info mb-4">Address Details</h5>
@@ -423,6 +445,7 @@ export default function RegisterAgentWizard() {
                         </div>
                       </CCard>
                     )}
+
                   </CForm>
                 </CCardBody>
               </CCard>
