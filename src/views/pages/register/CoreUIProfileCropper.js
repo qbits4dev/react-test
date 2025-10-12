@@ -1,37 +1,46 @@
 // src/views/pages/register/CoreUIProfileCropper.js
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import Cropper from 'react-easy-crop';
-import { CButton } from '@coreui/react';
+import { CButton, CSpinner } from '@coreui/react';
 
-function getCroppedImg(imageSrc, crop, zoom, aspect = 1) {
+function createImage(url) {
   return new Promise((resolve, reject) => {
     const image = new Image();
-    image.src = imageSrc;
-    image.onload = () => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
+    image.addEventListener('load', () => resolve(image));
+    image.addEventListener('error', (err) => reject(err));
+    image.setAttribute('crossOrigin', 'anonymous'); // avoid CORS issues
+    image.src = url;
+  });
+}
 
-      const size = Math.min(image.width, image.height);
-      canvas.width = size;
-      canvas.height = size;
+async function getCroppedImg(imageSrc, crop, zoom, aspect = 1) {
+  const image = await createImage(imageSrc);
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
 
-      ctx.drawImage(
-        image,
-        crop.x * image.width,
-        crop.y * image.height,
-        size,
-        size,
-        0,
-        0,
-        size,
-        size
-      );
+  // calculate crop dimensions
+  const cropWidth = image.width * zoom;
+  const cropHeight = image.height * zoom;
 
-      canvas.toBlob((blob) => {
-        resolve(blob);
-      }, 'image/jpeg');
-    };
-    image.onerror = (err) => reject(err);
+  canvas.width = cropWidth;
+  canvas.height = cropHeight;
+
+  ctx.drawImage(
+    image,
+    crop.x * image.width,
+    crop.y * image.height,
+    cropWidth,
+    cropHeight,
+    0,
+    0,
+    cropWidth,
+    cropHeight
+  );
+
+  return new Promise((resolve) => {
+    canvas.toBlob((blob) => {
+      resolve(blob);
+    }, 'image/jpeg');
   });
 }
 
@@ -39,6 +48,7 @@ export default function CoreUIProfileCropper({ onChange }) {
   const [imageSrc, setImageSrc] = useState(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
+  const [loading, setLoading] = useState(false);
   const inputRef = useRef();
 
   const handleFileChange = (e) => {
@@ -53,35 +63,70 @@ export default function CoreUIProfileCropper({ onChange }) {
     reader.readAsDataURL(file);
   };
 
-  const handleCropSave = async () => {
-    const blob = await getCroppedImg(imageSrc, crop, zoom);
-    const croppedFile = new File([blob], 'photo.jpg', { type: 'image/jpeg' });
-    onChange(croppedFile);
-    setImageSrc(null); // remove cropper after save
-  };
+  const handleCropSave = useCallback(async () => {
+    try {
+      setLoading(true);
+      const blob = await getCroppedImg(imageSrc, crop, zoom);
+      const croppedFile = new File([blob], 'photo.jpg', { type: 'image/jpeg' });
+      onChange(croppedFile);
+      setImageSrc(null);
+    } catch (err) {
+      console.error('Crop failed:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [imageSrc, crop, zoom, onChange]);
 
   return (
     <div>
       {imageSrc ? (
-        <div className="position-relative" style={{ width: 200, height: 200, marginBottom: 10 }}>
-          <Cropper
-            image={imageSrc}
-            crop={crop}
-            zoom={zoom}
-            aspect={1}
-            cropShape="round"
-            onCropChange={setCrop}
-            onZoomChange={setZoom}
-          />
-          <div className="mt-2 d-flex justify-content-between">
-            <CButton color="primary" size="sm" onClick={handleCropSave}>Save</CButton>
-            <CButton color="secondary" size="sm" onClick={() => setImageSrc(null)}>Cancel</CButton>
+        <>
+          <div
+            style={{
+              position: 'relative',
+              width: 250,
+              height: 250,
+              borderRadius: '50%',
+              overflow: 'hidden',
+              marginBottom: '10px',
+              margin: '0 auto',
+            }}
+          >
+            <Cropper
+              image={imageSrc}
+              crop={crop}
+              zoom={zoom}
+              aspect={1}
+              cropShape="round"
+              showGrid={false}
+              onCropChange={setCrop}
+              onZoomChange={setZoom}
+            />
           </div>
-        </div>
+
+          <div className="d-flex justify-content-center gap-2">
+            <CButton color="primary" size="sm" onClick={handleCropSave} disabled={loading}>
+              {loading ? <CSpinner size="sm" /> : 'Save'}
+            </CButton>
+            <CButton color="secondary" size="sm" onClick={() => setImageSrc(null)} disabled={loading}>
+              Cancel
+            </CButton>
+          </div>
+        </>
       ) : (
-        <CButton color="info" onClick={() => inputRef.current.click()}>Upload Photo</CButton>
+        <CButton color="info" onClick={() => inputRef.current.click()}>
+          Upload Photo
+        </CButton>
       )}
-      <input ref={inputRef} type="file" accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} />
+
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleFileChange}
+        style={{ display: 'none' }}
+      />
     </div>
+
   );
 }
