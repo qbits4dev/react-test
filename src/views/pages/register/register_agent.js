@@ -72,7 +72,7 @@ export default function RegisterAgentWizard() {
   };
 
   // Fetch designations
-  const apiBaseUrl = process.env.API_BASE_URL || 'https://api.qbits4dev.com';
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://api.qbits4dev.com';
   useEffect(() => {
     fetch(`${apiBaseUrl}/designations`, { headers: { accept: 'application/json' } })
       .then(res => res.json())
