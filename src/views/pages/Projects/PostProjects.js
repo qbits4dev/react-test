@@ -55,7 +55,7 @@ export default function ProjectForm() {
     console.log('Submitting payload:', payload);
 
     try {
-      const response = await fetch('https://api.qbits4dev.com/projects/', {
+      const response = await fetch('${apiBaseUrl}/projects/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

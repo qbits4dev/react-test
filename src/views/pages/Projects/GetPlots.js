@@ -36,7 +36,7 @@ export default function PlotsList() {
     async function fetchPlots() {
       setLoading(true);
       try {
-        const res = await fetch('https://api.qbits4dev.com/projects/plots');
+        const res = await fetch('${apiBaseUrl}/projects/plots');
         if (!res.ok) throw new Error('Failed to fetch plots');
         const data = await res.json();
         setPlots(Array.isArray(data) ? data : data.plots || []);

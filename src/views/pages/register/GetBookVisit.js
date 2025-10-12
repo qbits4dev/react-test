@@ -23,7 +23,7 @@ export default function SiteVisitsTable() {
     const [error, setError] = useState(null)
 
     useEffect(() => {
-        fetch('https://api.qbits4dev.com/visits/')
+        fetch('${apiBaseUrl}/visits/')
             .then((response) => {
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`)

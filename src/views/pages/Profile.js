@@ -78,7 +78,7 @@ export default function UserProfile() {
         console.log("working")
         const userId = localStorage.getItem('user_id'); // e.g. "ag000007"
         if (!userId) return;
-        const apiUrl = `https://api.qbits4dev.com/users/${userId}`;
+        const apiUrl = `${apiBaseUrl}/users/${userId}`;
         fetch(apiUrl)
           .then((response) => response.json())
           .then((data) => {

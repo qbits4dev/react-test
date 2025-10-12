@@ -15,7 +15,7 @@ export default function Skandagreenvalley() {
   useEffect(() => {
     const fetchPlots = async () => {
       try {
-        const response = await fetch('https://api.qbits4dev.com/projects/plots')
+        const response = await fetch('${apiBaseUrl}/projects/plots')
         if (!response.ok) {
           throw new Error('Failed to fetch plots')
         }

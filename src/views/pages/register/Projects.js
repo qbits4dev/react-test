@@ -38,7 +38,7 @@ export default function Projects() {
   // Fetch existing projects
   const fetchProjects = async () => {
     try {
-      const response = await fetch('https://api.qbits4dev.com/projects/');
+      const response = await fetch('${apiBaseUrl}/projects/');
       if (response.ok) {
         const data = await response.json();
         setProjects(data);
@@ -67,7 +67,7 @@ export default function Projects() {
     e.preventDefault();
 
     try {
-      const response = await fetch('https://api.qbits4dev.com/projects/', {
+      const response = await fetch('${apiBaseUrl}/projects/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),

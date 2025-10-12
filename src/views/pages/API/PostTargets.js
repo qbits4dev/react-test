@@ -92,7 +92,7 @@ const PostTargets = () => {
     }
 
     useEffect(() => {
-        fetch('https://api.qbits4dev.com/register/?key=designation', {
+        fetch('${apiBaseUrl}/register/?key=designation', {
             headers: { accept: 'application/json' },
         })
             .then((res) => res.json())

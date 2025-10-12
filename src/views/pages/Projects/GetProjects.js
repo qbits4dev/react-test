@@ -26,7 +26,7 @@ export default function ProjectsList() {
     async function fetchProjects() {
       setLoading(true);
       try {
-        const res = await fetch('https://api.qbits4dev.com/projects/');
+        const res = await fetch('${apiBaseUrl}/projects/');
         if (!res.ok) throw new Error('Failed to fetch projects');
         const data = await res.json();
         setProjects(Array.isArray(data) ? data : (data.projects || []));
@@ -46,7 +46,7 @@ export default function ProjectsList() {
     setPlotsLoading(true);
     try {
       // Replace with actual plots API
-      const res = await fetch(`https://api.qbits4dev.com/plots`);
+      const res = await fetch(`${apiBaseUrl}/plots`);
       if (!res.ok) throw new Error('Failed to fetch plots');
       const data = await res.json();
       setPlots(Array.isArray(data) ? data : (data.plots || []));

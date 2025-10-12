@@ -13,7 +13,7 @@ import {
 } from '@coreui/react';
 
 // API endpoint for posting new contacts
-const API_URL = 'https://api.qbits4dev.com/contacts/';
+const API_URL = '${apiBaseUrl}/contacts/';
 
 export default function ContactEntryForm() {
     const [form, setForm] = useState({

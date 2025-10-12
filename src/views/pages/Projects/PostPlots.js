@@ -44,7 +44,7 @@ export default function PlotForm() {
     console.log('Submitting payload:', payload);
 
     try {
-      const response = await fetch('https://api.qbits4dev.com/projects/plots', {
+      const response = await fetch('${apiBaseUrl}/projects/plots', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

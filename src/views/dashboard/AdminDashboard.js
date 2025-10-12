@@ -65,7 +65,7 @@ const ClientDashboard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('https://api.qbits4dev.com')
+    fetch('${apiBaseUrl}')
       .then(res => res.json())
       .then(json => {
         setData(json);
@@ -84,7 +84,7 @@ const ClientDashboard = () => {
   //       try {
   //         setLoading(true);
   //         // Fetch data for a single product (e.g., product with ID 1)
-  //         const response = await fetch('https://api.qbits4dev.com');
+  //         const response = await fetch('${apiBaseUrl}');
   //         if (!response.ok) {
   //           throw new Error(`HTTP error! status: ${response.status}`);
   //         }
