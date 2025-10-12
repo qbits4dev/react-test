@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import {
     CAvatar,
     CCard,
@@ -29,6 +29,8 @@ import {
     CDropdownItem,
     CPagination,
     CPaginationItem,
+    CSpinner,
+    CAlert,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import {
@@ -42,13 +44,6 @@ import {
 } from '@coreui/icons'
 import { useNavigate } from 'react-router-dom'
 
-
-import avatar2 from '../../../assets/images/avatars/2.jpg'
-import avatar3 from '../../../assets/images/avatars/3.jpg'
-import avatar6 from '../../../assets/images/avatars/6.jpg'
-import avatar9 from '../../../assets/images/avatars/9.jpg'
-import avatar10 from '../../../assets/images/avatars/1.jpg'
-
 // Helper function
 const formatLabel = (key) => {
     const result = key.replace(/([A-Z])/g, ' $1')
@@ -59,148 +54,9 @@ export default function AgentTable() {
     const navigate = useNavigate()
 
     // --- Agent Data ---
-    const [agents, setAgents] = useState([
-        {
-            id: 1,
-            agentId: 'AG000001',
-            firstName: 'Rahul',
-            lastName: 'Sharma',
-            avatar: avatar6, // Use imported variable
-            fatherName: 'Vijay Sharma',
-            maritalStatus: 'Married',
-            dob: '1990-05-10',
-            gender: 'Male',
-            email: 'rahul.sharma@example.com',
-            phone: '9876543210',
-            occupation: 'Sales',
-            education: 'MBA',
-            designation: 'Senior Agent',
-            referenceAgent: 'Amit Verma',
-            agentTeam: 'Alpha',
-            workLocation: 'Delhi',
-            bankName: 'HDFC Bank',
-            branch: 'Connaught Place',
-            accountNumber: '123456789012',
-            ifscCode: 'HDFC0000123',
-            nomineeName: 'Neha Sharma',
-            nomineeRelation: 'Wife',
-            nomineeMobile: '9123456780',
-            permanentAddress: 'Delhi, India',
-            presentAddress: 'Delhi, India',
-        },
-        {
-            id: 2,
-            agentId: 'AG000002',
-            firstName: 'Vikram',
-            lastName: 'Singh',
-            avatar: avatar2, // Use imported variable
-            fatherName: 'Raj Singh',
-            maritalStatus: 'Single',
-            dob: '1995-02-20',
-            gender: 'Male',
-            email: 'vikram.singh@example.com',
-            phone: '9123456789',
-            occupation: 'Marketing',
-            education: 'BBA',
-            designation: 'Agent',
-            referenceAgent: 'Rahul Sharma',
-            agentTeam: 'Beta',
-            workLocation: 'Mumbai',
-            bankName: 'ICICI Bank',
-            branch: 'Andheri',
-            accountNumber: '987654321098',
-            ifscCode: 'ICIC0000456',
-            nomineeName: 'Rita Singh',
-            nomineeRelation: 'Mother',
-            nomineeMobile: '9876501234',
-            permanentAddress: 'Jaipur, India',
-            presentAddress: 'Mumbai, India',
-        },
-        {
-            id: 3,
-            agentId: 'AG000003',
-            firstName: 'Amit',
-            lastName: 'Verma',
-            avatar: avatar3, // Use imported variable
-            fatherName: 'Sunil Verma',
-            maritalStatus: 'Married',
-            dob: '1988-08-15',
-            gender: 'Male',
-            email: 'amit.verma@example.com',
-            phone: '9876501234',
-            occupation: 'Sales',
-            education: 'MBA',
-            designation: 'Team Lead',
-            referenceAgent: 'None',
-            agentTeam: 'Alpha',
-            workLocation: 'Delhi',
-            bankName: 'SBI',
-            branch: 'Connaught Place',
-            accountNumber: '111122223333',
-            ifscCode: 'SBIN0001234',
-            nomineeName: 'Anita Verma',
-            nomineeRelation: 'Wife',
-            nomineeMobile: '9123456789',
-            permanentAddress: 'Delhi, India',
-            presentAddress: 'Delhi, India',
-        },
-        {
-            id: 4,
-            agentId: 'AG000004',
-            firstName: 'Suresh',
-            lastName: 'Reddy',
-            avatar: avatar9, // Use imported variable
-            fatherName: 'Ramesh Reddy',
-            maritalStatus: 'Single',
-            dob: '1992-11-12',
-            gender: 'Male',
-            email: 'suresh.reddy@example.com',
-            phone: '9123498765',
-            occupation: 'Marketing',
-            education: 'B.Tech',
-            designation: 'Agent',
-            referenceAgent: 'Amit Verma',
-            agentTeam: 'Gamma',
-            workLocation: 'Hyderabad',
-            bankName: 'HDFC Bank',
-            branch: 'Bandra',
-            accountNumber: '222233334444',
-            ifscCode: 'HDFC0000456',
-            nomineeName: 'Sunita Reddy',
-            nomineeRelation: 'Mother',
-            nomineeMobile: '9876504321',
-            permanentAddress: 'Hyderabad, India',
-            presentAddress: 'Hyderabad, India',
-        },
-        {
-            id: 5,
-            agentId: 'AG000005',
-            firstName: 'Anil',
-            lastName: 'Kumar',
-            avatar: avatar10, // Use imported variable
-            fatherName: 'Sanjay Kumar',
-            maritalStatus: 'Married',
-            dob: '1985-01-25',
-            gender: 'Male',
-            email: 'anil.kumar@example.com',
-            phone: '9988776655',
-            occupation: 'Finance',
-            education: 'M.Com',
-            designation: 'Senior Agent',
-            referenceAgent: 'Amit Verma',
-            agentTeam: 'Delta',
-            workLocation: 'Bangalore',
-            bankName: 'Axis Bank',
-            branch: 'Koramangala',
-            accountNumber: '555566667777',
-            ifscCode: 'UTIB0000123',
-            nomineeName: 'Sunitha Kumar',
-            nomineeRelation: 'Wife',
-            nomineeMobile: '9988776650',
-            permanentAddress: 'Bangalore, India',
-            presentAddress: 'Bangalore, India',
-        },
-    ])
+    const [agents, setAgents] = useState([])
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState(null)
 
     // --- State ---
     const [editModalVisible, setEditModalVisible] = useState(false)
@@ -211,6 +67,7 @@ export default function AgentTable() {
     const [teamFilter, setTeamFilter] = useState('')
     const [sortConfig, setSortConfig] = useState({ key: 'firstName', direction: 'ascending' })
     const [currentPage, setCurrentPage] = useState(1)
+    const [isSaving, setIsSaving] = useState(false)
     const itemsPerPage = 5
 
     const personalFields = ['firstName', 'lastName', 'fatherName', 'dob', 'gender', 'maritalStatus']
@@ -231,9 +88,126 @@ export default function AgentTable() {
         color: 'white',
     }
 
+    // --- Fetch Agents from API ---
+    useEffect(() => {
+        const fetchAgents = async () => {
+            try {
+                setLoading(true)
+                setError(null)
+
+                // Step 1: Fetch all user IDs
+                const usersResponse = await fetch(`${globalThis.apiBaseUrl}/users/`)
+                if (!usersResponse.ok) {
+                    throw new Error('Failed to fetch user list')
+                }
+                const usersData = await usersResponse.json()
+                console.log('All users:', usersData)
+
+                // Step 2: Filter only agent IDs (starting with 'ag')
+                const agentIds = usersData
+                    .filter(user => user.u_id && user.u_id.toLowerCase().startsWith('ag'))
+                    .map(user => user.u_id)
+
+                console.log('Agent IDs:', agentIds)
+
+                if (agentIds.length === 0) {
+                    console.log('No agents found')
+                    setAgents([])
+                    setLoading(false)
+                    return
+                }
+
+                // Step 3: Fetch detailed data for each agent using Promise.allSettled
+                const agentPromises = agentIds.map(async (agentId) => {
+                    try {
+                        const response = await fetch(`${globalThis.apiBaseUrl}/users/${agentId}`)
+                        if (!response.ok) {
+                            console.error(`Failed to fetch agent ${agentId}: ${response.status}`)
+                            return null
+                        }
+                        const data = await response.json()
+                        console.log(`Successfully fetched agent ${agentId}`)
+                        return data
+                    } catch (error) {
+                        console.error(`Error fetching agent ${agentId}:`, error)
+                        return null
+                    }
+                })
+
+                // Wait for all agent data fetches (successful or failed)
+                const agentsResults = await Promise.allSettled(agentPromises)
+                
+                console.log('All fetch results:', agentsResults)
+
+                // Step 4: Extract successful results and filter out failed/null ones
+                const successfulAgents = agentsResults
+                    .filter(result => result.status === 'fulfilled' && result.value !== null)
+                    .map(result => result.value)
+
+                console.log('Successfully fetched agents:', successfulAgents)
+
+                // Log failed fetches
+                const failedCount = agentsResults.filter(
+                    result => result.status === 'rejected' || 
+                    (result.status === 'fulfilled' && result.value === null)
+                ).length
+                
+                if (failedCount > 0) {
+                    console.warn(`Failed to fetch ${failedCount} out of ${agentIds.length} agent(s)`)
+                }
+
+                // Step 5: Transform data to match component structure
+                const transformedAgents = successfulAgents.map((agent, index) => ({
+                    id: index + 1,
+                    agentId: agent.u_id || '',
+                    firstName: agent.first_name || '',
+                    lastName: agent.last_name || '',
+                    avatar: '', // No avatar from API, use default
+                    fatherName: agent.father_name || '',
+                    maritalStatus: agent.marital_status ? 
+                        agent.marital_status.charAt(0).toUpperCase() + agent.marital_status.slice(1) : '',
+                    dob: agent.dob || '',
+                    gender: agent.gender ? 
+                        agent.gender.charAt(0).toUpperCase() + agent.gender.slice(1) : '',
+                    email: agent.email || '',
+                    phone: agent.mobile || '',
+                    occupation: agent.occupation || '',
+                    education: agent.education || '',
+                    designation: agent.designation || '',
+                    referenceAgent: agent.reference_agent || '',
+                    agentTeam: agent.agent_team || '',
+                    workLocation: agent.work_location || '',
+                    bankName: agent.bank_name || '',
+                    branch: agent.branch || '',
+                    accountNumber: agent.account_number || '',
+                    ifscCode: agent.ifsc_code || '',
+                    nomineeName: agent.nominiee || '',
+                    nomineeRelation: agent.relationship || '',
+                    nomineeMobile: agent.nominee_mobile || '',
+                    permanentAddress: agent.address || '',
+                    presentAddress: agent.address || '',
+                    workExperience: agent.work_experience || '',
+                    income: agent.income || '',
+                }))
+
+                console.log('Transformed agents:', transformedAgents)
+                console.log(`Total agents loaded: ${transformedAgents.length} out of ${agentIds.length}`)
+                
+                setAgents(transformedAgents)
+            } catch (err) {
+                console.error('Error fetching agents:', err)
+                setError(err.message || 'Failed to load agents')
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        fetchAgents()
+    }, [])
+
     // --- Filtering + Sorting ---
     const processedAgents = useMemo(() => {
-        let filtered = agents.filter((agent) => agent.gender === 'Male')
+        let filtered = [...agents]
 
         if (searchTerm) {
             filtered = filtered.filter(
@@ -296,24 +270,107 @@ export default function AgentTable() {
         setSelectedAgent({ ...selectedAgent, [name]: value })
     }
 
-    const handleSave = () => {
-        if (selectedAgent) {
-            setAgents((prev) => prev.map((a) => (a.id === selectedAgent.id ? selectedAgent : a)))
-            setEditModalVisible(false)
-            setSelectedAgent(null)
+    const handleSave = async () => {
+        if (!selectedAgent) return;
+
+        try {
+            setIsSaving(true);
+
+            // Transform data back to API format (camelCase to snake_case)
+            const updateData = {
+                first_name: selectedAgent.firstName,
+                last_name: selectedAgent.lastName,
+                email: selectedAgent.email.toLowerCase(),
+                mobile: selectedAgent.phone,
+                dob: selectedAgent.dob,
+                gender: selectedAgent.gender.toLowerCase(),
+                father_name: selectedAgent.fatherName,
+                marital_status: selectedAgent.maritalStatus.toLowerCase(),
+                education: selectedAgent.education,
+                occupation: selectedAgent.occupation,
+                work_experience: selectedAgent.workExperience,
+                designation: selectedAgent.designation,
+                reference_agent: selectedAgent.referenceAgent,
+                agent_team: selectedAgent.agentTeam,
+                work_location: selectedAgent.workLocation,
+                bank_name: selectedAgent.bankName,
+                branch: selectedAgent.branch,
+                account_number: selectedAgent.accountNumber,
+                ifsc_code: selectedAgent.ifscCode,
+                nominiee: selectedAgent.nomineeName,
+                relationship: selectedAgent.nomineeRelation,
+                nominee_mobile: selectedAgent.nomineeMobile,
+                address: selectedAgent.presentAddress,
+                income: selectedAgent.income ? parseInt(selectedAgent.income) : null,
+            };
+
+            console.log('Updating agent:', selectedAgent.agentId);
+            console.log('Update data:', updateData);
+
+            // Make PATCH request
+            const response = await fetch(`${globalThis.apiBaseUrl}/users/${selectedAgent.agentId}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(updateData),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error('Update failed:', errorData);
+                throw new Error(errorData.message || errorData.detail || `Failed to update agent: ${response.status}`);
+            }
+
+            const result = await response.json();
+            console.log('Update successful:', result);
+
+            // Update local state
+            setAgents((prev) => prev.map((a) => (a.id === selectedAgent.id ? selectedAgent : a)));
+            
+            setEditModalVisible(false);
+            setSelectedAgent(null);
+
+            // Show success message
+            alert('Agent updated successfully!');
+        } catch (error) {
+            console.error('Error updating agent:', error);
+            alert(`Failed to update agent: ${error.message}`);
+        } finally {
+            setIsSaving(false);
         }
-    }
+    };
 
     const handleDelete = (agent) => {
         setAgentToDelete(agent)
         setDeleteModalVisible(true)
     }
 
-    const confirmDelete = () => {
+    const confirmDelete = async () => {
         if (agentToDelete) {
-            setAgents(agents.filter((a) => a.id !== agentToDelete.id))
-            setDeleteModalVisible(false)
-            setAgentToDelete(null)
+            try {
+                // Make DELETE request
+                const response = await fetch(`${globalThis.apiBaseUrl}/users/${agentToDelete.agentId}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || `Failed to delete agent: ${response.status}`);
+                }
+
+                console.log('Agent deleted successfully:', agentToDelete.agentId);
+
+                // Update local state
+                setAgents(agents.filter((a) => a.id !== agentToDelete.id));
+                setDeleteModalVisible(false);
+                setAgentToDelete(null);
+
+                alert('Agent deleted successfully!');
+            } catch (error) {
+                console.error('Error deleting agent:', error);
+                alert(`Failed to delete agent: ${error.message}`);
+            }
         }
     }
 
@@ -321,12 +378,40 @@ export default function AgentTable() {
     const groupedAgents = useMemo(() => {
         const groups = {}
         paginatedAgents.forEach((agent) => {
-            const team = agent.agentTeam
+            const team = agent.agentTeam || 'Unassigned'
             if (!groups[team]) groups[team] = []
             groups[team].push(agent)
         })
         return groups
     }, [paginatedAgents])
+
+    // --- Loading and Error States ---
+    if (loading) {
+        return (
+            <CCard className="shadow border-0">
+                <CCardBody className="text-center py-5">
+                    <CSpinner color="primary" />
+                    <p className="mt-3 text-muted">Loading agents...</p>
+                </CCardBody>
+            </CCard>
+        )
+    }
+
+    if (error) {
+        return (
+            <CCard className="shadow border-0">
+                <CCardBody>
+                    <CAlert color="danger">
+                        <h4>Error Loading Agents</h4>
+                        <p>{error}</p>
+                        <CButton color="primary" onClick={() => window.location.reload()}>
+                            Retry
+                        </CButton>
+                    </CAlert>
+                </CCardBody>
+            </CCard>
+        )
+    }
 
     return (
         <>
@@ -363,7 +448,7 @@ export default function AgentTable() {
                                 }}
                             >
                                 <option value="">All Teams</option>
-                                {Array.from(new Set(agents.map((a) => a.agentTeam))).map((team) => (
+                                {Array.from(new Set(agents.map((a) => a.agentTeam).filter(Boolean))).map((team) => (
                                     <option key={team} value={team}>
                                         {team}
                                     </option>
@@ -384,102 +469,113 @@ export default function AgentTable() {
                 </CCardHeader>
 
                 <CCardBody style={{ overflowX: 'auto' }}>
-                    <CTable hover responsive align="middle" className="mb-0">
-                        <CTableHead color="light">
-                            <CTableRow>
-                                <CTableHeaderCell
-                                    scope="col"
-                                    onClick={() => requestSort('firstName')}
-                                    className="cursor-pointer"
-                                >
-                                    Agent {getSortIcon('firstName')}
-                                </CTableHeaderCell>
-                                <CTableHeaderCell
-                                    scope="col"
-                                    onClick={() => requestSort('agentId')}
-                                    className="cursor-pointer"
-                                >
-                                    Agent ID {getSortIcon('agentId')}
-                                </CTableHeaderCell>
-                                <CTableHeaderCell
-                                    scope="col"
-                                    onClick={() => requestSort('designation')}
-                                    className="cursor-pointer"
-                                >
-                                    Designation {getSortIcon('designation')}
-                                </CTableHeaderCell>
-                                <CTableHeaderCell scope="col">Contact</CTableHeaderCell>
-                                <CTableHeaderCell
-                                    scope="col"
-                                    onClick={() => requestSort('workLocation')}
-                                    className="cursor-pointer"
-                                >
-                                    Location {getSortIcon('workLocation')}
-                                </CTableHeaderCell>
-                                <CTableHeaderCell
-                                    scope="col"
-                                    onClick={() => requestSort('agentTeam')}
-                                    className="cursor-pointer"
-                                >
-                                    Team {getSortIcon('agentTeam')}
-                                </CTableHeaderCell>
-                                <CTableHeaderCell scope="col" className="text-center">
-                                    Actions
-                                </CTableHeaderCell>
-                            </CTableRow>
-                        </CTableHead>
+                    {agents.length === 0 ? (
+                        <div className="text-center py-5">
+                            <p className="text-muted">No agents found. Click "Add Agent" to register a new agent.</p>
+                        </div>
+                    ) : (
+                        <CTable hover responsive align="middle" className="mb-0">
+                            <CTableHead color="light">
+                                <CTableRow>
+                                    <CTableHeaderCell
+                                        scope="col"
+                                        onClick={() => requestSort('firstName')}
+                                        className="cursor-pointer"
+                                    >
+                                        Agent {getSortIcon('firstName')}
+                                    </CTableHeaderCell>
+                                    <CTableHeaderCell
+                                        scope="col"
+                                        onClick={() => requestSort('agentId')}
+                                        className="cursor-pointer"
+                                    >
+                                        Agent ID {getSortIcon('agentId')}
+                                    </CTableHeaderCell>
+                                    <CTableHeaderCell
+                                        scope="col"
+                                        onClick={() => requestSort('designation')}
+                                        className="cursor-pointer"
+                                    >
+                                        Designation {getSortIcon('designation')}
+                                    </CTableHeaderCell>
+                                    <CTableHeaderCell scope="col">Contact</CTableHeaderCell>
+                                    <CTableHeaderCell
+                                        scope="col"
+                                        onClick={() => requestSort('workLocation')}
+                                        className="cursor-pointer"
+                                    >
+                                        Location {getSortIcon('workLocation')}
+                                    </CTableHeaderCell>
+                                    <CTableHeaderCell
+                                        scope="col"
+                                        onClick={() => requestSort('agentTeam')}
+                                        className="cursor-pointer"
+                                    >
+                                        Team {getSortIcon('agentTeam')}
+                                    </CTableHeaderCell>
+                                    <CTableHeaderCell scope="col" className="text-center">
+                                        Actions
+                                    </CTableHeaderCell>
+                                </CTableRow>
+                            </CTableHead>
 
-                        <CTableBody>
-                            {Object.entries(groupedAgents).map(([team, members]) => (
-                                <React.Fragment key={team}>
-                                    <CTableRow className="bg-light fw-bold">
-                                        <CTableDataCell colSpan={7}>
-                                            {team} — Total Members: {members.length}
-                                        </CTableDataCell>
-                                    </CTableRow>
-
-                                    {members.map((agent) => (
-                                        <CTableRow key={agent.id}>
-                                            <CTableDataCell>
-                                                <div className="d-flex align-items-center">
-                                                    {/* --- FIX 3: Pass the imported avatar to src --- */}
-                                                    {/* This now works because `agent.avatar` holds the correct URL */}
-                                                    <CAvatar size="md" src={agent.avatar} className="me-3" />
-                                                    <div>
-                                                        <div className="fw-bold">{`${agent.firstName} ${agent.lastName}`}</div>
-                                                        <div className="text-medium-emphasis small">{agent.email}</div>
-                                                    </div>
-                                                </div>
-                                            </CTableDataCell>
-                                            <CTableDataCell>{agent.agentId}</CTableDataCell>
-                                            <CTableDataCell>{agent.designation}</CTableDataCell>
-                                            <CTableDataCell>{agent.phone}</CTableDataCell>
-                                            <CTableDataCell>{agent.workLocation}</CTableDataCell>
-                                            <CTableDataCell>{agent.agentTeam}</CTableDataCell>
-                                            <CTableDataCell className="text-center">
-                                                <CDropdown variant="btn-group">
-                                                    <CDropdownToggle color="transparent" className="p-0" caret={false}>
-                                                        <CIcon icon={cilOptions} />
-                                                    </CDropdownToggle>
-                                                    <CDropdownMenu>
-                                                        <CDropdownItem onClick={() => handleEdit(agent)}>
-                                                            <CIcon icon={cilPencil} className="me-2" /> Edit
-                                                        </CDropdownItem>
-                                                        <CDropdownItem
-                                                            onClick={() => handleDelete(agent)}
-                                                            className="text-danger"
-                                                        >
-                                                            <CIcon icon={cilTrash} className="me-2" /> Delete
-                                                        </CDropdownItem>
-                                                    </CDropdownMenu>
-                                                </CDropdown>
+                            <CTableBody>
+                                {Object.entries(groupedAgents).map(([team, members]) => (
+                                    <React.Fragment key={team}>
+                                        <CTableRow className="bg-light fw-bold">
+                                            <CTableDataCell colSpan={7}>
+                                                {team} — Total Members: {members.length}
                                             </CTableDataCell>
                                         </CTableRow>
-                                    ))}
-                                </React.Fragment>
-                            ))}
-                        </CTableBody>
-                    </CTable>
+
+                                        {members.map((agent) => (
+                                            <CTableRow key={agent.id}>
+                                                <CTableDataCell>
+                                                    <div className="d-flex align-items-center">
+                                                        <CAvatar 
+                                                            size="md" 
+                                                            color="primary" 
+                                                            textColor="white"
+                                                            className="me-3"
+                                                        >
+                                                            {agent.firstName.charAt(0)}{agent.lastName.charAt(0)}
+                                                        </CAvatar>
+                                                        <div>
+                                                            <div className="fw-bold">{`${agent.firstName} ${agent.lastName}`}</div>
+                                                            <div className="text-medium-emphasis small">{agent.email}</div>
+                                                        </div>
+                                                    </div>
+                                                </CTableDataCell>
+                                                <CTableDataCell>{agent.agentId}</CTableDataCell>
+                                                <CTableDataCell>{agent.designation}</CTableDataCell>
+                                                <CTableDataCell>{agent.phone}</CTableDataCell>
+                                                <CTableDataCell>{agent.workLocation}</CTableDataCell>
+                                                <CTableDataCell>{agent.agentTeam}</CTableDataCell>
+                                                <CTableDataCell className="text-center">
+                                                    <CDropdown variant="btn-group">
+                                                        <CDropdownToggle color="transparent" className="p-0" caret={false}>
+                                                            <CIcon icon={cilOptions} />
+                                                        </CDropdownToggle>
+                                                        <CDropdownMenu>
+                                                            <CDropdownItem onClick={() => handleEdit(agent)}>
+                                                                <CIcon icon={cilPencil} className="me-2" /> Edit
+                                                            </CDropdownItem>
+                                                            <CDropdownItem
+                                                                onClick={() => handleDelete(agent)}
+                                                                className="text-danger"
+                                                            >
+                                                                <CIcon icon={cilTrash} className="me-2" /> Delete
+                                                            </CDropdownItem>
+                                                        </CDropdownMenu>
+                                                    </CDropdown>
+                                                </CTableDataCell>
+                                            </CTableRow>
+                                        ))}
+                                    </React.Fragment>
+                                ))}
+                            </CTableBody>
+                        </CTable>
+                    )}
                 </CCardBody>
 
                 {pageCount > 1 && (
@@ -511,11 +607,16 @@ export default function AgentTable() {
                 )}
             </CCard>
 
-            {/* Edit Modal (remains unchanged) */}
+            {/* Edit Modal */}
             {selectedAgent && (
                 <CModal
                     visible={editModalVisible}
-                    onClose={() => setEditModalVisible(false)}
+                    onClose={() => {
+                        if (!isSaving) {
+                            setEditModalVisible(false)
+                            setSelectedAgent(null)
+                        }
+                    }}
                     size="lg"
                     backdrop="static"
                 >
@@ -536,8 +637,10 @@ export default function AgentTable() {
                                             <CFormInput
                                                 label={formatLabel(key)}
                                                 name={key}
+                                                type={key === 'dob' ? 'date' : 'text'}
                                                 value={selectedAgent[key]}
                                                 onChange={handleChange}
+                                                disabled={isSaving}
                                             />
                                         </CCol>
                                     ))}
@@ -555,6 +658,7 @@ export default function AgentTable() {
                                                 name={key}
                                                 value={selectedAgent[key]}
                                                 onChange={handleChange}
+                                                disabled={isSaving}
                                             />
                                         </CCol>
                                     ))}
@@ -572,7 +676,7 @@ export default function AgentTable() {
                                                 name={key}
                                                 value={selectedAgent[key]}
                                                 onChange={handleChange}
-                                                disabled={key === 'agentId'}
+                                                disabled={key === 'agentId' || isSaving}
                                             />
                                         </CCol>
                                     ))}
@@ -590,6 +694,7 @@ export default function AgentTable() {
                                                 name={key}
                                                 value={selectedAgent[key]}
                                                 onChange={handleChange}
+                                                disabled={isSaving}
                                             />
                                         </CCol>
                                     ))}
@@ -600,6 +705,7 @@ export default function AgentTable() {
                                                 name={key}
                                                 value={selectedAgent[key]}
                                                 onChange={handleChange}
+                                                disabled={isSaving}
                                             />
                                         </CCol>
                                     ))}
@@ -611,18 +717,33 @@ export default function AgentTable() {
                         <CButton
                             color="secondary"
                             variant="ghost"
-                            onClick={() => setEditModalVisible(false)}
+                            onClick={() => {
+                                setEditModalVisible(false)
+                                setSelectedAgent(null)
+                            }}
+                            disabled={isSaving}
                         >
                             Cancel
                         </CButton>
-                        <CButton color="primary" onClick={handleSave}>
-                            Save Changes
+                        <CButton 
+                            color="primary" 
+                            onClick={handleSave}
+                            disabled={isSaving}
+                        >
+                            {isSaving ? (
+                                <>
+                                    <CSpinner size="sm" className="me-2" />
+                                    Saving...
+                                </>
+                            ) : (
+                                'Save Changes'
+                            )}
                         </CButton>
                     </CModalFooter>
                 </CModal>
             )}
 
-            {/* Delete Modal (remains unchanged) */}
+            {/* Delete Modal */}
             <CModal visible={deleteModalVisible} onClose={() => setDeleteModalVisible(false)}>
                 <CModalHeader>
                     <CModalTitle>Confirm Deletion</CModalTitle>

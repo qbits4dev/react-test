@@ -38,7 +38,7 @@ export default function Projects() {
   // Fetch existing projects
   const fetchProjects = async () => {
     try {
-      const response = await fetch('https://api.qbits4dev.com/projects/');
+      const response = await fetch(`${globalThis.apiBaseUrl}/projects/`);
       if (response.ok) {
         const data = await response.json();
         setProjects(data);
