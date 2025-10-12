@@ -56,6 +56,10 @@ const AppHeader = () => {
     }
   }
 
+  const handleProfileClick = () => {
+    navigate('/profile');
+  };
+
   return (
     <CHeader position="sticky" className="mb-4 p-0" ref={headerRef}>
       <CContainer className="border-bottom px-4" fluid>
@@ -72,6 +76,12 @@ const AppHeader = () => {
           <CNavItem>
             <CNavLink onClick={handleDashboardClick} style={{ cursor: 'pointer' }}>
               Dashboard
+            </CNavLink>
+          </CNavItem>
+          
+          <CNavItem>
+            <CNavLink onClick={handleProfileClick} style={{ cursor: 'pointer' }}>
+              Profile
             </CNavLink>
           </CNavItem>
           {/* <CNavItem>

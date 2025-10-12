@@ -15,7 +15,8 @@ import {
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilLockLocked, cilUser } from '@coreui/icons'
-
+import { AppFooter } from '../../../components' // Correctly import AppHeader and AppFooter
+import { LoginHeader } from '../../../components/LoginHeader.js'
 const Login = () => {
   const navigate = useNavigate()
   const [username, setUsername] = useState('')
@@ -37,12 +38,53 @@ const Login = () => {
       return
     }
 
-    // Replace with your API logic
+    const payload = {
+      grant_type: 'password',
+      username,
+      password,
+      scope: '',
+      client_id: '',
+      client_secret: '',
+    }
+
     try {
-      // Mocking successful login for demo
-      const role = username === 'admin' ? 'admin' : 'customer'
-      localStorage.setItem('user_role', role)
-      navigate(role === 'admin' ? '/AdminDashboard' : '/ClientDashboard')
+      const formBody = new URLSearchParams()
+      formBody.append('grant_type', 'password')
+      formBody.append('username', payload.username)
+      formBody.append('password', payload.password)
+      formBody.append('scope', payload.scope || '')
+      formBody.append('client_id', payload.client_id || '')
+      formBody.append('client_secret', payload.client_secret || '')
+      console.log(`${globalThis.apiBaseUrl}/auth/login`)
+
+      const response = await fetch(`${globalThis.apiBaseUrl}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: formBody.toString(),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        localStorage.setItem('access_token', data.access_token)
+        localStorage.setItem('refresh_token', data.refresh_token)
+        localStorage.setItem('user_role', data.role)
+        localStorage.setItem('user_id', data.u_id)
+        setErrors({})
+        console.log(data.role)
+        // Role-based navigation
+        if (data.role === 'admin') {
+          navigate('/AdminDashboard')
+        } else if (data.role === 'agent') {
+          navigate('/AgentDashboard')
+        } else if (data.role === 'customer') {
+          navigate('/ClientDashboard')
+        } else {
+          navigate('/dashboard') // fallback default
+        }
+      } else {
+        setErrors({ form: data.message || 'Invalid credentials' })
+      }
     } catch (error) {
       setErrors({ form: error.message || 'Request failed' })
     }
