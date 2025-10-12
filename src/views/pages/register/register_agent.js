@@ -4,9 +4,9 @@ import {
   CButton, CDropdown, CDropdownToggle, CDropdownMenu, CDropdownItem, CAlert, CInputGroup
 } from '@coreui/react';
 import { useNavigate } from 'react-router-dom';
-import { AppFooter, AppHeader } from '../../../components/index';
+import { AppFooter } from '../../../components/index';
 import CoreUIProfileCropper from './CoreUIProfileCropper';
-
+import { LoginHeader } from '../../../components/LoginHeader.js'
 export default function RegisterAgentWizard() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
@@ -186,7 +186,7 @@ export default function RegisterAgentWizard() {
 
   return (
     <div>
-      <AppHeader />
+      <LoginHeader />
       <div className="bg-light min-vh-100 d-flex flex-row align-items-center py-5">
         <CContainer>
           <CRow className="justify-content-center">

@@ -15,8 +15,8 @@ import {
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilLockLocked, cilUser } from '@coreui/icons'
-import { AppHeader, AppFooter } from '../../../components' // Correctly import AppHeader and AppFooter
-
+import { AppFooter } from '../../../components' // Correctly import AppHeader and AppFooter
+import { LoginHeader } from '../../../components/LoginHeader.js'
 const Login = () => {
   const navigate = useNavigate()
   const [username, setUsername] = useState('')
@@ -91,7 +91,7 @@ const Login = () => {
 
   return (
     <div className="wrapper d-flex flex-column min-vh-100">
-      <AppHeader />
+      <LoginHeader />
       <div className="body flex-grow-1">
         <div className="bg-body-tertiary min-vh-100 d-flex flex-row align-items-center">
           <CContainer>
