@@ -55,6 +55,7 @@ const Login = () => {
       formBody.append('scope', payload.scope || '')
       formBody.append('client_id', payload.client_id || '')
       formBody.append('client_secret', payload.client_secret || '')
+      console.log(`${globalThis.apiBaseUrl}/auth/login`)
 
       const response = await fetch(`${globalThis.apiBaseUrl}/auth/login`, {
         method: 'POST',

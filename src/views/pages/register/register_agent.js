@@ -73,7 +73,7 @@ export default function RegisterAgentWizard() {
 
   // Fetch designations
   useEffect(() => {
-    fetch(`${apiBaseUrl}/register/?key=designation`, { headers: { accept: 'application/json' } })
+    fetch(`${globalThis.apiBaseUrl}/register/?key=designation`, { headers: { accept: 'application/json' } })
       .then(res => res.json())
       .then(data => {
         if (data.status === 'ok' && Array.isArray(data.designation)) setDesignations(data.designation);
@@ -171,7 +171,8 @@ export default function RegisterAgentWizard() {
     }
 
     try {
-      const response = await fetch('API_BASE_URL', { method: 'POST', body: formData });
+      console.log(`${globalThis.apiBaseUrl}/auth/register`)
+      const response = await fetch(`${globalThis.apiBaseUrl}/auth/register`, { method: 'POST', body: formData });
       const result = await response.json();
       if (response.ok) {
         setAlert({ visible: true, message: 'Registration successful! Redirecting to login...', color: 'success' });

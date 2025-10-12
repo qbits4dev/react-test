@@ -67,7 +67,9 @@ export default function Projects() {
     e.preventDefault();
 
     try {
-      const response = await fetch('https://api.qbits4dev.com/projects/', {
+      console.log(`${globalThis.apiBaseUrl}/projects/`)
+
+      const response = await fetch(`${globalThis.apiBaseUrl}/projects/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
