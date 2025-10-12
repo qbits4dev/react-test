@@ -17,7 +17,6 @@ import CIcon from '@coreui/icons-react'
 import { cilLockLocked, cilUser } from '@coreui/icons'
 
 import { AppFooter } from '../../../components'
-import { LoginHeader } from '../../../components/LoginHeader'
 
 const Login = () => {
   const navigate = useNavigate()
@@ -94,7 +93,6 @@ const Login = () => {
 
   return (
     <div className="wrapper d-flex flex-column min-vh-100">
-      <LoginHeader />
       <div className="body flex-grow-1">
         <div
           className="min-vh-100 d-flex align-items-center justify-content-center"
