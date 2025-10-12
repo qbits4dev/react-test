@@ -57,6 +57,7 @@ const Projects = React.lazy(() => import('./views/pages/register/Projects'))
 const newProjects = React.lazy(() => import('./views/pages/newProjects'))
 const Profile = React.lazy(() => import('./views/pages/Profile'))
 const ARegister = React.lazy(() => import('./views/pages/register/ARegister'))
+const venture = React.lazy(() => import('./views/pages/Projects/venture'))
 
 //Projects
 const skandagreenvalley = React.lazy(() => import('./views/pages/Projects/Skandagreenvalley'))
@@ -158,6 +159,7 @@ const routes = [
   { path: '/GetBookVisit', name: 'Get Book Visit', element: GetBookVisit },
   { path: '/VisitCalender', name: 'Visit Calender', element: VisitCalender },
   { path: '/Loginheader', name: 'Loginheader', element: Loginheader },
+  { path: '/venture', name: 'Venture Details', element: venture },
 ]
 
 export default routes

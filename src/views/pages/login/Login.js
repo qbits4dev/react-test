@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import {
   CButton,
   CCard,
@@ -15,7 +15,6 @@ import {
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilLockLocked, cilUser } from '@coreui/icons'
-//import logo from './../../../assets/images/sriadithya.jpg' // replace with your logo path
 
 const Login = () => {
   const navigate = useNavigate()
@@ -38,126 +37,123 @@ const Login = () => {
       return
     }
 
-    const payload = {
-      grant_type: 'password',
-      username,
-      password,
-      scope: '',
-      client_id: '',
-      client_secret: '',
-    }
-
+    // Replace with your API logic
     try {
-      const formBody = new URLSearchParams()
-      formBody.append('grant_type', 'password')
-      formBody.append('username', payload.username)
-      formBody.append('password', payload.password)
-      formBody.append('scope', payload.scope || '')
-      formBody.append('client_id', payload.client_id || '')
-      formBody.append('client_secret', payload.client_secret || '')
-
-      const response = await fetch('${apiBaseUrl}/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: formBody.toString(),
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        localStorage.setItem('access_token', data.access_token)
-        localStorage.setItem('refresh_token', data.refresh_token)
-        localStorage.setItem('user_role', data.role)
-        localStorage.setItem('user_id', data.u_id)
-        setErrors({})
-        console.log(data.role)
-        // Role-based navigation
-        if (data.role === 'admin') {
-          navigate('/AdminDashboard')
-        } else if (data.role === 'agent') {
-          navigate('/AgentDashboard')
-        } else if (data.role === 'customer') {
-          navigate('/ClientDashboard')
-        } else {
-          navigate('/dashboard') // fallback default
-        }
-      } else {
-        setErrors({ form: data.message || 'Invalid credentials' })
-      }
+      // Mocking successful login for demo
+      const role = username === 'admin' ? 'admin' : 'customer'
+      localStorage.setItem('user_role', role)
+      navigate(role === 'admin' ? '/AdminDashboard' : '/ClientDashboard')
     } catch (error) {
       setErrors({ form: error.message || 'Request failed' })
     }
   }
 
   return (
-    <div className="bg-body-tertiary min-vh-100 d-flex flex-row align-items-center">
+    <div
+      className="min-vh-100 d-flex align-items-center justify-content-center"
+      style={{
+        background: 'linear-gradient(to right, #667eea, #764ba2)',
+      }}
+    >
       <CContainer>
         <CRow className="justify-content-center">
-          <CCol xs={12} sm={10} md={8} lg={7}>
-            <div className="d-flex flex-column flex-md-row">
-              <CCard className="text-white bg-primary py-5 flex-fill mt-3 mt-md-0">
-                <CCardBody className="text-center d-flex flex-column justify-content-center align-items-center">
-                  {/* Company Logo */}
+          <CCol xs={12} sm={10} md={6} lg={5}>
+            <CCard
+              className="p-4 shadow-lg"
+              style={{
+                borderRadius: '1rem',
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+              }}
+            >
+              <CCardBody>
+                <div className="text-center mb-4">
                   <img
-                    src='logo' // replace with your logo path
-                    style={{ width: '100px', marginBottom: '20px' }}
+                    src="src/assets/images/siradithya.jpg"
+                    alt="Logo"
+                    style={{
+                      maxWidth: '100px',
+                      width: '30%',
+                      height: 'auto',
+                      borderRadius: '50%',
+                      boxShadow: '0px 4px 10px rgba(0,0,0,0.2)',
+                    }}
                   />
-                  {/* Company Name */}
-                  <h2 className="mb-0">Sri Aditya Developers</h2>
-                </CCardBody>
-              </CCard>
+                </div>
 
-              <CCard className="p-4 flex-fill">
-                <CCardBody>
-                  <CForm onSubmit={handleLogin} noValidate>
-                    <h1>Login</h1>
-                    <p className="text-body-secondary">Sign In to your account</p>
-                    {errors.form && <p className="text-danger">{errors.form}</p>}
+                <h2 className="text-center mb-2" style={{ fontWeight: '600' }}>
+                  Welcome 
+                </h2>
+                <p className="text-center mb-4 text-muted" style={{ fontSize: '0.9rem' }}>
+                  Sign in to your account
+                </p>
 
-                    <CInputGroup className="mb-3">
-                      <CInputGroupText>
-                        <CIcon icon={cilUser} />
-                      </CInputGroupText>
-                      <CFormInput
-                        name="username"
-                        placeholder="Username"
-                        autoComplete="username"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        invalid={!!errors.username}
-                        required
-                      />
-                    </CInputGroup>
-                    {errors.username && (
-                      <CFormText className="text-danger">{errors.username}</CFormText>
-                    )}
+                {errors.form && (
+                  <p className="text-danger text-center mb-3">{errors.form}</p>
+                )}
 
-                    <CInputGroup className="mb-4">
-                      <CInputGroupText>
-                        <CIcon icon={cilLockLocked} />
-                      </CInputGroupText>
-                      <CFormInput
-                        name="password"
-                        type="password"
-                        placeholder="Password"
-                        autoComplete="current-password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        invalid={!!errors.password}
-                        required
-                      />
-                    </CInputGroup>
-                    {errors.password && (
-                      <CFormText className="text-danger">{errors.password}</CFormText>
-                    )}
+                <CForm onSubmit={handleLogin} noValidate>
+                  <CInputGroup className="mb-3">
+                    <CInputGroupText style={{ backgroundColor: '#f0f0f0' }}>
+                      <CIcon icon={cilUser} />
+                    </CInputGroupText>
+                    <CFormInput
+                      name="username"
+                      placeholder="Username"
+                      autoComplete="username"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      invalid={!!errors.username}
+                      required
+                      style={{ fontSize: '0.95rem' }}
+                    />
+                  </CInputGroup>
+                  {errors.username && (
+                    <CFormText className="text-danger mb-2">{errors.username}</CFormText>
+                  )}
 
-                    <CButton type="submit" color="primary" className="w-100">
-                      Login
-                    </CButton>
-                  </CForm>
-                </CCardBody>
-              </CCard>
-            </div>
+                  <CInputGroup className="mb-4">
+                    <CInputGroupText style={{ backgroundColor: '#f0f0f0' }}>
+                      <CIcon icon={cilLockLocked} />
+                    </CInputGroupText>
+                    <CFormInput
+                      type="password"
+                      placeholder="Password"
+                      autoComplete="current-password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      invalid={!!errors.password}
+                      required
+                      style={{ fontSize: '0.95rem' }}
+                    />
+                  </CInputGroup>
+                  {errors.password && (
+                    <CFormText className="text-danger mb-3">{errors.password}</CFormText>
+                  )}
+
+                  <CButton
+                    type="submit"
+                    color="primary"
+                    className="w-100"
+                    style={{
+                      fontSize: '1rem',
+                      padding: '0.5rem 0',
+                      borderRadius: '0.5rem',
+                      fontWeight: '500',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                    }}
+                  >
+                    Login
+                  </CButton>
+                </CForm>
+
+                <div className="text-center mt-3">
+                  <p className="mb-0" style={{ fontSize: '0.85rem', color: '#6c757d' }}>
+                    Don't have an account?{' '}
+                    <span style={{ color: '#667eea', cursor: 'pointer' }}>Sign Up</span>
+                  </p>
+                </div>
+              </CCardBody>
+            </CCard>
           </CCol>
         </CRow>
       </CContainer>

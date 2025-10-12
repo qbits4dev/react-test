@@ -4,8 +4,9 @@ import {
   CButton, CDropdown, CDropdownToggle, CDropdownMenu, CDropdownItem, CAlert, CInputGroup
 } from '@coreui/react';
 import { useNavigate } from 'react-router-dom';
-import { AppFooter, AppHeader } from '../../../components/index';
+import { AppFooter } from '../../../components/index';
 import CoreUIProfileCropper from './CoreUIProfileCropper';
+import { LoginHeader } from '../../../components/LoginHeader/index'
 
 export default function RegisterAgentWizard() {
   const navigate = useNavigate();
@@ -171,7 +172,7 @@ export default function RegisterAgentWizard() {
     }
 
     try {
-      const response = await fetch('API_BASE_URL', { method: 'POST', body: formData });
+      const response = await fetch(`${apiBaseUrl}/auth/register`, { method: 'POST', body: formData });
       const result = await response.json();
       if (response.ok) {
         setAlert({ visible: true, message: 'Registration successful! Redirecting to login...', color: 'success' });
@@ -185,8 +186,8 @@ export default function RegisterAgentWizard() {
   };
 
   return (
-    <div>
-      <AppHeader />
+    <div >
+      <LoginHeader />
       <div className="bg-light min-vh-100 d-flex flex-row align-items-center py-5">
         <CContainer>
           <CRow className="justify-content-center">
@@ -226,7 +227,7 @@ export default function RegisterAgentWizard() {
                             <option value="Married">Married</option>
                           </CFormSelect>
                           {renderError('maritalStatus')}
-                        </div> 
+                        </div>
                         <CRow>
                           <CCol xs={12} md={6} className="mb-3">
                             <CFormLabel>Date of Birth</CFormLabel>

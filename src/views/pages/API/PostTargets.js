@@ -92,7 +92,7 @@ const PostTargets = () => {
     }
 
     useEffect(() => {
-        fetch('${apiBaseUrl}/register/?key=designation', {
+        fetch(`${apiBaseUrl}/register/?key=designation`, {
             headers: { accept: 'application/json' },
         })
             .then((res) => res.json())
