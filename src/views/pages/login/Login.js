@@ -56,7 +56,7 @@ const Login = () => {
       formBody.append('client_id', payload.client_id || '')
       formBody.append('client_secret', payload.client_secret || '')
 
-      const response = await fetch('https://api.qbits4dev.com/auth/login', {
+      const response = await fetch(`${globalThis.apiBaseUrl}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: formBody.toString(),
@@ -153,7 +153,7 @@ const Login = () => {
                     <CCardBody className="text-center d-flex flex-column justify-content-center">
                       <div>
                         <h2 className="mb-4">Sign up</h2>
-                        <p>If you don't have an account, you can register here.</p>
+                        <p>If you don\'t have an account, you can register here.</p>
                         <Link to="/register_agent">
                           <CButton color="info" className="mt-3 w-100">
                             Agent Register
