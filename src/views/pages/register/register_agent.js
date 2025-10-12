@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { AppFooter } from '../../../components/index';
 import CoreUIProfileCropper from './CoreUIProfileCropper';
 import { LoginHeader } from '../../../components/LoginHeader.js'
+
 export default function RegisterAgentWizard() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
@@ -158,31 +159,120 @@ export default function RegisterAgentWizard() {
     if (!validateStep()) return;
 
     const formData = new FormData();
-    for (let key in form) {
-      if (key === 'photo' && form.photo) {
-        const res = await fetch(form.photo);
-        const blob = await res.blob();
-        formData.append('photo', blob, 'photo.png');
-      } else if (form[key] instanceof File) {
-        formData.append(key, form[key]);
-      } else {
-        formData.append(key, form[key]);
+    
+    // Required fields (marked with *)
+    formData.append('first_name', form.firstName);
+    formData.append('last_name', form.lastName);
+    formData.append('email', form.email.toLowerCase());
+    formData.append('password', form.password);
+    
+    // Optional text fields
+    if (form.dob) formData.append('dob', form.dob);
+    if (form.gender) formData.append('gender', form.gender.toLowerCase());
+    if (form.adhar) formData.append('adhar', form.adhar);
+    if (form.pan) formData.append('pan', form.pan);
+    if (form.designation) formData.append('designation', form.designation);
+    if (form.referenceAgent) formData.append('reference_agent', form.referenceAgent);
+    if (form.agentTeam) formData.append('agent_team', form.agentTeam);
+    if (form.phone) formData.append('mobile', form.phone);
+    if (form.presentAddress) formData.append('address', form.presentAddress);
+    if (form.fatherName) formData.append('father_name', form.fatherName);
+    if (form.maritalStatus) formData.append('marital_status', form.maritalStatus.toLowerCase());
+    if (form.education) formData.append('education', form.education);
+    if (form.language) formData.append('language', form.language);
+    if (form.occupation) formData.append('occupation', form.occupation);
+    if (form.workExperience) formData.append('work_experience', form.workExperience);
+    if (form.bankName) formData.append('bank_name', form.bankName);
+    if (form.accountNumber) formData.append('account_number', form.accountNumber);
+    if (form.ifscCode) formData.append('ifsc_code', form.ifscCode);
+    if (form.branch) formData.append('branch', form.branch);
+    if (form.workLocation) formData.append('work_location', form.workLocation);
+    if (form.nomineeName) formData.append('nominiee', form.nomineeName);
+    if (form.nomineeRelation) formData.append('relationship', form.nomineeRelation);
+    if (form.nomineeMobile) formData.append('nominee_mobile', form.nomineeMobile);
+    
+    // Income as number (FormData will convert to string, but backend should parse it)
+    if (form.income) formData.append('income', form.income);
+    
+    // Role - hardcoded as agent
+    formData.append('role', 'agent');
+
+    // Handle photo file with correct MIME type
+    if (form.photo) {
+      try {
+        const response = await fetch(form.photo);
+        const blob = await response.blob();
+        const photoFile = new File([blob], 'photo.png', { type: 'image/png' });
+        formData.append('photo', photoFile);
+      } catch (error) {
+        console.error('Photo conversion error:', error);
+        setAlert({ 
+          visible: true, 
+          message: 'Failed to process photo. Please try again.', 
+          color: 'danger' 
+        });
+        return;
       }
     }
 
+    // Handle PDF files
+    if (form.aadhaarFile) {
+      formData.append('aadhaar_file', form.aadhaarFile);
+    }
+    
+    if (form.panFile) {
+      formData.append('pan_file', form.panFile);
+    }
+
     try {
-      console.log(`${globalThis.apiBaseUrl}/auth/register`)
-      const response = await fetch(`${globalThis.apiBaseUrl}/auth/register`, { method: 'POST', body: formData });
+      console.log(`${globalThis.apiBaseUrl}/auth/register`);
+      console.log('--- Form Data Being Sent ---');
+      for (let [key, value] of formData.entries()) {
+        console.log(`${key}:`, value);
+      }
+      console.log('--------------------------');
+
+      const response = await fetch(`${globalThis.apiBaseUrl}/auth/register`, { 
+        method: 'POST', 
+        body: formData 
+      });
+      
       const result = await response.json();
+      console.log('Full API Response:', result);
+      
       if (response.ok) {
-        const userId=result.u_id;
-        setAlert({ visible: true, message: `Registration successful! Your User ID: ${userId} Redirecting to login...`, color: 'success' });
-        setTimeout(() => navigate('/login'), 3000);
+        const userId = result.u_id;
+        setAlert({ 
+          visible: true, 
+          message: `Registration successful! Your User ID: ${userId}. Redirecting to login...`, 
+          color: 'success' 
+        });
+        setTimeout(() => navigate('/login'), 10000);
       } else {
-        setAlert({ visible: true, message: result.message || 'Registration failed.', color: 'danger' });
+        // Display detailed validation errors
+        console.error('422 Validation Error:', result);
+        let errorMsg = 'Registration failed. ';
+        
+        if (result.detail && Array.isArray(result.detail)) {
+          // FastAPI style validation errors
+          errorMsg += result.detail.map(err => `${err.loc.join('.')}: ${err.msg}`).join(', ');
+        } else {
+          errorMsg += result.message || result.detail || JSON.stringify(result);
+        }
+        
+        setAlert({ 
+          visible: true, 
+          message: errorMsg, 
+          color: 'danger' 
+        });
       }
     } catch (error) {
-      setAlert({ visible: true, message: 'Network error.', color: 'danger' });
+      console.error('Network error:', error);
+      setAlert({ 
+        visible: true, 
+        message: 'Network error. Please check your connection and try again.', 
+        color: 'danger' 
+      });
     }
   };
 
