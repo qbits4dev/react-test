@@ -64,7 +64,8 @@ const AgentDashboard = () => {
 
       {/* Targets Section */}
       <CRow className="justify-content-center mb-4">
-        <CCol md={12}>
+        {/* Targets Section */}
+        <CCol md={6}>
           <CCard className="shadow-sm border-0 rounded-3">
             <CCardHeader className="bg-primary text-white text-center fs-5">
               Targets
@@ -99,10 +100,8 @@ const AgentDashboard = () => {
             </CCardBody>
           </CCard>
         </CCol>
-      </CRow>
 
-      {/* Upcoming Visits Widget Section */}
-      <CRow className="justify-content-center">
+        {/* Upcoming Visits Widget Section */}
         <CCol md={6}>
           <CCard className="shadow-sm border-0 rounded-3">
             <CCardHeader className="bg-info text-white text-center fs-5">
@@ -114,6 +113,7 @@ const AgentDashboard = () => {
           </CCard>
         </CCol>
       </CRow>
+
     </CContainer>
   )
 }

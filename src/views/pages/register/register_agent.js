@@ -73,7 +73,7 @@ export default function RegisterAgentWizard() {
 
   // Fetch designations
   useEffect(() => {
-    fetch('https://api.qbits4dev.com/register/?key=designation', { headers: { accept: 'application/json' } })
+    fetch('API_BASE_URL', { headers: { accept: 'application/json' } })
       .then(res => res.json())
       .then(data => {
         if (data.status === 'ok' && Array.isArray(data.designation)) setDesignations(data.designation);
@@ -171,7 +171,7 @@ export default function RegisterAgentWizard() {
     }
 
     try {
-      const response = await fetch('https://api.qbits4dev.com/auth/register', { method: 'POST', body: formData });
+      const response = await fetch('API_BASE_URL', { method: 'POST', body: formData });
       const result = await response.json();
       if (response.ok) {
         setAlert({ visible: true, message: 'Registration successful! Redirecting to login...', color: 'success' });
@@ -226,7 +226,7 @@ export default function RegisterAgentWizard() {
                             <option value="Married">Married</option>
                           </CFormSelect>
                           {renderError('maritalStatus')}
-                        </div>
+                        </div> 
                         <CRow>
                           <CCol xs={12} md={6} className="mb-3">
                             <CFormLabel>Date of Birth</CFormLabel>
