@@ -6,6 +6,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { AppFooter, AppHeader } from '../../../components/index';
 import CoreUIProfileCropper from './CoreUIProfileCropper';
+import LoginHeader from '..'
 
 export default function RegisterAgentWizard() {
   const navigate = useNavigate();

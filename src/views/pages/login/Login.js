@@ -15,6 +15,7 @@ import {
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilLockLocked, cilUser } from '@coreui/icons'
+//import logo from './../../../assets/images/sriadithya.jpg' // replace with your logo path
 
 const Login = () => {
   const navigate = useNavigate()
@@ -94,6 +95,18 @@ const Login = () => {
         <CRow className="justify-content-center">
           <CCol xs={12} sm={10} md={8} lg={7}>
             <div className="d-flex flex-column flex-md-row">
+              <CCard className="text-white bg-primary py-5 flex-fill mt-3 mt-md-0">
+                <CCardBody className="text-center d-flex flex-column justify-content-center align-items-center">
+                  {/* Company Logo */}
+                  <img
+                    src='logo' // replace with your logo path
+                    style={{ width: '100px', marginBottom: '20px' }}
+                  />
+                  {/* Company Name */}
+                  <h2 className="mb-0">Sri Aditya Developers</h2>
+                </CCardBody>
+              </CCard>
+
               <CCard className="p-4 flex-fill">
                 <CCardBody>
                   <CForm onSubmit={handleLogin} noValidate>
@@ -142,25 +155,6 @@ const Login = () => {
                       Login
                     </CButton>
                   </CForm>
-                </CCardBody>
-              </CCard>
-
-              <CCard className="text-white bg-primary py-5 flex-fill mt-3 mt-md-0 md-3">
-                <CCardBody className="text-center d-flex flex-column justify-content-center">
-                  <div>
-                    <h2 className="mb-4">Sign up</h2>
-                    <p>If you don't have an account, you can register here.</p>
-                    <Link to="/register_agent">
-                      <CButton color="info" className="mt-3 w-100">
-                        Agent Register
-                      </CButton>
-                    </Link>
-                    <Link to="/cilent_register">
-                      <CButton color="danger" className="mt-3 w-100">
-                        Client Register
-                      </CButton>
-                    </Link>
-                  </div>
                 </CCardBody>
               </CCard>
             </div>
