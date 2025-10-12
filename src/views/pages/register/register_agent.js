@@ -74,7 +74,7 @@ export default function RegisterAgentWizard() {
   // Fetch designations
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://api.qbits4dev.com';
   useEffect(() => {
-    fetch(`${apiBaseUrl}/designations`, { headers: { accept: 'application/json' } })
+    fetch(`${apiBaseUrl}/register/?key=designation`, { headers: { accept: 'application/json' } })
       .then(res => res.json())
       .then(data => {
         if (data.status === 'ok' && Array.isArray(data.designation)) setDesignations(data.designation);
