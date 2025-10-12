@@ -15,8 +15,9 @@ import {
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilLockLocked, cilUser } from '@coreui/icons'
-import { AppFooter } from '../../../components' // Correctly import AppHeader and AppFooter
-import { LoginHeader } from '../../../components/LoginHeader.js'
+import { AppFooter } from '../../../components'
+import { LoginHeader } from '../../../components/LoginHeader'
+
 const Login = () => {
   const navigate = useNavigate()
   const [username, setUsername] = useState('')
@@ -91,114 +92,120 @@ const Login = () => {
   }
 
   return (
-    <div
-      className="min-vh-100 d-flex align-items-center justify-content-center"
-      style={{
-        background: 'linear-gradient(to right, #667eea, #764ba2)',
-      }}
-    >
-      <CContainer>
-        <CRow className="justify-content-center">
-          <CCol xs={12} sm={10} md={6} lg={5}>
-            <CCard
-              className="p-4 shadow-lg"
-              style={{
-                borderRadius: '1rem',
-                backgroundColor: 'rgba(255, 255, 255, 0.95)',
-              }}
-            >
-              <CCardBody>
-                <div className="text-center mb-4">
-                  <img
-                    src="src/assets/images/siradithya.jpg"
-                    alt="Logo"
-                    style={{
-                      maxWidth: '100px',
-                      width: '30%',
-                      height: 'auto',
-                      borderRadius: '50%',
-                      boxShadow: '0px 4px 10px rgba(0,0,0,0.2)',
-                    }}
-                  />
-                </div>
+    <div className="wrapper d-flex flex-column min-vh-100">
+      <LoginHeader />
+      <div className="body flex-grow-1">
+        <div
+          className="min-vh-100 d-flex align-items-center justify-content-center"
+          style={{
+            background: 'linear-gradient(to right, #667eea, #764ba2)',
+          }}
+        >
+          <CContainer>
+            <CRow className="justify-content-center">
+              <CCol xs={12} sm={10} md={6} lg={5}>
+                <CCard
+                  className="p-4 shadow-lg"
+                  style={{
+                    borderRadius: '1rem',
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                  }}
+                >
+                  <CCardBody>
+                    <div className="text-center mb-4">
+                      <img
+                        src="src/assets/images/siradithya.jpg"
+                        alt="Logo"
+                        style={{
+                          maxWidth: '100px',
+                          width: '30%',
+                          height: 'auto',
+                          borderRadius: '50%',
+                          boxShadow: '0px 4px 10px rgba(0,0,0,0.2)',
+                        }}
+                      />
+                    </div>
 
-                <h2 className="text-center mb-2" style={{ fontWeight: '600' }}>
-                  Welcome 
-                </h2>
-                <p className="text-center mb-4 text-muted" style={{ fontSize: '0.9rem' }}>
-                  Sign in to your account
-                </p>
+                    <h2 className="text-center mb-2" style={{ fontWeight: '600' }}>
+                      Welcome
+                    </h2>
+                    <p className="text-center mb-4 text-muted" style={{ fontSize: '0.9rem' }}>
+                      Sign in to your account
+                    </p>
 
-                {errors.form && (
-                  <p className="text-danger text-center mb-3">{errors.form}</p>
-                )}
+                    {errors.form && (
+                      <p className="text-danger text-center mb-3">{errors.form}</p>
+                    )}
 
-                <CForm onSubmit={handleLogin} noValidate>
-                  <CInputGroup className="mb-3">
-                    <CInputGroupText style={{ backgroundColor: '#f0f0f0' }}>
-                      <CIcon icon={cilUser} />
-                    </CInputGroupText>
-                    <CFormInput
-                      name="username"
-                      placeholder="Username"
-                      autoComplete="username"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      invalid={!!errors.username}
-                      required
-                      style={{ fontSize: '0.95rem' }}
-                    />
-                  </CInputGroup>
-                  {errors.username && (
-                    <CFormText className="text-danger mb-2">{errors.username}</CFormText>
-                  )}
+                    <CForm onSubmit={handleLogin} noValidate>
+                      <CInputGroup className="mb-3">
+                        <CInputGroupText style={{ backgroundColor: '#f0f0f0' }}>
+                          <CIcon icon={cilUser} />
+                        </CInputGroupText>
+                        <CFormInput
+                          name="username"
+                          placeholder="Username"
+                          autoComplete="username"
+                          value={username}
+                          onChange={(e) => setUsername(e.target.value)}
+                          invalid={!!errors.username}
+                          required
+                          style={{ fontSize: '0.95rem' }}
+                        />
+                      </CInputGroup>
+                      {errors.username && (
+                        <CFormText className="text-danger mb-2">{errors.username}</CFormText>
+                      )}
 
-                  <CInputGroup className="mb-4">
-                    <CInputGroupText style={{ backgroundColor: '#f0f0f0' }}>
-                      <CIcon icon={cilLockLocked} />
-                    </CInputGroupText>
-                    <CFormInput
-                      type="password"
-                      placeholder="Password"
-                      autoComplete="current-password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      invalid={!!errors.password}
-                      required
-                      style={{ fontSize: '0.95rem' }}
-                    />
-                  </CInputGroup>
-                  {errors.password && (
-                    <CFormText className="text-danger mb-3">{errors.password}</CFormText>
-                  )}
+                      <CInputGroup className="mb-4">
+                        <CInputGroupText style={{ backgroundColor: '#f0f0f0' }}>
+                          <CIcon icon={cilLockLocked} />
+                        </CInputGroupText>
+                        <CFormInput
+                          type="password"
+                          placeholder="Password"
+                          autoComplete="current-password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          invalid={!!errors.password}
+                          required
+                          style={{ fontSize: '0.95rem' }}
+                        />
+                      </CInputGroup>
+                      {errors.password && (
+                        <CFormText className="text-danger mb-3">{errors.password}</CFormText>
+                      )}
 
-                  <CButton
-                    type="submit"
-                    color="primary"
-                    className="w-100"
-                    style={{
-                      fontSize: '1rem',
-                      padding: '0.5rem 0',
-                      borderRadius: '0.5rem',
-                      fontWeight: '500',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                    }}
-                  >
-                    Login
-                  </CButton>
-                </CForm>
+                      <CButton
+                        type="submit"
+                        color="primary"
+                        className="w-100"
+                        style={{
+                          fontSize: '1rem',
+                          padding: '0.5rem 0',
+                          borderRadius: '0.5rem',
+                          fontWeight: '500',
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                        }}
+                      >
+                        Login
+                      </CButton>
+                    </CForm>
 
-                <div className="text-center mt-3">
-                  <p className="mb-0" style={{ fontSize: '0.85rem', color: '#6c757d' }}>
-                    Don't have an account?{' '}
-                    <span style={{ color: '#667eea', cursor: 'pointer' }}>Sign Up</span>
-                  </p>
-                </div>
-              </CCardBody>
-            </CCard>
-          </CCol>
-        </CRow>
-      </CContainer>
+                    <div className="text-center mt-3">
+                      <p className="mb-0" style={{ fontSize: '0.85rem', color: '#6c757d' }}>
+                        Don't have an account?{' '}
+                        <span style={{ color: '#667eea', cursor: 'pointer' }}>Sign Up</span>
+                      </p>
+                    </div>
+                  </CCardBody>
+                </CCard>
+              </CCol>
+            </CRow>
+          </CContainer>
+        </div>
+      </div>
+      <AppFooter />
     </div>
   )
 }
