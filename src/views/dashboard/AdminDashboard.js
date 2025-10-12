@@ -235,11 +235,12 @@ const ClientDashboard = () => {
 
   const agentWidgetsData = [
     {
-      id: 'leads',
-      title: 'Leads Generated',
-      value: '500',
+      id: 'Agent Management',
+      title: 'Agent Management',
+      value: '50',
       changeIcon: 'cilArrowTop',
       color: 'primary',
+      buttonLink: '/GetAgents',
     },
     {
       //Card 2: Agent Details with Leads Data (Multiple Internal Links in Dropdown)
