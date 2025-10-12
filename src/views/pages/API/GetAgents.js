@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from 'react'
 import {
-    // 1. Import CAvatar
     CAvatar,
     CCard,
     CCardHeader,
@@ -43,14 +42,17 @@ import {
 } from '@coreui/icons'
 import { useNavigate } from 'react-router-dom'
 
-// Helper functions
+
+import avatar2 from '../../../assets/images/avatars/2.jpg'
+import avatar3 from '../../../assets/images/avatars/3.jpg'
+import avatar6 from '../../../assets/images/avatars/6.jpg'
+import avatar9 from '../../../assets/images/avatars/9.jpg'
+import avatar10 from '../../../assets/images/avatars/1.jpg'
+
+// Helper function
 const formatLabel = (key) => {
     const result = key.replace(/([A-Z])/g, ' $1')
     return result.charAt(0).toUpperCase() + result.slice(1)
-}
-
-const getInitials = (firstName, lastName) => {
-    return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase()
 }
 
 export default function AgentTable() {
@@ -58,14 +60,12 @@ export default function AgentTable() {
 
     // --- Agent Data ---
     const [agents, setAgents] = useState([
-        // 2. Add 'avatar' property to each agent object
-        // NOTE: These paths assume you have images in your project's `public/avatars` directory.
         {
             id: 1,
             agentId: 'AG000001',
             firstName: 'Rahul',
             lastName: 'Sharma',
-            avatar: 'src/assets/images/avatars/6.jpg', // Example path
+            avatar: avatar6, // Use imported variable
             fatherName: 'Vijay Sharma',
             maritalStatus: 'Married',
             dob: '1990-05-10',
@@ -93,7 +93,7 @@ export default function AgentTable() {
             agentId: 'AG000002',
             firstName: 'Vikram',
             lastName: 'Singh',
-            avatar: 'src/assets/images/avatars/2.jpg',
+            avatar: avatar2, // Use imported variable
             fatherName: 'Raj Singh',
             maritalStatus: 'Single',
             dob: '1995-02-20',
@@ -121,7 +121,7 @@ export default function AgentTable() {
             agentId: 'AG000003',
             firstName: 'Amit',
             lastName: 'Verma',
-            avatar: 'src/assets/images/avatars/3.jpg',
+            avatar: avatar3, // Use imported variable
             fatherName: 'Sunil Verma',
             maritalStatus: 'Married',
             dob: '1988-08-15',
@@ -149,7 +149,7 @@ export default function AgentTable() {
             agentId: 'AG000004',
             firstName: 'Suresh',
             lastName: 'Reddy',
-            avatar: 'src/assets/images/avatars/9.jpg',
+            avatar: avatar9, // Use imported variable
             fatherName: 'Ramesh Reddy',
             maritalStatus: 'Single',
             dob: '1992-11-12',
@@ -177,7 +177,7 @@ export default function AgentTable() {
             agentId: 'AG000005',
             firstName: 'Anil',
             lastName: 'Kumar',
-            avatar: 'src/assets/images/avatars/10..jpg',
+            avatar: avatar10, // Use imported variable
             fatherName: 'Sanjay Kumar',
             maritalStatus: 'Married',
             dob: '1985-01-25',
@@ -442,7 +442,8 @@ export default function AgentTable() {
                                         <CTableRow key={agent.id}>
                                             <CTableDataCell>
                                                 <div className="d-flex align-items-center">
-                                                    {/* 3. Replace the initials div with the CAvatar component */}
+                                                    {/* --- FIX 3: Pass the imported avatar to src --- */}
+                                                    {/* This now works because `agent.avatar` holds the correct URL */}
                                                     <CAvatar size="md" src={agent.avatar} className="me-3" />
                                                     <div>
                                                         <div className="fw-bold">{`${agent.firstName} ${agent.lastName}`}</div>

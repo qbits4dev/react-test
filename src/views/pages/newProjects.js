@@ -17,6 +17,15 @@ import {
 import { cilLocationPin, cilFilter, cilSortAlphaDown, cilSortNumericDown } from "@coreui/icons";
 import CIcon from "@coreui/icons-react";
 
+import image1 from './../../assets/images/projects/images.jpeg';
+import image2 from './../../assets/images/projects/image2.jpeg';
+import image3 from './../../assets/images/projects/image3.jpeg';
+import image4 from './../../assets/images/projects/image4.jpg';
+import image5 from './../../assets/images/projects/image5.jpg';
+import image6 from './../../assets/images/projects/image6.jpg';
+import image7 from './../../assets/images/projects/image7.jpg';
+import image8 from './../../assets/images/projects/image88.jpg';
+
 // Helper function to determine progress bar color based on availability
 const getAvailabilityColor = (percentage) => {
     if (percentage > 60) return "#4CAF50"; // Green
@@ -30,22 +39,18 @@ export default function AvailableProjects() {
     const [sortBy, setSortBy] = useState(null); // Can be 'name' or 'availability'
 
     // Data with unique IDs
+    // ✅ Use the imported images here
     const projects = [
-        { id: 1, image: "src/assets/images/goldenheights1.png", title: "GOLDEN HEIGHTS RAJAPUR PHASE 1", location: "RAJAPUR", total: 52, available: 17 },
-        { id: 2, image: "src/assets/images/goldenheights2.png", title: "GOLDEN HEIGHTS RAJAPUR PHASE 2", location: "RAJAPUR", total: 318, available: 169 },
-        { id: 3, image: "src/assets/images/dreamvalley3.png", title: "DREAM VALLEY 3", location: "SHADNAGAR", total: 509, available: 336 },
-        { id: 4, image: "src/assets/images/iconic5.png", title: "ICONIC 5", location: "SHADNAGAR", total: 65, available: 13 },
-        { id: 5, image: "src/assets/images/iconic4.png", title: "ICONIC 4", location: "SHADNAGAR", total: 68, available: 26 },
-        { id: 6, image: "src/assets/images/iconic5.png", title: "ICONIC 5", location: "KOTHUR", total: 72, available: 30 },
-        { id: 7, image: "src/assets/images/iconic6.png", title: "ICONIC 6", location: "MAHESHWARAM", total: 80, available: 42 },
-        { id: 8, image: "src/assets/images/iconic7.png", title: "ICONIC 7", location: "SHADNAGAR", total: 60, available: 18 },
-        { id: 9, image: "src/assets/images/iconic8.png", title: "ICONIC 8", location: "JADCHERLA", total: 90, available: 40 },
-        { id: 10, image: "src/assets/images/iconic9.png", title: "ICONIC 9", location: "BIBINAGAR", total: 75, available: 25 },
-        { id: 11, image: "src/assets/images/iconic10.png", title: "ICONIC 10", location: "KANDUKUR", total: 100, available: 60 },
-        { id: 12, image: "src/assets/images/iconic11.png", title: "ICONIC 11", location: "SHAMSHABAD", total: 55, available: 20 },
-        { id: 13, image: "src/assets/images/iconic12.png", title: "ICONIC 12", location: "MAHESHWARAM", total: 68, available: 28 },
-        { id: 14, image: "src/assets/images/iconic13.png", title: "ICONIC 13", location: "KOTHUR", total: 85, available: 33 },
+        { id: 1, image: image1, title: "GOLDEN HEIGHTS RAJAPUR PHASE 1", location: "RAJAPUR", total: 52, available: 17 },
+        { id: 2, image: image2, title: "GOLDEN HEIGHTS RAJAPUR PHASE 2", location: "RAJAPUR", total: 318, available: 169 },
+        { id: 3, image: image3, title: "DREAM VALLEY 3", location: "SHADNAGAR", total: 509, available: 336 },
+        { id: 4, image: image4, title: "ICONIC 5", location: "SHADNAGAR", total: 65, available: 13 },
+        { id: 5, image: image5, title: "ICONIC 4", location: "SHADNAGAR", total: 68, available: 26 },
+        { id: 6, image: image6, title: "ICONIC 5", location: "KOTHUR", total: 72, available: 30 },
+        { id: 7, image: image7, title: "ICONIC 6", location: "MAHESHWARAM", total: 80, available: 42 },
+        { id: 8, image: image8, title: "ICONIC 7", location: "SHADNAGAR", total: 60, available: 18 },
     ];
+
 
     // Memoized logic for filtering and sorting
     const displayedProjects = useMemo(() => {

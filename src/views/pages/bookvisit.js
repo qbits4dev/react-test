@@ -128,7 +128,8 @@ export default function LeadForm() {
     }
     console.log(apiBody)
     try {
-      const res = await fetch('https://api.qbits4dev.com/visits/', {
+      const apiBaseUrl = process.env.API_BASE_URL || 'https://api.qbits4dev.com';
+      const res = await fetch(`${apiBaseUrl}/visits/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(apiBody),
