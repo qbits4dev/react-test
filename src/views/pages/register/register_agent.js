@@ -6,7 +6,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { AppFooter } from '../../../components/index';
 import CoreUIProfileCropper from './CoreUIProfileCropper';
-import { LoginHeader } from '../../../components/LoginHeader.js'
+import { LoginHeader } from '../../../components/LoginHeader'
 
 export default function RegisterAgentWizard() {
   const navigate = useNavigate();
@@ -159,13 +159,13 @@ export default function RegisterAgentWizard() {
     if (!validateStep()) return;
 
     const formData = new FormData();
-    
+
     // Required fields (marked with *)
     formData.append('first_name', form.firstName);
     formData.append('last_name', form.lastName);
     formData.append('email', form.email.toLowerCase());
     formData.append('password', form.password);
-    
+
     // Optional text fields
     if (form.dob) formData.append('dob', form.dob);
     if (form.gender) formData.append('gender', form.gender.toLowerCase());
@@ -190,10 +190,10 @@ export default function RegisterAgentWizard() {
     if (form.nomineeName) formData.append('nominiee', form.nomineeName);
     if (form.nomineeRelation) formData.append('relationship', form.nomineeRelation);
     if (form.nomineeMobile) formData.append('nominee_mobile', form.nomineeMobile);
-    
+
     // Income as number (FormData will convert to string, but backend should parse it)
     if (form.income) formData.append('income', form.income);
-    
+
     // Role - hardcoded as agent
     formData.append('role', 'agent');
 
@@ -206,10 +206,10 @@ export default function RegisterAgentWizard() {
         formData.append('photo', photoFile);
       } catch (error) {
         console.error('Photo conversion error:', error);
-        setAlert({ 
-          visible: true, 
-          message: 'Failed to process photo. Please try again.', 
-          color: 'danger' 
+        setAlert({
+          visible: true,
+          message: 'Failed to process photo. Please try again.',
+          color: 'danger'
         });
         return;
       }
@@ -219,7 +219,7 @@ export default function RegisterAgentWizard() {
     if (form.aadhaarFile) {
       formData.append('aadhaar_file', form.aadhaarFile);
     }
-    
+
     if (form.panFile) {
       formData.append('pan_file', form.panFile);
     }
@@ -230,13 +230,11 @@ export default function RegisterAgentWizard() {
       for (let [key, value] of formData.entries()) {
         console.log(`${key}:`, value);
       }
-    }
-
-      const response = await fetch(`${globalThis.apiBaseUrl}/auth/register`, { 
-        method: 'POST', 
-        body: formData 
+      const response = await fetch(`${globalThis.apiBaseUrl}/auth/register`, {
+        method: 'POST',
+        body: formData
       });
-      
+
       const result = await response.json();
       if (response.ok) {
         setAlert({ visible: true, message: 'Registration successful! Redirecting to login...', color: 'success' });
