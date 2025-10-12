@@ -175,7 +175,8 @@ export default function RegisterAgentWizard() {
       const response = await fetch(`${globalThis.apiBaseUrl}/auth/register`, { method: 'POST', body: formData });
       const result = await response.json();
       if (response.ok) {
-        setAlert({ visible: true, message: 'Registration successful! Redirecting to login...', color: 'success' });
+        const userId=result.u_id;
+        setAlert({ visible: true, message: `Registration successful! Your User ID: ${userId} Redirecting to login...`, color: 'success' });
         setTimeout(() => navigate('/login'), 3000);
       } else {
         setAlert({ visible: true, message: result.message || 'Registration failed.', color: 'danger' });
