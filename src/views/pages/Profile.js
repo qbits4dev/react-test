@@ -14,7 +14,7 @@ import {
 
 export default function UserProfile() {
     const [profile, setProfile] = useState({
-        userId: "Ag1000011",
+        userId: localStorage.getItem('user_id'),
         // firstName: "Srinivas",
         // lastName: "Athili",
         // fatherName: "raghavendra Athili",
@@ -75,9 +75,11 @@ export default function UserProfile() {
     });
 
     useEffect(() => {
-        console.log("working")
+        console.log("working");
         const userId = localStorage.getItem('user_id'); // e.g. "ag000007"
         if (!userId) return;
+
+        // Fetch user data
         const apiUrl = `${apiBaseUrl}/users/${userId}`;
         fetch(apiUrl)
           .then((response) => response.json())
@@ -88,7 +90,6 @@ export default function UserProfile() {
               lastName: data.last_name || '',
               fatherName: data.father_name || '',
               dob: data.dob || '',
-            //   age: calculateAge(data.dob),
               gender: data.gender || '',
               email: data.email || '',
               phone: data.mobile || '',
@@ -107,13 +108,32 @@ export default function UserProfile() {
               ifsc: data.ifsc_code || '',
               permanentAddress: data.address || '',
               presentAddress: data.address || '',
-              photoUrl: 'src/assets/images/avatars/3.jpg', // Static or fetch from API if available
               referenceagent: data.reference_agent || '',
               agentteam: data.agent_team || '',
             }));
           })
           .catch((error) => {
             console.error('Error fetching user data:', error);
+          });
+
+        // Fetch profile photo
+        const photoUrl = `${apiBaseUrl}/photo?u_id=${userId}`;
+        fetch(photoUrl)
+          .then((response) => response.blob())
+          .then((imageBlob) => {
+            const imageObjectURL = URL.createObjectURL(imageBlob);
+            setProfile((prev) => ({
+              ...prev,
+              photoUrl: imageObjectURL,
+            }));
+          })
+          .catch((error) => {
+            console.error('Error fetching profile photo:', error);
+            // Fallback to default avatar if photo fetch fails
+            setProfile((prev) => ({
+              ...prev,
+              photoUrl: 'src/assets/images/avatars/3.jpg',
+            }));
           });
       }, []);
 
@@ -197,13 +217,20 @@ export default function UserProfile() {
             <CContainer>
                 <CRow className="justify-content-center mb-5">
                     <CCol md={12} className="text-center">
-                        <img
-                            src={profile.photoUrl}
-                            alt="Profile"
-                            className="rounded-circle shadow-sm mb-3"
-                            width={150}
-                            height={150}
-                        />
+                        {profile.photoUrl ? (
+                            <img
+                                src={profile.photoUrl}
+                                alt="Profile"
+                                className="rounded-circle shadow-sm mb-3"
+                                width={150}
+                                height={150}
+                            />
+                        ) : (
+                            <div className="rounded-circle shadow-sm mb-3 bg-secondary d-inline-flex align-items-center justify-content-center" 
+                                 style={{ width: 150, height: 150 }}>
+                                <span className="text-white">Loading...</span>
+                            </div>
+                        )}
                         <div className="fw-bold fs-5">User ID: {profile.userId}</div>
                     </CCol>
                 </CRow>

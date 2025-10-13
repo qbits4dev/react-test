@@ -10,6 +10,8 @@ import {
   CFormInput,
   CRow,
   CFormFeedback,
+  CAlert,
+  CSpinner,
 } from '@coreui/react'
 import { useNavigate } from 'react-router-dom'
 
@@ -24,6 +26,9 @@ export default function ForgotPassword() {
     new_password: '',
   })
 
+  const [alert, setAlert] = useState({ visible: false, message: '', color: 'success' })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
   const navigate = useNavigate()
 
   const handleChange = (e) => {
@@ -32,6 +37,8 @@ export default function ForgotPassword() {
 
     // Clear error while typing
     setErrors((prev) => ({ ...prev, [name]: '' }))
+    // Clear alert when user starts typing
+    setAlert({ visible: false, message: '', color: 'success' })
   }
 
   const validate = () => {
@@ -55,16 +62,67 @@ export default function ForgotPassword() {
     return valid
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
 
     if (!validate()) return
 
-    // TODO: API call for forgot password
-    console.log('Submitted:', formData)
+    setIsSubmitting(true)
+    setAlert({ visible: false, message: '', color: 'success' })
 
-    // redirect to verification page
-    navigate('/verification')
+    try {
+      // Create URLSearchParams for application/x-www-form-urlencoded
+      const params = new URLSearchParams()
+      params.append('uid', formData.uid)
+      params.append('new_password', formData.new_password)
+
+      console.log('Submitting forgot password request for UID:', formData.uid)
+
+      // Make API call
+      const response = await fetch('https://q.qbits4dev.com/register/forgot-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+        },
+        body: params.toString(),
+      })
+
+      const result = await response.json()
+      console.log('API Response:', result)
+
+      if (response.ok) {
+        // Success
+        setAlert({
+          visible: true,
+          message: 'Password reset successful! Redirecting to login...',
+          color: 'success',
+        })
+
+        // Clear form
+        setFormData({ uid: '', new_password: '' })
+
+        // Redirect to login after 3 seconds
+        setTimeout(() => {
+          navigate('/login')
+        }, 3000)
+      } else {
+        // Error from server
+        setAlert({
+          visible: true,
+          message: result.message || result.detail || 'Password reset failed. Please check your UID and try again.',
+          color: 'danger',
+        })
+      }
+    } catch (error) {
+      console.error('Network error:', error)
+      setAlert({
+        visible: true,
+        message: 'Network error. Please check your connection and try again.',
+        color: 'danger',
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -76,38 +134,79 @@ export default function ForgotPassword() {
               <h4 className="mb-0">Forgot Password</h4>
             </CCardHeader>
             <CCardBody>
-              <CForm onSubmit={handleSubmit}>
-                <CFormInput
-                  type="text"
-                  name="uid"
-                  label="UID"
-                  placeholder="Enter your 8-character UID"
-                  value={formData.uid}
-                  onChange={handleChange}
-                  invalid={!!errors.uid}
+              {/* Alert Message */}
+              {alert.visible && (
+                <CAlert
+                  color={alert.color}
+                  dismissible
+                  onClose={() => setAlert({ ...alert, visible: false })}
                   className="mb-3"
-                  required
-                />
-                {errors.uid && <CFormFeedback invalid>{errors.uid}</CFormFeedback>}
+                >
+                  {alert.message}
+                </CAlert>
+              )}
 
-                <CFormInput
-                  type="password"
-                  name="new_password"
-                  label="New Password"
-                  placeholder="Enter new password (8-32 characters)"
-                  value={formData.new_password}
-                  onChange={handleChange}
-                  invalid={!!errors.new_password}
-                  className="mb-4"
-                  required
-                />
-                {errors.new_password && (
-                  <CFormFeedback invalid>{errors.new_password}</CFormFeedback>
-                )}
+              <CForm onSubmit={handleSubmit}>
+                <div className="mb-3">
+                  <CFormInput
+                    type="text"
+                    name="uid"
+                    label="UID"
+                    placeholder="Enter your 8-character UID"
+                    value={formData.uid}
+                    onChange={handleChange}
+                    invalid={!!errors.uid}
+                    required
+                    disabled={isSubmitting}
+                    maxLength={8}
+                  />
+                  {errors.uid && <CFormFeedback className="d-block">{errors.uid}</CFormFeedback>}
+                </div>
 
-                <div className="d-grid">
-                  <CButton type="submit" color="primary" size="lg">
-                    Submit
+                <div className="mb-4">
+                  <CFormInput
+                    type="password"
+                    name="new_password"
+                    label="New Password"
+                    placeholder="Enter new password (8-32 characters)"
+                    value={formData.new_password}
+                    onChange={handleChange}
+                    invalid={!!errors.new_password}
+                    required
+                    disabled={isSubmitting}
+                    minLength={8}
+                    maxLength={32}
+                  />
+                  {errors.new_password && (
+                    <CFormFeedback className="d-block">{errors.new_password}</CFormFeedback>
+                  )}
+                </div>
+
+                <div className="d-grid gap-2">
+                  <CButton 
+                    type="submit" 
+                    color="primary" 
+                    size="lg"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <CSpinner size="sm" className="me-2" />
+                        Submitting...
+                      </>
+                    ) : (
+                      'Reset Password'
+                    )}
+                  </CButton>
+
+                  <CButton
+                    type="button"
+                    color="secondary"
+                    variant="outline"
+                    onClick={() => navigate('/login')}
+                    disabled={isSubmitting}
+                  >
+                    Back to Login
                   </CButton>
                 </div>
               </CForm>

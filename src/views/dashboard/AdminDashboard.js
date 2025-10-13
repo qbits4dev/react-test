@@ -59,7 +59,7 @@ import WidgetsDropdown from '../widgets/WidgetsCardsAd'
 import MainChart from './MainChart'
 
 
-const ClientDashboard = () => {
+const AdminDashboard = () => {
 
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -514,4 +514,4 @@ const ClientDashboard = () => {
   )
 }
 
-export default ClientDashboard
+export default AdminDashboard
