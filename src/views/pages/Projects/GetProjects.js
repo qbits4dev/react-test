@@ -14,6 +14,8 @@ import {
   CSpinner,
 } from '@coreui/react';
 
+const apiBaseUrl = globalThis.apiBaseUrl || 'http://localhost:8000';
+
 export default function ProjectsList() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,10 +28,10 @@ export default function ProjectsList() {
     async function fetchProjects() {
       setLoading(true);
       try {
-        const res = await fetch('${apiBaseUrl}/projects/');
+        const res = await fetch(`${apiBaseUrl}/projects/`);
         if (!res.ok) throw new Error('Failed to fetch projects');
         const data = await res.json();
-        setProjects(Array.isArray(data) ? data : (data.projects || []));
+        setProjects(Array.isArray(data) ? data : data.projects || []);
         setError('');
       } catch (err) {
         setError('Error fetching projects: ' + err.message);
@@ -45,11 +47,10 @@ export default function ProjectsList() {
     setPlots([]);
     setPlotsLoading(true);
     try {
-      // Replace with actual plots API
-      const res = await fetch(`${apiBaseUrl}/plots`);
+      const res = await fetch(`${apiBaseUrl}/plots?projectId=${project.id}`);
       if (!res.ok) throw new Error('Failed to fetch plots');
       const data = await res.json();
-      setPlots(Array.isArray(data) ? data : (data.plots || []));
+      setPlots(Array.isArray(data) ? data : data.plots || []);
     } catch (err) {
       alert('Error fetching plots: ' + err.message);
     } finally {
@@ -57,45 +58,55 @@ export default function ProjectsList() {
     }
   };
 
+  const getProjectBadgeColor = (status) => {
+    switch (status.toLowerCase()) {
+      case 'completed':
+        return 'success';
+      case 'ongoing':
+        return 'info';
+      case 'delayed':
+        return 'warning';
+      default:
+        return 'secondary';
+    }
+  };
+
+  const getPlotBadgeColor = (status) => (status.toLowerCase() === 'sold' ? 'danger' : 'success');
+
   return (
     <CContainer className="my-4">
       {loading ? (
         <div className="text-center py-5">
-          <CSpinner />
+          <CSpinner color="primary" />
         </div>
       ) : error ? (
         <div className="text-danger text-center py-5">{error}</div>
       ) : (
         <>
-          <CCard
-            style={{
-              background: '#fff',
-              borderRadius: '12px',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-              marginBottom: '20px',
-            }}
-          >
+          {/* Projects Table */}
+          <CCard className="mb-4" style={{ borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}>
             <CCardBody>
+              <h4 className="mb-3" style={{ color: '#495057' }}>Projects List</h4>
               <CTable hover responsive align="middle">
                 <CTableHead color="light">
                   <CTableRow>
-                    <CTableHeaderCell style={{ fontWeight: 600 }}>Name</CTableHeaderCell>
-                    <CTableHeaderCell style={{ fontWeight: 600 }}>Description</CTableHeaderCell>
-                    <CTableHeaderCell style={{ fontWeight: 600 }}>Location</CTableHeaderCell>
-                    <CTableHeaderCell style={{ fontWeight: 600 }}>Status</CTableHeaderCell>
-                    <CTableHeaderCell style={{ fontWeight: 600 }}>Developer</CTableHeaderCell>
-                    <CTableHeaderCell style={{ fontWeight: 600 }}>Action</CTableHeaderCell>
+                    <CTableHeaderCell>Name</CTableHeaderCell>
+                    <CTableHeaderCell>Description</CTableHeaderCell>
+                    <CTableHeaderCell>Location</CTableHeaderCell>
+                    <CTableHeaderCell>Status</CTableHeaderCell>
+                    <CTableHeaderCell>Developer</CTableHeaderCell>
+                    <CTableHeaderCell>Action</CTableHeaderCell>
                   </CTableRow>
                 </CTableHead>
                 <CTableBody>
                   {projects.length > 0 ? (
-                    projects.map((project, index) => (
-                      <CTableRow key={index} style={{ transition: '0.2s' }}>
+                    projects.map((project) => (
+                      <CTableRow key={project.id}>
                         <CTableDataCell>{project.name}</CTableDataCell>
                         <CTableDataCell>{project.description}</CTableDataCell>
                         <CTableDataCell>{project.location}</CTableDataCell>
                         <CTableDataCell>
-                          <CBadge color={project.status.toLowerCase() === 'completed' ? 'success' : 'warning'}>
+                          <CBadge color={getProjectBadgeColor(project.status)}>
                             {project.status}
                           </CBadge>
                         </CTableDataCell>
@@ -105,7 +116,7 @@ export default function ProjectsList() {
                             color="primary"
                             size="sm"
                             variant="outline"
-                            style={{ borderRadius: '20px' }}
+                            shape="rounded-pill"
                             onClick={() => handleViewPlot(project)}
                           >
                             View Plots
@@ -115,7 +126,7 @@ export default function ProjectsList() {
                     ))
                   ) : (
                     <CTableRow>
-                      <CTableDataCell colSpan="6" className="text-center">
+                      <CTableDataCell colSpan="6" className="text-center text-muted">
                         No projects found.
                       </CTableDataCell>
                     </CTableRow>
@@ -125,21 +136,16 @@ export default function ProjectsList() {
             </CCardBody>
           </CCard>
 
+          {/* Plots Table */}
           {selectedProject && (
-            <CCard
-              style={{
-                background: '#fff',
-                borderRadius: '12px',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-              }}
-            >
+            <CCard style={{ borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}>
               <CCardBody>
                 <h5 className="mb-3">
                   Plots for Project: <strong>{selectedProject.name}</strong>
                 </h5>
                 {plotsLoading ? (
                   <div className="text-center py-3">
-                    <CSpinner />
+                    <CSpinner color="primary" />
                   </div>
                 ) : plots.length > 0 ? (
                   <CTable hover responsive align="middle">
@@ -151,14 +157,12 @@ export default function ProjectsList() {
                       </CTableRow>
                     </CTableHead>
                     <CTableBody>
-                      {plots.map((plot, idx) => (
-                        <CTableRow key={idx}>
+                      {plots.map((plot) => (
+                        <CTableRow key={plot.id}>
                           <CTableDataCell>{plot.number}</CTableDataCell>
                           <CTableDataCell>{plot.size}</CTableDataCell>
                           <CTableDataCell>
-                            <CBadge color={plot.status.toLowerCase() === 'sold' ? 'danger' : 'success'}>
-                              {plot.status}
-                            </CBadge>
+                            <CBadge color={getPlotBadgeColor(plot.status)}>{plot.status}</CBadge>
                           </CTableDataCell>
                         </CTableRow>
                       ))}

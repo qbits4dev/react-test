@@ -65,7 +65,7 @@ const ClientDashboard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('${apiBaseUrl}')
+    fetch('${globalThis.apiBaseUrl}')
       .then(res => res.json())
       .then(json => {
         setData(json);

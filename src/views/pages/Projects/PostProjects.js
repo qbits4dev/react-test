@@ -32,24 +32,14 @@ export default function ProjectForm() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleStatusSelect = (status) => {
-    setForm((prev) => ({ ...prev, status }));
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     setLoading(true);
 
     const payload = {
-      name: form.name,
-      description: form.description,
-      location: form.location,
-      start_date: form.start_date,
-      end_date: form.end_date,
+      ...form,
       status: form.status.toLowerCase(),
       total_area: Number(form.total_area),
-      developer: form.developer,
     };
 
     console.log('Submitting payload:', payload);
@@ -57,16 +47,12 @@ export default function ProjectForm() {
     try {
       const response = await fetch('${apiBaseUrl}/projects/', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          // add auth headers here if needed
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Error response:', errorText);
         throw new Error(errorText || 'Failed to submit');
       }
 
@@ -92,25 +78,43 @@ export default function ProjectForm() {
     <CCard
       className="mb-4"
       style={{
-        background: '#ffffff',
         borderRadius: '16px',
-        boxShadow: '0 8px 30px rgba(0, 0, 0, 0.12)',
+        boxShadow: '0 15px 50px rgba(0,0,0,0.08)',
         border: 'none',
-        transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out',
+        transition: 'transform 0.3s ease, box-shadow 0.3s ease',
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.transform = 'translateY(-5px)';
-        e.currentTarget.style.boxShadow = '0 12px 35px rgba(0, 0, 0, 0.15)';
+        e.currentTarget.style.boxShadow = '0 20px 60px rgba(0,0,0,0.15)';
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.transform = 'translateY(0)';
-        e.currentTarget.style.boxShadow = '0 8px 30px rgba(0, 0, 0, 0.12)';
+        e.currentTarget.style.boxShadow = '0 15px 50px rgba(0,0,0,0.08)';
       }}
     >
       <CCardBody className="p-4 p-md-5">
-        <div className="text-center mb-4">
-          <h2 style={{ fontWeight: 700, color: '#2c3e50' }}>Create a New Project</h2>
-          <p className="text-medium-emphasis">Fill in the details below to get started.</p>
+        <div className="text-center mb-5">
+          <h1
+            className="fw-bold"
+            style={{
+              background: 'linear-gradient(90deg, #990bffff, #8857f3ff)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+            }}
+          >
+            Create a New Project
+          </h1>
+          <p
+            className="text-medium-emphasis"
+            style={{
+              background: 'linear-gradient(90deg,#990bffff, #8857f3ff)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              fontWeight: 500,
+            }}
+          >
+            Fill in the details below to get started.
+          </p>
         </div>
 
         <CForm onSubmit={handleSubmit}>
@@ -125,6 +129,7 @@ export default function ProjectForm() {
                 onChange={handleChange}
                 placeholder="Project Name"
                 required
+                className="border-primary"
               />
             </CCol>
             <CCol md={6}>
@@ -136,6 +141,7 @@ export default function ProjectForm() {
                 onChange={handleChange}
                 placeholder="Developer"
                 required
+                className="border-primary"
               />
             </CCol>
           </CRow>
@@ -151,6 +157,7 @@ export default function ProjectForm() {
                 onChange={handleChange}
                 placeholder="Location"
                 required
+                className="border-primary"
               />
             </CCol>
             <CCol md={6}>
@@ -163,6 +170,7 @@ export default function ProjectForm() {
                 onChange={handleChange}
                 placeholder="Total Area (sq. ft)"
                 required
+                className="border-primary"
               />
             </CCol>
           </CRow>
@@ -179,6 +187,7 @@ export default function ProjectForm() {
                 placeholder="Project Description"
                 rows={3}
                 required
+                className="border-primary"
               />
             </CCol>
           </CRow>
@@ -194,6 +203,7 @@ export default function ProjectForm() {
                 value={form.start_date}
                 onChange={handleChange}
                 required
+                className="border-primary"
               />
             </CCol>
             <CCol md={6}>
@@ -205,6 +215,7 @@ export default function ProjectForm() {
                 value={form.end_date}
                 onChange={handleChange}
                 required
+                className="border-primary"
               />
             </CCol>
           </CRow>
@@ -219,6 +230,7 @@ export default function ProjectForm() {
                 value={form.status}
                 onChange={handleChange}
                 required
+                className="border-primary"
               >
                 <option value="">Select a status</option>
                 {statusOptions.map((status) => (
@@ -232,7 +244,13 @@ export default function ProjectForm() {
 
           {/* Submit Button */}
           <div className="d-grid mt-4">
-            <CButton color="primary" type="submit" size="lg" style={{ fontWeight: 600 }} disabled={loading}>
+            <CButton
+              color="primary"
+              type="submit"
+              size="lg"
+              style={{ fontWeight: 600 }}
+              disabled={loading}
+            >
               {loading ? 'Submitting...' : 'Add Project'}
             </CButton>
           </div>
