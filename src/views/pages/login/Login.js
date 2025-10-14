@@ -18,7 +18,7 @@ import CIcon from '@coreui/icons-react'
 import { cilLockLocked, cilUser } from '@coreui/icons'
 
 import { AppFooter } from '../../../components'
-import Logo from '../../../assets/images/siraditya.jpg'
+import Logo from '../../../assets/images/siradithya.jpg'
 
 const Login = () => {
   const navigate = useNavigate()
@@ -118,7 +118,7 @@ const Login = () => {
                     <div className="text-center mb-4">
                       <img
                         src={Logo}
-                        alt="Logo"
+                        alt='../../../assets/images/siraditya.jpg'
                         style={{
                           maxWidth: '100px',
                           width: '30%',
