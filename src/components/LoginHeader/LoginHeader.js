@@ -5,46 +5,78 @@ import {
     CHeaderBrand,
     CHeaderText,
 } from '@coreui/react'
+import Logo from '../../assets/images/siradithya.jpg'
 
 const LoginHeader = () => {
     const headerStyle = {
-        background: 'linear-gradient(90deg, #0d6efd 0%, #6610f2 100%)',
+        background: '#0d6efd',
         color: '#fff',
-        height: '90px',
-        padding: '0.75rem 1.0rem',
-        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.15)',
+        height: '70px',
+        padding: '0.5rem 1rem',
+        boxShadow: '0 2px 6px rgba(0, 0, 0, 0.1)',
     }
 
     const logoStyle = {
-        width: '60px',
-        height: '60px',
-        borderRadius: '50%', // perfect circle
-        objectFit: 'cover',  // ensures the image covers the circle without distortion
+        width: '45px',
+        height: '45px',
+        borderRadius: '50%',
+        objectFit: 'cover',
         overflow: 'hidden',
-        border: '2px solid #fff', // optional: adds a white border
+        border: '2px solid #fff',
+    }
+
+    const titleStyle = {
+        margin: 0,
+        fontSize: '1.25rem',
+        fontWeight: '600',
+        whiteSpace: 'nowrap',
     }
 
     return (
-        <CHeader position="sticky" style={headerStyle} className="mb-4">
+        <CHeader position="sticky" style={headerStyle} className="mb-3">
             <CContainer
                 fluid
-                className="d-flex justify-content-between align-items-center"
+                className="d-flex justify-content-between align-items-center flex-wrap"
                 style={{ padding: '0 10px' }}
             >
                 {/* Logo on the left */}
                 <CHeaderBrand className="d-flex align-items-center">
-                    <img
-                        src="src/assets/images/siradithya.jpg"
-                        alt="Logo"
-                        style={logoStyle}
-                    />
+                    <img src={Logo} alt="Logo" style={logoStyle} />
                 </CHeaderBrand>
 
                 {/* Company Title on the right */}
                 <CHeaderText className="d-flex align-items-center text-light">
-                    <h3 style={{ margin: 0 }}>Sri Aditya Developers</h3>
+                    <h3 style={titleStyle} className="mb-0 text-center">
+                        Sri Aditya Developers
+                    </h3>
                 </CHeaderText>
             </CContainer>
+
+            {/* Responsive Adjustments */}
+            <style jsx>{`
+        @media (max-width: 768px) {
+          h3 {
+            font-size: 1rem;
+          }
+          img {
+            width: 40px !important;
+            height: 40px !important;
+          }
+          header {
+            height: 60px !important;
+          }
+        }
+
+        @media (max-width: 480px) {
+          h3 {
+            font-size: 0.9rem;
+          }
+          img {
+            width: 35px !important;
+            height: 35px !important;
+          }
+        }
+      `}</style>
         </CHeader>
     )
 }

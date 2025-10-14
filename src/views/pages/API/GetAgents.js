@@ -331,57 +331,69 @@ export default function AgentTable() {
     return (
         <>
             <CCard className="shadow border-0">
-                <CCardHeader
-                    className="d-flex flex-column flex-md-row justify-content-between align-items-center p-3"
-                    style={gradientHeaderStyle}
-                >
-                    <h3 className="mb-2 mb-md-0 fw-bold">Agent Management</h3>
-                    <div className="d-flex flex-column flex-md-row w-100 w-md-auto mt-2 mt-md-0">
-                        {/* Search */}
-                        <CInputGroup className="mb-2 mb-md-0 me-md-2">
-                            <CInputGroupText>
-                                <CIcon icon={cilSearch} />
-                            </CInputGroupText>
-                            <CFormInput
-                                placeholder="Search agents..."
-                                value={searchTerm}
-                                onChange={(e) => {
-                                    setSearchTerm(e.target.value)
-                                    setCurrentPage(1)
-                                }}
-                            />
-                        </CInputGroup>
+                <CCardHeader style={gradientHeaderStyle} className="text-white p-3">
+                    {/* Title centered at the top */}
+                    <div className="text-center mb-4">
+                        <h3 className="fw-bold mb-0">Agent Management</h3>
+                    </div>
 
-                        {/* Team Filter */}
-                        <CInputGroup className="mb-2 mb-md-0 me-md-2">
-                            <CInputGroupText>Team</CInputGroupText>
-                            <CFormSelect
-                                value={teamFilter}
-                                onChange={(e) => {
-                                    setTeamFilter(e.target.value)
-                                    setCurrentPage(1)
-                                }}
+                    {/* Filters & Actions */}
+                    <div
+                        className="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-md-between w-100 gap-2 gap-md-0"
+                    >
+                        {/* Team Filter - Left (Desktop), Full width (Mobile) */}
+                        <div className="w-100 w-md-auto ps-md-3">
+                            <CInputGroup style={{ maxWidth: '450px' }} className="mx-auto mx-md-0">
+                                <CInputGroupText>Team</CInputGroupText>
+                                <CFormSelect
+                                    value={teamFilter}
+                                    onChange={(e) => {
+                                        setTeamFilter(e.target.value)
+                                        setCurrentPage(1)
+                                    }}
+                                >
+                                    <option value="">All Teams</option>
+                                    {Array.from(new Set(agents.map((a) => a.agentTeam))).map((team) => (
+                                        <option key={team} value={team}>
+                                            {team}
+                                        </option>
+                                    ))}
+                                </CFormSelect>
+                            </CInputGroup>
+                        </div>
+
+                        {/* Search - Center */}
+                        <div className="w-100 w-md-auto px-md-2">
+                            <CInputGroup style={{ maxWidth: '400px' }} className="mx-auto">
+                                <CInputGroupText>
+                                    <CIcon icon={cilSearch} />
+                                </CInputGroupText>
+                                <CFormInput
+                                    placeholder="Search agents..."
+                                    value={searchTerm}
+                                    onChange={(e) => {
+                                        setSearchTerm(e.target.value)
+                                        setCurrentPage(1)
+                                    }}
+                                />
+                            </CInputGroup>
+                        </div>
+
+                        {/* Add Agent - Right (Desktop), Full width (Mobile) */}
+                        <div className="w-100 w-md-auto pe-md-3 d-flex justify-content-md-end">
+                            <CButton
+                                color="light"
+                                variant="outline"
+                                onClick={() => navigate('/register_agent')}
+                                size="sm"
+                                className="px-3 py-2 w-100 w-md-auto mx-auto"
                             >
-                                <option value="">All Teams</option>
-                                {Array.from(new Set(agents.map((a) => a.agentTeam))).map((team) => (
-                                    <option key={team} value={team}>
-                                        {team}
-                                    </option>
-                                ))}
-                            </CFormSelect>
-                        </CInputGroup>
-
-                        {/* Add Agent */}
-                        <CButton
-                            color="light"
-                            variant="outline"
-                            onClick={() => navigate('/register_agent')}
-                            className="w-100 w-md-auto"
-                        >
-                            <CIcon icon={cilUserPlus} className="me-2" /> Add Agent
-                        </CButton>
+                                <CIcon icon={cilUserPlus} className="me-2" /> Add Agent
+                            </CButton>
+                        </div>
                     </div>
                 </CCardHeader>
+
 
                 <CCardBody style={{ overflowX: 'auto' }}>
                     <CTable hover responsive align="middle" className="mb-0">

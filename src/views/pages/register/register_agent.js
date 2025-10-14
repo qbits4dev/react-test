@@ -7,6 +7,8 @@ import { useNavigate } from 'react-router-dom';
 import { AppFooter } from '../../../components/index';
 import CoreUIProfileCropper from './CoreUIProfileCropper';
 import { LoginHeader } from '../../../components/LoginHeader'
+import CIcon from '@coreui/icons-react'
+import { cilArrowLeft } from '@coreui/icons'
 
 export default function RegisterAgentWizard() {
   const navigate = useNavigate();
@@ -265,9 +267,16 @@ export default function RegisterAgentWizard() {
                       {alert.message}
                     </CAlert>
                   )}
-                  <CForm noValidate>
-                    <h1 className="mb-4 text-primary fw-bold">Agent Registration</h1>
+                  <div className="d-flex flex-column flex-sm-row align-items-center justify-content-between mb-3">
+                    <CButton color="primary" variant="ghost" onClick={() => navigate(-1)} className="mb-3 mb-sm-0">
+                      <CIcon icon={cilArrowLeft} className="me-2" />
+                    </CButton>
 
+                    <h1 className="text-center text-primary fw-bold mb-4 mb-sm-0 flex-grow-1">
+                      Agent Registration
+                    </h1>
+                  </div>
+                  <CForm noValidate>
                     {/* Step 1 - Personal Details */}
                     {step === 1 && (
                       <CCard className="mb-4 p-4 bg-white shadow-sm border-0">
