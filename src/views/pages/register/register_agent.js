@@ -223,6 +223,10 @@ export default function RegisterAgentWizard() {
     if (form.panFile) {
       formData.append('pan_file', form.panFile);
     }
+    if (form.photo?.file) {
+      formData.append('photo', form.photo.file);
+    }
+
 
     try {
       console.log(`${globalThis.apiBaseUrl}/auth/register`);
@@ -429,7 +433,7 @@ export default function RegisterAgentWizard() {
                             {form.photo ? (
                               <>
                                 <img
-                                  src={form.photo}
+                                  src={form.photo.previewUrl}
                                   alt="Profile Preview"
                                   className="rounded-circle mb-3 shadow-sm"
                                   style={{ width: '150px', height: '150px', objectFit: 'cover', border: '3px solid #0d6efd' }}
@@ -445,14 +449,15 @@ export default function RegisterAgentWizard() {
                               </>
                             ) : (
                               <CoreUIProfileCropper
-                                onChange={(croppedImage) => {
-                                  setForm(prev => ({ ...prev, photo: croppedImage }));
+                                onChange={({ file, previewUrl }) => {
+                                  setForm(prev => ({ ...prev, photo: { file, previewUrl } }));
                                   setErrors(prev => ({ ...prev, photo: '' }));
                                 }}
                               />
                             )}
                             {renderError('photo')}
                           </div>
+
 
                           {/* Aadhaar File Upload */}
                           <div className="mb-3">
