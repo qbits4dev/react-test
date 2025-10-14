@@ -12,22 +12,25 @@ import {
   CInputGroup,
   CInputGroupText,
   CRow,
+  CSpinner,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilLockLocked, cilUser } from '@coreui/icons'
 
 import { AppFooter } from '../../../components'
+import Logo from '../../../assets/images/siraditya.jpg'
 
 const Login = () => {
   const navigate = useNavigate()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [errors, setErrors] = useState({})
+  const [loading, setLoading] = useState(false)
 
   const validateForm = () => {
     const newErrors = {}
-    if (!username) newErrors.username = 'Username is required.'
-    if (!password) newErrors.password = 'Password is required.'
+    if (!username.trim()) newErrors.username = 'Username is required.'
+    if (!password.trim()) newErrors.password = 'Password is required.'
     return newErrors
   }
 
@@ -39,6 +42,9 @@ const Login = () => {
       return
     }
 
+    setLoading(true)
+    setErrors({})
+
     const payload = {
       grant_type: 'password',
       username,
@@ -49,45 +55,45 @@ const Login = () => {
     }
 
     try {
-      const formBody = new URLSearchParams()
-      formBody.append('grant_type', 'password')
-      formBody.append('username', payload.username)
-      formBody.append('password', payload.password)
-      formBody.append('scope', payload.scope || '')
-      formBody.append('client_id', payload.client_id || '')
-      formBody.append('client_secret', payload.client_secret || '')
-      console.log(`${globalThis.apiBaseUrl}/auth/login`)
+      const apiUrl = globalThis.apiBaseUrl || 'http://localhost:8000' // fallback
+      const formBody = new URLSearchParams(payload).toString()
 
-      const response = await fetch(`${globalThis.apiBaseUrl}/auth/login`, {
+      const response = await fetch(`${apiUrl}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: formBody.toString(),
+        body: formBody,
       })
 
       const data = await response.json()
 
-      if (response.ok) {
+      if (response.ok && data?.access_token) {
         localStorage.setItem('access_token', data.access_token)
-        localStorage.setItem('refresh_token', data.refresh_token)
-        localStorage.setItem('user_role', data.role)
-        localStorage.setItem('user_id', data.u_id)
-        setErrors({})
-        console.log(data.role)
+        localStorage.setItem('refresh_token', data.refresh_token || '')
+        localStorage.setItem('user_role', data.role || '')
+        localStorage.setItem('user_id', data.u_id || '')
+
         // Role-based navigation
-        if (data.role === 'admin') {
-          navigate('/AdminDashboard')
-        } else if (data.role === 'agent') {
-          navigate('/AgentDashboard')
-        } else if (data.role === 'customer') {
-          navigate('/ClientDashboard')
-        } else {
-          navigate('/dashboard') // fallback default
+        switch (data.role) {
+          case 'admin':
+            navigate('/AdminDashboard')
+            break
+          case 'agent':
+            navigate('/AgentDashboard')
+            break
+          case 'customer':
+            navigate('/ClientDashboard')
+            break
+          default:
+            navigate('/dashboard')
         }
       } else {
-        setErrors({ form: data.message || 'Invalid credentials' })
+        setErrors({ form: data.message || 'Invalid username or password.' })
       }
     } catch (error) {
-      setErrors({ form: error.message || 'Request failed' })
+      console.error('Login error:', error)
+      setErrors({ form: 'Unable to connect to the server. Please try again.' })
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -96,9 +102,7 @@ const Login = () => {
       <div className="body flex-grow-1">
         <div
           className="min-vh-100 d-flex align-items-center justify-content-center"
-          style={{
-            background: 'linear-gradient(to right, #667eea, #764ba2)',
-          }}
+          style={{ background: 'linear-gradient(to right, #667eea, #764ba2)' }}
         >
           <CContainer>
             <CRow className="justify-content-center">
@@ -113,7 +117,7 @@ const Login = () => {
                   <CCardBody>
                     <div className="text-center mb-4">
                       <img
-                        src="src/assets/images/siradithya.jpg"
+                        src={Logo}
                         alt="Logo"
                         style={{
                           maxWidth: '100px',
@@ -178,7 +182,7 @@ const Login = () => {
                       <CButton
                         type="submit"
                         color="primary"
-                        className="w-100"
+                        className="w-100 d-flex justify-content-center align-items-center"
                         style={{
                           fontSize: '1rem',
                           padding: '0.5rem 0',
@@ -186,8 +190,9 @@ const Login = () => {
                           fontWeight: '500',
                           boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
                         }}
+                        disabled={loading}
                       >
-                        Login
+                        {loading ? <CSpinner size="sm" color="light" /> : 'Login'}
                       </CButton>
                     </CForm>
 
