@@ -11,7 +11,7 @@ import {
   CTableRow,
   CTableHeaderCell,
   CTableBody,
-  CTableDataCell,
+  CTableDataCell
 } from '@coreui/react'
 import WidgetsDropdown from '../widgets/WidgetsCardsAd'
 import UpcomingVisitsWidget from '../pages/register/VisitCalender'
@@ -25,7 +25,7 @@ const AgentDashboard = () => {
       value: '40',
       color: 'danger',
       buttonLink: '/bookvisit',
-      buttonText: 'Book Site visit',
+      buttonText: 'Book Site Visit',
     },
     {
       id: 'Site Visits',
@@ -58,61 +58,60 @@ const AgentDashboard = () => {
   ])
 
   return (
-    <CContainer className="py-4">
-      {/* Widgets Section */}
-      <WidgetsDropdown widgetsData={agentWidgetsData} className="mb-4" />
-
-      {/* Targets Section */}
-      <CRow className="justify-content-center mb-4">
-        {/* Targets Section */}
-        <CCol md={6}>
-          <CCard className="shadow-sm border-0 rounded-3">
-            <CCardHeader className="bg-primary text-white text-center fs-5">
-              Targets
-            </CCardHeader>
-            <CCardBody>
-              {targets.length === 0 ? (
-                <p className="text-center text-muted py-3">
-                  No targets available.
-                </p>
-              ) : (
-                <CTable striped hover responsive>
-                  <CTableHead>
-                    <CTableRow>
-                      <CTableHeaderCell>S.no</CTableHeaderCell>
-                      <CTableHeaderCell>Role ID</CTableHeaderCell>
-                      <CTableHeaderCell>Description</CTableHeaderCell>
-                      <CTableHeaderCell>Plots</CTableHeaderCell>
-                    </CTableRow>
-                  </CTableHead>
-                  <CTableBody>
-                    {targets.map((target, index) => (
-                      <CTableRow key={index}>
-                        <CTableDataCell>{index + 1}</CTableDataCell>
-                        <CTableDataCell>{target.role_id}</CTableDataCell>
-                        <CTableDataCell>{target.description}</CTableDataCell>
-                        <CTableDataCell>{target.value}</CTableDataCell>
-                      </CTableRow>
-                    ))}
-                  </CTableBody>
-                </CTable>
-              )}
-            </CCardBody>
-          </CCard>
+    <CContainer fluid className="py-4 px-3">
+      {/* ===== Widgets Section ===== */}
+      <CRow className="g-4">
+        <CCol xs={12}>
+          <WidgetsDropdown widgetsData={agentWidgetsData} />
         </CCol>
+      </CRow>
 
-        {/* Upcoming Visits Widget Section */}
-        <CCol md={6}>
-          <CCard className="shadow-sm border-0 rounded-3">
-            <CCardHeader className="bg-info text-white text-center fs-5">
+      {/* ===== Upcoming Visits Section ===== */}
+      <CRow className="mt-4">
+        <CCol xs={12}>
+          <CCard className="shadow-sm border-0 rounded-3 h-100">
+            <CCardHeader className="bg-info text-white text-center fs-5 fw-semibold py-3">
               Upcoming Client Visits
             </CCardHeader>
-            <CCardBody>
+            <CCardBody className="p-3">
               <UpcomingVisitsWidget />
             </CCardBody>
           </CCard>
         </CCol>
       </CRow>
+
+
+      {/* ===== Targets Table Section (Future Use) ===== */}
+
+      {/* <CRow className="mt-4">
+        <CCol xs={12}>
+          <CCard className="shadow-sm border-0 rounded-3">
+            <CCardHeader className="bg-light fw-semibold">
+              Current Targets
+            </CCardHeader>
+            <CCardBody>
+              <CTable responsive hover align="middle">
+                <CTableHead className="table-info text-center">
+                  <CTableRow>
+                    <CTableHeaderCell>Role ID</CTableHeaderCell>
+                    <CTableHeaderCell>Description</CTableHeaderCell>
+                    <CTableHeaderCell>Value</CTableHeaderCell>
+                  </CTableRow>
+                </CTableHead>
+                <CTableBody>
+                  {targets.map((target, index) => (
+                    <CTableRow key={index} className="text-center">
+                      <CTableDataCell>{target.role_id}</CTableDataCell>
+                      <CTableDataCell>{target.description}</CTableDataCell>
+                      <CTableDataCell>{target.value}</CTableDataCell>
+                    </CTableRow>
+                  ))}
+                </CTableBody>
+              </CTable>
+            </CCardBody>
+          </CCard>
+        </CCol>
+      </CRow> */}
 
     </CContainer>
   )

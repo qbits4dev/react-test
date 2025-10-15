@@ -11,6 +11,7 @@ import {
     CTableDataCell,
     CContainer,
     CButton,
+    CSpinner,
 } from '@coreui/react'
 
 import { useNavigate } from 'react-router-dom'
@@ -23,21 +24,22 @@ export default function SiteVisitsTable() {
     const [error, setError] = useState(null)
 
     useEffect(() => {
-        fetch('${apiBaseUrl}/visits/')
-            .then((response) => {
+        const fetchVisits = async () => {
+            try {
+                const response = await fetch(`${globalThis.apiBaseUrl}/visits/`)
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`)
+                    throw new Error(`HTTP error! Status: ${response.status}`)
                 }
-                return response.json()
-            })
-            .then((data) => {
+                const data = await response.json()
                 setSiteVisits(data)
+            } catch (err) {
+                setError(err.message)
+            } finally {
                 setLoading(false)
-            })
-            .catch((error) => {
-                setError(error.message)
-                setLoading(false)
-            })
+            }
+        }
+
+        fetchVisits()
     }, [])
 
     return (
@@ -46,40 +48,57 @@ export default function SiteVisitsTable() {
                 <CCardHeader className="text-primary text-center fw-bold fs-3">
                     Booked Site Visits
                 </CCardHeader>
+
                 <CCardBody>
-                    {loading && <div>Loading site visits...</div>}
-                    {error && <div className="text-danger">Error: {error}</div>}
+                    {loading && (
+                        <div className="text-center py-3">
+                            <CSpinner color="primary" /> <span className="ms-2">Loading site visits...</span>
+                        </div>
+                    )}
+
+                    {error && (
+                        <div className="text-danger text-center py-3">
+                            <strong>Error:</strong> {error}
+                        </div>
+                    )}
+
                     {!loading && !error && (
-                        <CTable hover responsive bordered align="middle" className="mb-0 text-center">
-                            <CTableHead color="light">
-                                <CTableRow>
-                                    <CTableHeaderCell>#</CTableHeaderCell>
-                                    <CTableHeaderCell>Lead Type</CTableHeaderCell>
-                                    <CTableHeaderCell>Customer ID</CTableHeaderCell>
-                                    <CTableHeaderCell>Agent ID</CTableHeaderCell>
-                                    <CTableHeaderCell>Phone</CTableHeaderCell>
-                                    <CTableHeaderCell>Project</CTableHeaderCell>
-                                    <CTableHeaderCell>Plot Details</CTableHeaderCell>
-                                    <CTableHeaderCell>Date of Visit</CTableHeaderCell>
-                                </CTableRow>
-                            </CTableHead>
-                            <CTableBody>
-                                {siteVisits.map((visit, index) => (
-                                    <CTableRow key={visit.id}>
-                                        <CTableDataCell>{index + 1}</CTableDataCell>
-                                        <CTableDataCell>
-                                            {visit.customer_id.startsWith('cu') ? 'Existing' : 'New'}
-                                        </CTableDataCell>
-                                        <CTableDataCell>{visit.customer_id}</CTableDataCell>
-                                        <CTableDataCell>{visit.agent_id}</CTableDataCell>
-                                        <CTableDataCell>{/* Phone not in API, placeholder */}</CTableDataCell>
-                                        <CTableDataCell>{`Project ${visit.project_id}`}</CTableDataCell>
-                                        <CTableDataCell>{`Plot ${visit.plot_id}`}</CTableDataCell>
-                                        <CTableDataCell>{visit.visit_date}</CTableDataCell>
-                                    </CTableRow>
-                                ))}
-                            </CTableBody>
-                        </CTable>
+                        <>
+                            {siteVisits.length > 0 ? (
+                                <CTable hover responsive bordered align="middle" className="mb-0 text-center">
+                                    <CTableHead color="light">
+                                        <CTableRow>
+                                            <CTableHeaderCell>#</CTableHeaderCell>
+                                            <CTableHeaderCell>Lead Type</CTableHeaderCell>
+                                            <CTableHeaderCell>Customer ID</CTableHeaderCell>
+                                            <CTableHeaderCell>Agent ID</CTableHeaderCell>
+                                            <CTableHeaderCell>Phone</CTableHeaderCell>
+                                            <CTableHeaderCell>Project</CTableHeaderCell>
+                                            <CTableHeaderCell>Plot Details</CTableHeaderCell>
+                                            <CTableHeaderCell>Date of Visit</CTableHeaderCell>
+                                        </CTableRow>
+                                    </CTableHead>
+                                    <CTableBody>
+                                        {siteVisits.map((visit, index) => (
+                                            <CTableRow key={visit.id || index}>
+                                                <CTableDataCell>{index + 1}</CTableDataCell>
+                                                <CTableDataCell>
+                                                    {visit.customer_id && visit.customer_id.startsWith('cu') ? 'Existing' : 'New'}
+                                                </CTableDataCell>
+                                                <CTableDataCell>{visit.customer_id || '—'}</CTableDataCell>
+                                                <CTableDataCell>{visit.agent_id || '—'}</CTableDataCell>
+                                                <CTableDataCell>{visit.phone || '—'}</CTableDataCell>
+                                                <CTableDataCell>{visit.project_id ? `Project ${visit.project_id}` : '—'}</CTableDataCell>
+                                                <CTableDataCell>{visit.plot_id ? `Plot ${visit.plot_id}` : '—'}</CTableDataCell>
+                                                <CTableDataCell>{visit.visit_date || '—'}</CTableDataCell>
+                                            </CTableRow>
+                                        ))}
+                                    </CTableBody>
+                                </CTable>
+                            ) : (
+                                <div className="text-center py-3 text-muted">No site visits found.</div>
+                            )}
+                        </>
                     )}
 
                     <div className="text-end mt-3">
