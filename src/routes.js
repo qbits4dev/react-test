@@ -15,6 +15,8 @@ const ForgotPassword = React.lazy(() => import('./views/pages/register/ForgotPas
 const Targets = React.lazy(() => import('./views/pages/API/Targets'))
 const VisitCalender = React.lazy(() => import('./views/pages/register/VisitCalender'))
 const Loginheader = React.lazy(() => import('./components/LoginHeader/LoginHeader.js'))
+const venture2 = React.lazy(() => import('./views/pages/Projects/venture2.js'))
+const CoastalGardenPhase2 = React.lazy(() => import('./views/pages/Projects/CoastalGardenPhase2.js'))
 
 
 const Colors = React.lazy(() => import('./views/theme/colors/Colors'))
@@ -160,6 +162,8 @@ const routes = [
   { path: '/VisitCalender', name: 'Visit Calender', element: VisitCalender },
   { path: '/Loginheader', name: 'Loginheader', element: Loginheader },
   { path: '/venture', name: 'Venture Details', element: venture },
+  { path: '/venture2', name: 'Varahi Gradens', element: venture2 },
+  { path: '/CoastalGardenPhase2', name: 'Coastal Garden Phase II', element: CoastalGardenPhase2 },
 ]
 
 export default routes

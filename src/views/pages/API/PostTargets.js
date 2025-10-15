@@ -27,20 +27,25 @@ const PostTargets = () => {
 
     const [formData, setFormData] = useState({
         designation: '',
-        description: '',
-        sqyards: '',
-        Units: '',
-        Amount: '',
-        Time: '', // Added Time to formData state
+        sale_type: '',
+        stage: '',
+        timeframe: '',
+        target_units: '',
+        insurance_cover: '',
+        medical_cover: '',
+        tour: '',
+        rewards: '',
+        salary_monthly: '',
+        commission_notes: '',
+        salary_eligibility_notes: '',
+        other_notes: '',
     })
 
     const [message, setMessage] = useState('')
     const [error, setError] = useState('')
     const [selectedTarget, setSelectedTarget] = useState('Select Target Type')
 
-    const handleSelect = (targetType) => {
-        setSelectedTarget(targetType)
-    }
+    const handleSelect = (targetType) => setSelectedTarget(targetType)
 
     const handleChange = (e) => {
         const { name, value } = e.target
@@ -67,7 +72,8 @@ const PostTargets = () => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 ...formData,
-                targetType: selectedTarget, // Include target type in submission
+                sale_type: formData.sale_type || 'Direct sale', // default value if blank
+                targetType: selectedTarget,
             }),
         })
             .then((res) => {
@@ -79,11 +85,18 @@ const PostTargets = () => {
                 // Reset form after successful submission
                 setFormData({
                     designation: '',
-                    description: '',
-                    sqyards: '',
-                    Units: '',
-                    Amount: '',
-                    Time: '',
+                    sale_type: '',
+                    stage: '',
+                    timeframe: '',
+                    target_units: '',
+                    insurance_cover: '',
+                    medical_cover: '',
+                    tour: '',
+                    rewards: '',
+                    salary_monthly: '',
+                    commission_notes: '',
+                    salary_eligibility_notes: '',
+                    other_notes: '',
                 })
                 setDesignationName('Select Designation')
                 setSelectedTarget('Select Target Type')
@@ -92,30 +105,22 @@ const PostTargets = () => {
     }
 
     useEffect(() => {
-        fetch(`${apiBaseUrl}/register/?key=designation`, {
-            headers: { accept: 'application/json' },
-        })
+        fetch(`${apiBaseUrl}/register/?key=designation`, { headers: { accept: 'application/json' } })
             .then((res) => res.json())
             .then((data) => {
-                if (data.status === 'ok' && Array.isArray(data.designation)) {
-                    setDesignations(data.designation)
-                } else {
-                    setDesignationError('No designations found')
-                }
+                if (data.status === 'ok' && Array.isArray(data.designation)) setDesignations(data.designation)
+                else setDesignationError('No designations found')
             })
             .catch(() => setDesignationError('Failed to fetch designations'))
             .finally(() => setLoadingDesignations(false))
     }, [])
 
     return (
-        // Added background color and vertical alignment for a better page layout
         <CContainer fluid className="bg-light py-5 d-flex align-items-center min-vh-100">
             <CRow className="justify-content-center w-100">
                 <CCol md={9} lg={7} xl={6}>
-                    {/* Enhanced card with shadow, border, and rounded corners */}
                     <CCard className="shadow-lg border-0 rounded-4">
-                        {/* A vibrant, gradient header */}
-                        <CCardHeader className=" bg-gradient text-primary text-center p-4 rounded-top-4">
+                        <CCardHeader className="bg-gradient text-primary text-center p-4 rounded-top-4">
                             <h4 className="mb-0">Post New Target</h4>
                         </CCardHeader>
                         <CCardBody className="p-4 p-md-5">
@@ -132,12 +137,8 @@ const PostTargets = () => {
                                             {selectedTarget}
                                         </CDropdownToggle>
                                         <CDropdownMenu className="w-100">
-                                            <CDropdownItem onClick={() => handleSelect('Team Target')}>
-                                                Team Target
-                                            </CDropdownItem>
-                                            <CDropdownItem onClick={() => handleSelect('Individual Target')}>
-                                                Individual Target
-                                            </CDropdownItem>
+                                            <CDropdownItem onClick={() => handleSelect('Team Target')}>Team Target</CDropdownItem>
+                                            <CDropdownItem onClick={() => handleSelect('Individual Target')}>Individual Target</CDropdownItem>
                                         </CDropdownMenu>
                                     </CDropdown>
                                 </div>
@@ -161,7 +162,6 @@ const PostTargets = () => {
                                             )}
                                         </CDropdownToggle>
                                         <CDropdownMenu className="w-100">
-                                            {/* Logic for loading/error/data states */}
                                             {!loadingDesignations && !designationError ? (
                                                 designations.map((d) => (
                                                     <CDropdownItem key={d.id} onClick={() => handleDesignationSelect(d)}>
@@ -169,37 +169,51 @@ const PostTargets = () => {
                                                     </CDropdownItem>
                                                 ))
                                             ) : (
-                                                <CDropdownItem disabled>
-                                                    {loadingDesignations ? 'Loading...' : designationError}
-                                                </CDropdownItem>
+                                                <CDropdownItem disabled>{loadingDesignations ? 'Loading...' : designationError}</CDropdownItem>
                                             )}
                                         </CDropdownMenu>
                                     </CDropdown>
                                 </div>
 
-                                {/* Form Fields */}
-                                <div className="mb-3">
-                                    <CFormLabel className="fw-semibold text-muted">Description</CFormLabel>
-                                    <CFormTextarea name="description" value={formData.description} onChange={handleChange} required />
-                                </div>
-
+                                {/* Core Form Fields from JSON */}
                                 <CRow>
                                     <CCol sm={6} className="mb-3">
-                                        <CFormLabel className="fw-semibold text-muted">Sq Yards</CFormLabel>
-                                        <CFormInput type="number" name="sqyards" value={formData.sqyards} onChange={handleChange} required />
+                                        <CFormLabel className="fw-semibold text-muted">Stage</CFormLabel>
+                                        <CFormInput name="stage" value={formData.stage} onChange={handleChange} required />
                                     </CCol>
                                     <CCol sm={6} className="mb-3">
-                                        <CFormLabel className="fw-semibold text-muted">Units</CFormLabel>
-                                        <CFormInput type="number" name="Units" value={formData.Units} onChange={handleChange} required />
+                                        <CFormLabel className="fw-semibold text-muted">Timeframe (Month)</CFormLabel>
+                                        <CFormInput name="timeframe" type="number" value={formData.timeframe} onChange={handleChange} required />
                                     </CCol>
                                 </CRow>
 
-                                <div className="mb-4">
-                                    <CFormLabel className="fw-semibold text-muted">Time (Month)</CFormLabel>
-                                    <CFormInput type="number" name="Time" placeholder="e.g., 2 months" value={formData.Time} onChange={handleChange} required />
+                                <CRow>
+                                    <CCol sm={6} className="mb-3">
+                                        <CFormLabel className="fw-semibold text-muted">Target Units</CFormLabel>
+                                        <CFormInput name="target_units" type="number" value={formData.target_units} onChange={handleChange} required />
+                                    </CCol>
+                                    <CCol sm={6} className="mb-3">
+                                        <CFormLabel className="fw-semibold text-muted">Insurance Cover</CFormLabel>
+                                        <CFormInput name="insurance_cover" value={formData.insurance_cover} onChange={handleChange} required />
+                                    </CCol>
+                                </CRow>
+
+                                <CRow>
+                                    <CCol sm={6} className="mb-3">
+                                        <CFormLabel className="fw-semibold text-muted">Medical Cover</CFormLabel>
+                                        <CFormInput name="medical_cover" value={formData.medical_cover} onChange={handleChange} required />
+                                    </CCol>
+                                    <CCol sm={6} className="mb-3">
+                                        <CFormLabel className="fw-semibold text-muted">Tour</CFormLabel>
+                                        <CFormInput name="tour" value={formData.tour} onChange={handleChange} />
+                                    </CCol>
+                                </CRow>
+
+                                <div className="mb-3">
+                                    <CFormLabel className="fw-semibold text-muted">Rewards</CFormLabel>
+                                    <CFormTextarea name="rewards" value={formData.rewards} onChange={handleChange} />
                                 </div>
 
-                                {/* Submit Button */}
                                 <div className="d-grid mt-4">
                                     <CButton color="primary" type="submit" size="lg" className="fw-semibold">
                                         Submit Target
@@ -207,7 +221,6 @@ const PostTargets = () => {
                                 </div>
                             </CForm>
 
-                            {/* Alerts with solid variant for better visibility */}
                             {message && (
                                 <CAlert color="success" variant="solid" className="mt-4 text-center">
                                     {message}

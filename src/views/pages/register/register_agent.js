@@ -268,14 +268,25 @@ export default function RegisterAgentWizard() {
                     </CAlert>
                   )}
                   <div className="d-flex flex-column flex-sm-row align-items-center justify-content-between mb-3">
-                    <CButton color="primary" variant="ghost" onClick={() => navigate(-1)} className="mb-3 mb-sm-0">
-                      <CIcon icon={cilArrowLeft} className="me-2" />
-                    </CButton>
 
-                    <h1 className="text-center text-primary fw-bold mb-4 mb-sm-0 flex-grow-1">
-                      Agent Registration
-                    </h1>
+                    {/* Back Button */}
+                    <div className="w-100 w-sm-auto d-flex justify-content-start mb-2 mb-sm-0">
+                      <CButton
+                        color="primary"
+                        variant="ghost"
+                        onClick={() => navigate(-1)}
+                        className="p-0"
+                      >
+                        <CIcon icon={cilArrowLeft} className="me-2 fs-5 fs-sm-4" />
+                      </CButton>
+                    </div>
+
+                    {/* Title */}
                   </div>
+                  <h1 className="text-center text-sm-center text-primary fw-bold mb-0 flex-grow-1 fs-4 fs-sm-3 fs-md-2">
+                    Agent Registration
+                  </h1>
+
                   <CForm noValidate>
                     {/* Step 1 - Personal Details */}
                     {step === 1 && (
