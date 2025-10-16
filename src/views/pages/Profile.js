@@ -68,8 +68,7 @@ export default function UserProfile() {
     accountNumber: '',
     ifsc: '',
     permanentAddress: '',
-    presentAddress: '',
-    photoUrl: '', 
+    presentAddress: '', 
     referenceagent: '',
     agentteam: '',
     });

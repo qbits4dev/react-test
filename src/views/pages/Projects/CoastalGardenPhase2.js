@@ -11,7 +11,8 @@ import {
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilArrowLeft, cilPhone } from '@coreui/icons'
-import banner from './../../../assets/images/projects/Coasalgarden.jpg'
+import img from "./../../../assets/images/projects/Coasalgarden.jpg";
+
 
 const CoastalGardenPhase2 = () => {
     const siteDevelopments = [
@@ -64,7 +65,7 @@ const CoastalGardenPhase2 = () => {
                 <CCol>
                     <CCard className="border-0 shadow-sm rounded-4 overflow-hidden">
                         <CImage
-                            src={banner}
+                            src={img}
                             alt="Coastal Garden Phase 2 Banner"
                             fluid
                             className="w-100"
