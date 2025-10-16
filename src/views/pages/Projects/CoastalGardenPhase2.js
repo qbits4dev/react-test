@@ -11,7 +11,7 @@ import {
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilArrowLeft, cilPhone } from '@coreui/icons'
-import img from '../../../assets/images/projects/image2.jpeg'
+import img from 'src/assets/images/projects/coastalgarden.jpg'
 
 
 const CoastalGardenPhase2 = () => {
