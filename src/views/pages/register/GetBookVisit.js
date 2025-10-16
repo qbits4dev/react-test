@@ -85,7 +85,7 @@ export default function SiteVisitsTable() {
                                                 <CTableDataCell>
                                                     {visit.customer_id && visit.customer_id.startsWith('cu') ? 'Existing' : 'New'}
                                                 </CTableDataCell>
-                                                <CTableDataCell>{visit.customer_id || '—'}</CTableDataCell>
+                                                <CTableDataCell>{visit.customer_id || '—'}</CTableDataCell> 
                                                 <CTableDataCell>{visit.agent_id || '—'}</CTableDataCell>
                                                 <CTableDataCell>{visit.phone || '—'}</CTableDataCell>
                                                 <CTableDataCell>{visit.project_id ? `Project ${visit.project_id}` : '—'}</CTableDataCell>
