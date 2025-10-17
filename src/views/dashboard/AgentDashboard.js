@@ -21,11 +21,10 @@ const AgentDashboard = () => {
   const agentWidgetsData = [
     {
       id: 'Book Site Visit',
-      title: 'Book Site Visit',
+      title: 'Schedule a Site Visit',
       value: '40',
       color: 'danger',
       buttonLink: '/bookvisit',
-      buttonText: 'Book Site Visit',
     },
     {
       id: 'Site Visits',
@@ -68,7 +67,8 @@ const AgentDashboard = () => {
 
       {/* ===== Upcoming Visits Section ===== */}
       <CRow className="mt-4">
-        <CCol xs={12}>
+        {/* Left Side – Upcoming Visits */}
+        <CCol md={6}>
           <CCard className="shadow-sm border-0 rounded-3 h-100">
             <CCardHeader className="bg-info text-white text-center fs-5 fw-semibold py-3">
               Upcoming Client Visits
@@ -78,40 +78,44 @@ const AgentDashboard = () => {
             </CCardBody>
           </CCard>
         </CCol>
+
+        {/* Right Side (Keep empty for now or use later) */}
+        <CCol md={6}></CCol>
       </CRow>
+
 
 
       {/* ===== Targets Table Section (Future Use) ===== */}
 
       {/* <CRow className="mt-4">
-        <CCol xs={12}>
-          <CCard className="shadow-sm border-0 rounded-3">
-            <CCardHeader className="bg-light fw-semibold">
-              Current Targets
-            </CCardHeader>
-            <CCardBody>
-              <CTable responsive hover align="middle">
-                <CTableHead className="table-info text-center">
-                  <CTableRow>
-                    <CTableHeaderCell>Role ID</CTableHeaderCell>
-                    <CTableHeaderCell>Description</CTableHeaderCell>
-                    <CTableHeaderCell>Value</CTableHeaderCell>
-                  </CTableRow>
-                </CTableHead>
-                <CTableBody>
-                  {targets.map((target, index) => (
-                    <CTableRow key={index} className="text-center">
-                      <CTableDataCell>{target.role_id}</CTableDataCell>
-                      <CTableDataCell>{target.description}</CTableDataCell>
-                      <CTableDataCell>{target.value}</CTableDataCell>
+          <CCol xs={12}>
+            <CCard className="shadow-sm border-0 rounded-3">
+              <CCardHeader className="bg-light fw-semibold">
+                Current Targets
+              </CCardHeader>
+              <CCardBody>
+                <CTable responsive hover align="middle">
+                  <CTableHead className="table-info text-center">
+                    <CTableRow>
+                      <CTableHeaderCell>Role ID</CTableHeaderCell>
+                      <CTableHeaderCell>Description</CTableHeaderCell>
+                      <CTableHeaderCell>Value</CTableHeaderCell>
                     </CTableRow>
-                  ))}
-                </CTableBody>
-              </CTable>
-            </CCardBody>
-          </CCard>
-        </CCol>
-      </CRow> */}
+                  </CTableHead>
+                  <CTableBody>
+                    {targets.map((target, index) => (
+                      <CTableRow key={index} className="text-center">
+                        <CTableDataCell>{target.role_id}</CTableDataCell>
+                        <CTableDataCell>{target.description}</CTableDataCell>
+                        <CTableDataCell>{target.value}</CTableDataCell>
+                      </CTableRow>
+                    ))}
+                  </CTableBody>
+                </CTable>
+              </CCardBody>
+            </CCard>
+          </CCol>
+        </CRow> */}
 
     </CContainer>
   )
