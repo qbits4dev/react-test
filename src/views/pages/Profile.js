@@ -15,126 +15,101 @@ import {
 export default function UserProfile() {
     const [profile, setProfile] = useState({
         userId: localStorage.getItem('user_id'),
-        // firstName: "Srinivas",
-        // lastName: "Athili",
-        // fatherName: "raghavendra Athili",
-        // spouseName: "uma Athili",
-        // dob: "1990-05-10",
-        // age: "33",
-        // gender: "Male",
-        // email: "srinivas.a@example.com",
-        // phone: "9876543210",
-        // occupation: "Agent",
-        // workExperience: "5 years",
-        // language: "English",
-        // maritalStatus: "Married",
-        // education: "Graduate",
-        // designation: "Senior Agent",
-        // nomineeName: "Amala Athili",
-        // nomineeRelation: "Daughter",
-        // nomineeContact: "9876543211",
-        // bankName: "ABC Bank",
-        // branchName: "Kakinada Branch",
-        // accountNumber: "123456789012",
-        // ifsc: "ABCD0123456",
-        // permanentAddress: "athili street, Kakinada, Andhra Pradesh",
-        // presentAddress: "athili street, Kakinada, Andhra Pradesh",
+
         photoUrl: "src/assets/images/avatars/3.jpg",
         photoFile: null,
         aadhaarFileName: "dummy_aadhaar.pdf",
         panFileName: "dummy_pan.pdf",
-        // referenceagent: "alpha",
-        // agentteam: "beta",
         firstName: '',
-    lastName: '',
-    fatherName: '',
-    spouseName: '',
-    dob: '',
-    age: '',
-    gender: '',
-    email: '',
-    phone: '',
-    occupation: '',
-    workExperience: '',
-    language: 'English', // default
-    maritalStatus: '',
-    education: '',
-    designation: '',
-    nomineeName: '',
-    nomineeRelation: '',
-    nomineeContact: '',
-    bankName: '',
-    branchName: '',
-    accountNumber: '',
-    ifsc: '',
-    permanentAddress: '',
-    presentAddress: '', 
-    referenceagent: '',
-    agentteam: '',
+        lastName: '',
+        fatherName: '',
+        spouseName: '',
+        dob: '',
+        age: '',
+        gender: '',
+        email: '',
+        phone: '',
+        occupation: '',
+        workExperience: '',
+        language: 'English',
+        maritalStatus: '',
+        education: '',
+        designation: '',
+        nomineeName: '',
+        nomineeRelation: '',
+        nomineeContact: '',
+        bankName: '',
+        branchName: '',
+        accountNumber: '',
+        ifsc: '',
+        permanentAddress: '',
+        presentAddress: '',
+        referenceagent: '',
+        agentteam: '',
     });
 
     useEffect(() => {
         console.log("working");
-        const userId = localStorage.getItem('user_id'); // e.g. "ag000007"
+        const userId = localStorage.getItem('user_id');
         if (!userId) return;
 
         // Fetch user data
-        const apiUrl = `${apiBaseUrl}/users/${userId}`;
-        fetch(apiUrl)
-          .then((response) => response.json())
-          .then((data) => {
-            setProfile((prev) => ({
-              ...prev,
-              firstName: data.first_name || '',
-              lastName: data.last_name || '',
-              fatherName: data.father_name || '',
-              dob: data.dob || '',
-              gender: data.gender || '',
-              email: data.email || '',
-              phone: data.mobile || '',
-              occupation: data.role || '',
-              workExperience: data.work_experience || '',
-              language: 'English',
-              maritalStatus: data.marital_status || '',
-              education: data.education || '',
-              designation: data.designation || '',
-              nomineeName: data.nominiee || '',
-              nomineeRelation: data.relationship || '',
-              nomineeContact: data.nominee_mobile || '',
-              bankName: data.bank_name || '',
-              branchName: data.branch || '',
-              accountNumber: data.account_number || '',
-              ifsc: data.ifsc_code || '',
-              permanentAddress: data.address || '',
-              presentAddress: data.address || '',
-              referenceagent: data.reference_agent || '',
-              agentteam: data.agent_team || '',
-            }));
-          })
-          .catch((error) => {
-            console.error('Error fetching user data:', error);
-          });
+        const apiBaseUrl = globalThis.apiBaseUrl;
+        fetch(`${apiBaseUrl}/users/${userId}`)
+            .then((response) => response.json())
+            .then((data) => {
+                setProfile((prev) => ({
+                    ...prev,
+                    firstName: data.first_name || '',
+                    lastName: data.last_name || '',
+                    fatherName: data.father_name || '',
+                    dob: data.dob || '',
+                    gender: data.gender || '',
+                    email: data.email || '',
+                    phone: data.mobile || '',
+                    occupation: data.role || '',
+                    workExperience: data.work_experience || '',
+                    language: 'English',
+                    maritalStatus: data.marital_status || '',
+                    education: data.education || '',
+                    designation: data.designation || '',
+                    nomineeName: data.nominiee || '',
+                    nomineeRelation: data.relationship || '',
+                    nomineeContact: data.nominee_mobile || '',
+                    bankName: data.bank_name || '',
+                    branchName: data.branch || '',
+                    accountNumber: data.account_number || '',
+                    ifsc: data.ifsc_code || '',
+                    permanentAddress: data.address || '',
+                    presentAddress: data.address || '',
+                    referenceagent: data.reference_agent || '',
+                    agentteam: data.agent_team || '',
+                }));
+            })
+            .catch((error) => {
+                console.error('Error fetching user data:', error);
+            });
 
         // Fetch profile photo
         const photoUrl = `${apiBaseUrl}/photo?u_id=${userId}`;
         fetch(photoUrl)
-          .then((response) => response.blob())
-          .then((imageBlob) => {
-            const imageObjectURL = URL.createObjectURL(imageBlob);
-            setProfile((prev) => ({
-              ...prev,
-              photoUrl: imageObjectURL,
-            }));
-          })
-          .catch((error) => {
-            console.error('Error fetching profile photo:', error);
-            // Fallback to default avatar if photo fetch fails
-            setProfile((prev) => ({
-              ...prev,
-              photoUrl: 'src/assets/images/avatars/3.jpg',
-            }));
-          });
-      }, []);
+            .then((response) => response.blob())
+            .then((imageBlob) => {
+                const imageObjectURL = URL.createObjectURL(imageBlob);
+                setProfile((prev) => ({
+                    ...prev,
+                    photoUrl: imageObjectURL,
+                }));
+            })
+            .catch((error) => {
+                console.error('Error fetching profile photo:', error);
+                // Fallback to default avatar if photo fetch fails
+                setProfile((prev) => ({
+                    ...prev,
+                    photoUrl: 'src/assets/images/avatars/3.jpg',
+                }));
+            });
+    }, []);
 
     const [errors, setErrors] = useState({ email: "", phone: "", photoFile: "" });
 
@@ -225,8 +200,8 @@ export default function UserProfile() {
                                 height={150}
                             />
                         ) : (
-                            <div className="rounded-circle shadow-sm mb-3 bg-secondary d-inline-flex align-items-center justify-content-center" 
-                                 style={{ width: 150, height: 150 }}>
+                            <div className="rounded-circle shadow-sm mb-3 bg-secondary d-inline-flex align-items-center justify-content-center"
+                                style={{ width: 150, height: 150 }}>
                                 <span className="text-white">Loading...</span>
                             </div>
                         )}
