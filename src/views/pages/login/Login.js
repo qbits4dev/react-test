@@ -132,7 +132,7 @@ const Login = () => {
                     <h2 className="text-center text-dark mb-2" style={{ fontWeight: '600' }}>
                       Welcome
                     </h2>
-                    <p className="text-center mb-4 text-dark text-muted" style={{ fontSize: '0.9rem' }}>
+                    <p className="text-center text-dark mb-4  text-muted" style={{ fontSize: '0.9rem' }}>
                       Sign in to your account
                     </p>
 
