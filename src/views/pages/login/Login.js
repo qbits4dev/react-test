@@ -129,12 +129,19 @@ const Login = () => {
                       />
                     </div>
 
-                    <h2 className="text-center text-dark mb-2" style={{ fontWeight: '600' }}>
+                    <h2
+                      className="text-center text-dark mb-2"
+                      style={{ fontWeight: '600' }}
+                    >
                       Welcome
                     </h2>
-                    <p className="text-center text-dark mb-4  text-muted" style={{ fontSize: '0.9rem' }}>
+                    <p
+                      className="text-center text-dark mb-4"
+                      style={{ fontSize: '0.9rem' }}
+                    >
                       Sign in to your account
                     </p>
+
 
                     {errors.form && (
                       <p className="text-danger text-center mb-3">{errors.form}</p>
