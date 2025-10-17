@@ -70,18 +70,6 @@ const App = () => {
           {/* Public routes */}
           <Route exact path="/login" name="Login Page" element={<Login />} />
           <Route exact path="/register" name="Register Page" element={<Register />} />
-          <Route
-            exact
-            path="/register_agent"
-            name="Agent Registration"
-            element={<AgentRegistration />}
-          />
-          <Route
-            exact
-            path="/cilent_register"
-            name="Client Registration"
-            element={<ClientRegister />}
-          />
           <Route exact path="/404" name="Page 404" element={<Page404 />} />
           <Route exact path="/500" name="Page 500" element={<Page500 />} />
           <Route exact path="/verification" name="Verification" element={<Verification />} />

@@ -7,6 +7,7 @@ import {
   CFormInput,
   CFormLabel,
   CFormSelect,
+  CFormFeedback,
   CButton,
   CRow,
   CCol,
@@ -34,9 +35,10 @@ export default function LeadForm() {
     feedback: '',
   })
   const [errors, setErrors] = useState({})
+  const [touched, setTouched] = useState({})
   const [loading, setLoading] = useState(false)
 
-  // Example projects with plots and IDs - replace with real data
+  // Example static project and plot data
   const projectsList = [
     {
       name: 'Aditya Heights',
@@ -56,13 +58,12 @@ export default function LeadForm() {
     },
   ]
 
-  const chosenProject = projectsList.find(
-    (p) => p.name === formData.interestedIn
-  )
+  const chosenProject = projectsList.find((p) => p.name === formData.interestedIn)
   const chosenPlot = chosenProject?.plots.find((pl) => pl.label === formData.plot)
   const projectId = chosenProject?.id || 0
   const plotId = chosenPlot?.id || 0
 
+  // -------------------- VALIDATION --------------------
   const validate = () => {
     let errs = {}
 
@@ -72,8 +73,8 @@ export default function LeadForm() {
       }
     }
 
-    if (!/^[A-Za-z]{2}[0-9]{6}$/.test(formData.agentId)) {
-      errs.agentId = 'Agent ID must be 2 letters followed by 6 digits'
+    if (!formData.agentId) {
+      errs.agentId = 'Agent ID missing from session'
     }
 
     if (!/^[0-9]{10}$/.test(formData.phone)) {
@@ -111,11 +112,35 @@ export default function LeadForm() {
     return Object.keys(errs).length === 0
   }
 
+  // -------------------- HANDLERS --------------------
+  const handleChange = (e) => {
+    const { name, value } = e.target
+    setFormData({ ...formData, [name]: value })
+  }
+
+  const handleBlur = (e) => {
+    const { name } = e.target
+    setTouched({ ...touched, [name]: true })
+    validate()
+  }
+
+  // -------------------- SUBMIT --------------------
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setTouched({
+      customerId: true,
+      agentId: true,
+      phone: true,
+      firstName: true,
+      lastName: true,
+      interestedIn: true,
+      plot: true,
+      dateOfVisit: true,
+    })
     if (!validate()) return
 
     setLoading(true)
+
     const apiBody = {
       customer_id: formData.customerId || '',
       plot_id: plotId,
@@ -126,18 +151,26 @@ export default function LeadForm() {
       status: 'scheduled',
       project_id: projectId,
     }
-    console.log(apiBody)
+
     try {
-      const apiBaseUrl = process.env.API_BASE_URL || '${apiBaseUrl}';
-      const res = await fetch(`${apiBaseUrl}/visits/`, {
+      
+      const res = await fetch(`${globalThis.apiBaseUrl}/visits`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
         body: JSON.stringify(apiBody),
       })
+
       if (!res.ok) {
         const errorText = await res.text()
-        throw new Error(errorText || 'Failed to submit form')
+        const message = errorText.includes('<html>')
+          ? `Server returned ${res.status} (${res.statusText}). Check API method or URL.`
+          : errorText
+        throw new Error(message)
       }
+
       alert('Form Submitted Successfully ✅')
       navigate('/GetBookVisit')
     } catch (err) {
@@ -147,10 +180,7 @@ export default function LeadForm() {
     }
   }
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value })
-  }
-
+  // -------------------- UI --------------------
   return (
     <CRow className="justify-content-center mt-4">
       <CCol md={10} lg={6}>
@@ -166,11 +196,14 @@ export default function LeadForm() {
                 name="leadType"
                 value={leadType}
                 onChange={(e) => setLeadType(e.target.value)}
+                onBlur={handleBlur}
+                invalid={touched.leadType && !leadType}
               >
                 <option value="">Select Lead Type</option>
                 <option value="New">New Lead</option>
                 <option value="Existing">Existing Lead</option>
               </CFormSelect>
+              <CFormFeedback invalid>Please select lead type</CFormFeedback>
               <br />
 
               {leadType === 'Existing' && (
@@ -180,10 +213,11 @@ export default function LeadForm() {
                     name="customerId"
                     value={formData.customerId}
                     onChange={handleChange}
+                    onBlur={handleBlur}
                     placeholder="Ex: AB123456"
-                    invalid={!!errors.customerId}
+                    invalid={touched.customerId && !!errors.customerId}
                   />
-                  <small className="text-danger">{errors.customerId}</small>
+                  <CFormFeedback invalid>{errors.customerId}</CFormFeedback>
                   <br />
                 </>
               )}
@@ -195,10 +229,11 @@ export default function LeadForm() {
                     name="firstName"
                     value={formData.firstName}
                     onChange={handleChange}
+                    onBlur={handleBlur}
                     placeholder="Enter first name"
-                    invalid={!!errors.firstName}
+                    invalid={touched.firstName && !!errors.firstName}
                   />
-                  <small className="text-danger">{errors.firstName}</small>
+                  <CFormFeedback invalid>{errors.firstName}</CFormFeedback>
                   <br />
 
                   <CFormLabel>Last Name</CFormLabel>
@@ -206,25 +241,24 @@ export default function LeadForm() {
                     name="lastName"
                     value={formData.lastName}
                     onChange={handleChange}
+                    onBlur={handleBlur}
                     placeholder="Enter last name"
-                    invalid={!!errors.lastName}
+                    invalid={touched.lastName && !!errors.lastName}
                   />
-                  <small className="text-danger">{errors.lastName}</small>
+                  <CFormFeedback invalid>{errors.lastName}</CFormFeedback>
                   <br />
                 </>
               )}
 
-              {/* Agent ID (Read-only) */}
+              {/* Agent ID */}
               <CFormLabel>Agent ID</CFormLabel>
               <CFormInput
                 name="agentId"
                 value={formData.agentId}
-                onChange={handleChange}
                 readOnly
-                placeholder="Ex: AG123456"
-                invalid={!!errors.agentId}
+                invalid={touched.agentId && !!errors.agentId}
               />
-              <small className="text-danger">{errors.agentId}</small>
+              <CFormFeedback invalid>{errors.agentId}</CFormFeedback>
               <br />
 
               {/* Phone */}
@@ -233,10 +267,11 @@ export default function LeadForm() {
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
+                onBlur={handleBlur}
                 placeholder="10-digit phone number"
-                invalid={!!errors.phone}
+                invalid={touched.phone && !!errors.phone}
               />
-              <small className="text-danger">{errors.phone}</small>
+              <CFormFeedback invalid>{errors.phone}</CFormFeedback>
               <br />
 
               {/* Interested In */}
@@ -245,7 +280,8 @@ export default function LeadForm() {
                 name="interestedIn"
                 value={formData.interestedIn}
                 onChange={handleChange}
-                invalid={!!errors.interestedIn}
+                onBlur={handleBlur}
+                invalid={touched.interestedIn && !!errors.interestedIn}
               >
                 <option value="">Select Project</option>
                 {projectsList.map((proj) => (
@@ -254,10 +290,10 @@ export default function LeadForm() {
                   </option>
                 ))}
               </CFormSelect>
-              <small className="text-danger">{errors.interestedIn}</small>
+              <CFormFeedback invalid>{errors.interestedIn}</CFormFeedback>
               <br />
 
-              {/* Plot select */}
+              {/* Plot */}
               {chosenProject && (
                 <>
                   <CFormLabel>Plot Number & Facing</CFormLabel>
@@ -265,7 +301,8 @@ export default function LeadForm() {
                     name="plot"
                     value={formData.plot}
                     onChange={handleChange}
-                    invalid={!!errors.plot}
+                    onBlur={handleBlur}
+                    invalid={touched.plot && !!errors.plot}
                   >
                     <option value="">Select Plot</option>
                     {chosenProject.plots.map((p) => (
@@ -274,7 +311,7 @@ export default function LeadForm() {
                       </option>
                     ))}
                   </CFormSelect>
-                  <small className="text-danger">{errors.plot}</small>
+                  <CFormFeedback invalid>{errors.plot}</CFormFeedback>
                   <br />
                 </>
               )}
@@ -286,9 +323,10 @@ export default function LeadForm() {
                 name="dateOfVisit"
                 value={formData.dateOfVisit}
                 onChange={handleChange}
-                invalid={!!errors.dateOfVisit}
+                onBlur={handleBlur}
+                invalid={touched.dateOfVisit && !!errors.dateOfVisit}
               />
-              <small className="text-danger">{errors.dateOfVisit}</small>
+              <CFormFeedback invalid>{errors.dateOfVisit}</CFormFeedback>
               <br />
 
               {/* Purpose */}
@@ -300,6 +338,7 @@ export default function LeadForm() {
                 placeholder="Purpose of visit"
               />
               <br />
+
               {/* Feedback */}
               <CFormLabel>Feedback</CFormLabel>
               <CFormInput

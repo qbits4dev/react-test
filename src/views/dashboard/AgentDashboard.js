@@ -66,9 +66,8 @@ const AgentDashboard = () => {
       </CRow>
 
       {/* ===== Upcoming Visits Section ===== */}
-      <CRow className="mt-4">
-        {/* Left Side – Upcoming Visits */}
-        <CCol md={6}>
+      {/* <CRow className="mt-4">
+        <CCol md={4}>
           <CCard className="shadow-sm border-0 rounded-3 h-100">
             <CCardHeader className="bg-info text-white text-center fs-5 fw-semibold py-3">
               Upcoming Client Visits
@@ -77,11 +76,11 @@ const AgentDashboard = () => {
               <UpcomingVisitsWidget />
             </CCardBody>
           </CCard>
-        </CCol>
+        </CCol> */}
 
         {/* Right Side (Keep empty for now or use later) */}
-        <CCol md={6}></CCol>
-      </CRow>
+        {/* <CCol md={6}></CCol>
+      </CRow> */}
 
 
 
