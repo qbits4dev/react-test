@@ -1,7 +1,5 @@
-// import React from 'react'
 import classNames from 'classnames'
-import React, { useState, useEffect } from 'react';
-
+import React, { useState, useEffect } from 'react'
 
 import {
   CAvatar,
@@ -21,6 +19,7 @@ import {
   CTableHeaderCell,
   CTableRow,
 } from '@coreui/react'
+
 import CIcon from '@coreui/icons-react'
 import {
   cibCcAmex,
@@ -53,64 +52,37 @@ import avatar5 from 'src/assets/images/avatars/5.jpg'
 import avatar6 from 'src/assets/images/avatars/6.jpg'
 
 import WidgetsBrand from '../widgets/WidgetsBrand'
-// import WidgetsDropdown from '../widgets/WidgetsDropdown'
 import WidgetsDropdown from '../widgets/WidgetsCardsAd'
-
 import MainChart from './MainChart'
 
-
 const AdminDashboard = () => {
-
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('${globalThis.apiBaseUrl}')
-      .then(res => res.json())
-      .then(json => {
-        setData(json);
-        setLoading(false);
-      });
-  }, []);
+    // ✅ FIXED: Removed quotes around variable
+    fetch(globalThis.apiBaseUrl)
+      .then(async (res) => {
+        const contentType = res.headers.get('content-type')
+        if (contentType && contentType.includes('application/json')) {
+          return res.json()
+        } else {
+          const text = await res.text()
+          console.error('Expected JSON, got:', text)
+          throw new Error('Non-JSON response received')
+        }
+      })
+      .then((json) => {
+        setData(json)
+        setLoading(false)
+      })
+      .catch((err) => {
+        console.error('Fetch error:', err)
+        setLoading(false)
+      })
+  }, [])
 
-  if (loading) return <div>Loading...</div>;
-
-  //   const [product, setProduct] = useState(null);
-  //   const [loading, setLoading] = useState(true);
-  //   const [error, setError] = useState(null);
-
-  // useEffect(() => {
-  //     const fetchProduct = async () => {
-  //       try {
-  //         setLoading(true);
-  //         // Fetch data for a single product (e.g., product with ID 1)
-  //         const response = await fetch('${apiBaseUrl}');
-  //         if (!response.ok) {
-  //           throw new Error(`HTTP error! status: ${response.status}`);
-  //         }
-  //         const data = await response.json();
-  //         setProduct(data); // Store the entire product object in state
-
-  //       } catch (error) {
-  //         setError(error);
-  //         console.error('Error fetching product data:', error);
-  //         // You might want to set a more user-friendly error message here
-  //       } finally {
-  //         setLoading(false);
-  //       }
-  //     };
-
-  //     fetchProduct(); // Call the async function
-  //   }, []); // Empty dependency array
-
-  //   if (loading) {
-  //     return <div>Loading product details...</div>;
-  //   }
-
-  //   if (error) {
-  //     return <div>Error: {error.message}</div>;
-  //   }
-
+  if (loading) return <div>Loading...</div>
 
   const progressExample = [
     { title: 'Visits', value: '29.703 Users', percent: 40, color: 'success' },
@@ -145,33 +117,17 @@ const AdminDashboard = () => {
   const tableExample = [
     {
       avatar: { src: avatar1, status: 'success' },
-      user: {
-        name: 'Yiorgos Avraamu',
-        new: true,
-        registered: 'Jan 1, 2023',
-      },
+      user: { name: 'Yiorgos Avraamu', new: true, registered: 'Jan 1, 2023' },
       country: { name: 'USA', flag: cifUs },
-      usage: {
-        value: 50,
-        period: 'Jun 11, 2023 - Jul 10, 2023',
-        color: 'success',
-      },
+      usage: { value: 50, period: 'Jun 11, 2023 - Jul 10, 2023', color: 'success' },
       payment: { name: 'Mastercard', icon: cibCcMastercard },
       activity: '10 sec ago',
     },
     {
       avatar: { src: avatar2, status: 'danger' },
-      user: {
-        name: 'Avram Tarasios',
-        new: false,
-        registered: 'Jan 1, 2023',
-      },
+      user: { name: 'Avram Tarasios', new: false, registered: 'Jan 1, 2023' },
       country: { name: 'Brazil', flag: cifBr },
-      usage: {
-        value: 22,
-        period: 'Jun 11, 2023 - Jul 10, 2023',
-        color: 'info',
-      },
+      usage: { value: 22, period: 'Jun 11, 2023 - Jul 10, 2023', color: 'info' },
       payment: { name: 'Visa', icon: cibCcVisa },
       activity: '5 minutes ago',
     },
@@ -179,11 +135,7 @@ const AdminDashboard = () => {
       avatar: { src: avatar3, status: 'warning' },
       user: { name: 'Quintin Ed', new: true, registered: 'Jan 1, 2023' },
       country: { name: 'India', flag: cifIn },
-      usage: {
-        value: 74,
-        period: 'Jun 11, 2023 - Jul 10, 2023',
-        color: 'warning',
-      },
+      usage: { value: 74, period: 'Jun 11, 2023 - Jul 10, 2023', color: 'warning' },
       payment: { name: 'Stripe', icon: cibCcStripe },
       activity: '1 hour ago',
     },
@@ -191,43 +143,23 @@ const AdminDashboard = () => {
       avatar: { src: avatar4, status: 'secondary' },
       user: { name: 'Enéas Kwadwo', new: true, registered: 'Jan 1, 2023' },
       country: { name: 'France', flag: cifFr },
-      usage: {
-        value: 98,
-        period: 'Jun 11, 2023 - Jul 10, 2023',
-        color: 'danger',
-      },
+      usage: { value: 98, period: 'Jun 11, 2023 - Jul 10, 2023', color: 'danger' },
       payment: { name: 'PayPal', icon: cibCcPaypal },
       activity: 'Last month',
     },
     {
       avatar: { src: avatar5, status: 'success' },
-      user: {
-        name: 'Agapetus Tadeáš',
-        new: true,
-        registered: 'Jan 1, 2023',
-      },
+      user: { name: 'Agapetus Tadeáš', new: true, registered: 'Jan 1, 2023' },
       country: { name: 'Spain', flag: cifEs },
-      usage: {
-        value: 22,
-        period: 'Jun 11, 2023 - Jul 10, 2023',
-        color: 'primary',
-      },
+      usage: { value: 22, period: 'Jun 11, 2023 - Jul 10, 2023', color: 'primary' },
       payment: { name: 'Google Wallet', icon: cibCcApplePay },
       activity: 'Last week',
     },
     {
       avatar: { src: avatar6, status: 'danger' },
-      user: {
-        name: 'Friderik Dávid',
-        new: true,
-        registered: 'Jan 1, 2023',
-      },
+      user: { name: 'Friderik Dávid', new: true, registered: 'Jan 1, 2023' },
       country: { name: 'Poland', flag: cifPl },
-      usage: {
-        value: 43,
-        period: 'Jun 11, 2023 - Jul 10, 2023',
-        color: 'success',
-      },
+      usage: { value: 43, period: 'Jun 11, 2023 - Jul 10, 2023', color: 'success' },
       payment: { name: 'Amex', icon: cibCcAmex },
       activity: 'Last week',
     },
@@ -243,30 +175,26 @@ const AdminDashboard = () => {
       buttonLink: '/GetAgents',
     },
     {
-      //Card 2: Agent Details with Leads Data (Multiple Internal Links in Dropdown)
       id: 'agent-details',
-
-      value: 'View Reports', // Value indicating action
-      color: 'secondary', // Example color
+      value: 'View Reports',
+      color: 'secondary',
       buttonLink: '/Reports',
     },
     {
       id: 'site-visits',
       title: 'Site Visits',
-      value: '30', // Replace with actual data
-      changeIcon: 'cilArrowTop', // Replace with actual icon
+      value: '30',
       color: 'warning',
-      // Add a 'buttonLink' property for the booking form
-      buttonLink: '/bookvisit', // Replace with the actual route to the booking form
-      buttonText: 'Book Visit', // Text for the button
+      buttonLink: '/bookvisit',
+      buttonText: 'Book Visit',
     },
     {
       id: 'Book Site',
       title: 'Book Site',
       value: '40',
       color: 'danger',
-      buttonLink: '/booksite', // Replace with the actual route to the booking form
-      buttonText: 'Book Site', // Text for the button
+      buttonLink: '/booksite',
+      buttonText: 'Book Site',
     },
     {
       id: 'targets',
@@ -286,14 +214,13 @@ const AdminDashboard = () => {
     },
   ]
 
-
   return (
     <>
       <WidgetsDropdown widgetsData={agentWidgetsData} className="mb-4" />
 
       <div>
         <h3>Fetched Users</h3>
-        <p>{data.Hello}</p>
+        <p>{data?.Hello || 'No data received'}</p>
       </div>
       {/* <div>
             <h2>API Response Details:</h2>
