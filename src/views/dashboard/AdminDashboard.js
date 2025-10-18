@@ -212,6 +212,12 @@ const AdminDashboard = () => {
       color: 'success',
       buttonLink: '/newProjects',
     },
+    {
+      id: 'register_agent',
+      title: 'Create an Agent Profile',
+      color: 'primary',
+      buttonLink: '/register_agent',
+    },
   ]
 
   return (
