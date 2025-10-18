@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   CCard, CCardBody, CCol, CContainer, CRow, CForm, CFormInput, CFormSelect, CSpinner, CFormLabel,
-  CButton, CDropdown, CDropdownToggle, CDropdownMenu, CDropdownItem, CAlert, CInputGroup
+  CButton, CDropdown, CDropdownToggle, CDropdownMenu, CDropdownItem, CAlert, CInputGroup, CFormTextarea
 } from '@coreui/react';
 import { useNavigate } from 'react-router-dom';
 import { AppFooter } from '../../../components/index';
@@ -243,8 +243,8 @@ export default function RegisterAgentWizard() {
 
       const result = await response.json();
       if (response.ok) {
-        setAlert({ visible: true, message: 'Registration successful! Redirecting to login...', color: 'success' });
-        setTimeout(() => navigate('/login'), 3000);
+        setAlert({ visible: true, message: 'Registration successful! Redirecting to Dashboard...', color: 'success' });
+        setTimeout(() => navigate('/AdminDashboard'), 3000);
       } else {
         setAlert({ visible: true, message: result.message || 'Registration failed.', color: 'danger' });
       }
@@ -520,13 +520,17 @@ export default function RegisterAgentWizard() {
                       <CCard className="mb-4 p-4 bg-white shadow-sm border-0">
                         <h5 className="text-info mb-4">Address Details</h5>
                         <div className="mb-3">
-                          <CFormInput placeholder="Permanent Address" name="permanentAddress" value={form.permanentAddress} onChange={handleChange} invalid={!!errors.permanentAddress} />
-                          {renderError('permanentAddress')}
+                          <CFormTextarea
+                            placeholder="Address"
+                            name="Address as per aadhaar "
+                            rows={4}
+                            value={form.address}
+                            onChange={handleChange}
+                            invalid={!!errors.address}
+                          />
+                          {renderError('address')}
                         </div>
-                        <div className="mb-3">
-                          <CFormInput placeholder="Present Address" name="presentAddress" value={form.presentAddress} onChange={handleChange} invalid={!!errors.presentAddress} />
-                          {renderError('presentAddress')}
-                        </div>
+
                         <div className="d-flex justify-content-between mt-4">
                           <CButton color="secondary" onClick={prevStep}>Back</CButton>
                           <CButton color="success" onClick={handleSubmit}>Submit</CButton>

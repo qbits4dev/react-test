@@ -44,7 +44,7 @@ const Client_Register = () => {
     console.log('Form data sent:', params.toString())
 
     try {
-      const res = await fetch('${apiBaseUrl}/register/client', {
+      const res = await fetch('${globalThis.apiBaseUrl}/register/client', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: params.toString(),
