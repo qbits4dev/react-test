@@ -69,8 +69,8 @@ const Login = () => {
       if (response.ok && data?.access_token) {
         localStorage.setItem('access_token', data.access_token)
         localStorage.setItem('refresh_token', data.refresh_token || '')
-        localStorage.setItem('user_role', data.role || '')
-        localStorage.setItem('user_id', data.u_id || '')
+        localStorage.setItem('user', JSON.stringify(data)); // Store the whole user object
+        console.log('LocalStorage values:', JSON.stringify(localStorage));
 
         // Role-based navigation
         switch (data.role) {
@@ -118,7 +118,7 @@ const Login = () => {
                     <div className="text-center mb-4">
                       <img
                         src={Logo}
-                        alt='../../../assets/images/siraditya.jpg'
+                        alt='../../../assets/images/siradithya.jpg'
                         style={{
                           maxWidth: '100px',
                           width: '30%',

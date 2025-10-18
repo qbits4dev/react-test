@@ -76,7 +76,7 @@ export default function RegisterAgentWizard() {
 
   // Fetch designations
   useEffect(() => {
-    fetch(`${apiBaseUrl}/register/?key=designation`, { headers: { accept: 'application/json' } })
+    fetch(`${globalThis.apiBaseUrl}/register/?key=designation`, { headers: { accept: 'application/json' } })
       .then(res => res.json())
       .then(data => {
         if (data.status === 'ok' && Array.isArray(data.designation)) setDesignations(data.designation);
@@ -255,7 +255,7 @@ export default function RegisterAgentWizard() {
 
   return (
     <div>
-      <LoginHeader />
+      {/* <LoginHeader /> */}
       <div className="bg-light min-vh-100 d-flex flex-row align-items-center py-5">
         <CContainer>
           <CRow className="justify-content-center">
@@ -541,7 +541,7 @@ export default function RegisterAgentWizard() {
           </CRow>
         </CContainer>
       </div>
-      <AppFooter />
+      {/* <AppFooter /> */}
     </div>
   );
 }

@@ -17,8 +17,8 @@ import { AppSidebarNav } from './AppSidebarNav'
 import logo from '/src/assets/brand/logo.jpeg'
 import { sygnet } from 'src/assets/brand/sygnet'
 
-// sidebar nav config
-import navigation from '../mod_nav'
+// Import the filtered navigation function instead of static array
+import navigationConfig, { getNavigationForRole } from '../mod_nav'
 
 const AppSidebar = () => {
   const dispatch = useDispatch()
@@ -26,16 +26,30 @@ const AppSidebar = () => {
   const unfoldable = useSelector((state) => state.sidebarUnfoldable)
   const sidebarShow = useSelector((state) => state.sidebarShow)
 
+  // Get filtered navigation based on user role from local storage
+  const navigation = React.useMemo(() => getNavigationForRole(), [])
+
   const handleBrandClick = () => {
-    const userRole = localStorage.getItem('user_role');
+    const userRoleString = localStorage.getItem('user')
+    let userRole = null
+
+    if (userRoleString) {
+      try {
+        const userData = JSON.parse(userRoleString)
+        userRole = userData?.role?.toLowerCase()
+      } catch {
+        userRole = null
+      }
+    }
+
     if (userRole === 'admin') {
-      navigate('/AdminDashboard');
+      navigate('/AdminDashboard')
     } else if (userRole === 'agent') {
-      navigate('/AgentDashboard');
-    } else if (userRole === 'customer') {
-      navigate('/ClientDashboard');
+      navigate('/AgentDashboard')
+    } else if (userRole === 'client') {  // corrected 'client' instead of 'customer'
+      navigate('/ClientDashboard')
     } else {
-      navigate('/dashboard'); // Fallback route
+      navigate('/dashboard') // fallback
     }
   }
 
@@ -51,8 +65,8 @@ const AppSidebar = () => {
       }}
     >
       <CSidebarHeader className="border-bottom">
-        <CSidebarBrand 
-          onClick={handleBrandClick} 
+        <CSidebarBrand
+          onClick={handleBrandClick}
           className="d-flex align-items-center"
           style={{ cursor: 'pointer', textDecoration: 'none' }}
         >
@@ -66,7 +80,10 @@ const AppSidebar = () => {
           onClick={() => dispatch({ type: 'set', sidebarShow: false })}
         />
       </CSidebarHeader>
+
+      {/* Pass filtered navigation items here */}
       <AppSidebarNav items={navigation} />
+
       <CSidebarFooter className="border-top d-none d-lg-flex">
         <CSidebarToggler
           onClick={() => dispatch({ type: 'set', sidebarUnfoldable: !unfoldable })}
