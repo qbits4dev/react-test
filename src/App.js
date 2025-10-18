@@ -16,9 +16,7 @@ const Page404 = React.lazy(() => import('./views/pages/page404/Page404'))
 const Page500 = React.lazy(() => import('./views/pages/page500/Page500'))
 const Verification = React.lazy(() => import('./views/pages/verification'))
 globalThis.apiBaseUrl = import.meta.env.VITE_API_BASE_URL
-console.log('API Base URL:', apiBaseUrl);
-// const Invoice = React.lazy(() => import('./views/pages/Invoice'))
-
+console.log('API Base URL:', globalThis.apiBaseUrl);
 
 const AgentRegistration = React.lazy(() =>
   import('./views/pages/register/register_agent')
@@ -70,6 +68,12 @@ const App = () => {
           {/* Public routes */}
           <Route exact path="/login" name="Login Page" element={<Login />} />
           <Route exact path="/register" name="Register Page" element={<Register />} />
+           {/* <Route
+            exact
+            path="/agent-register"
+            name="Agent Registration Page"
+            element={<AgentRegistration />}
+          /> */}
           <Route exact path="/404" name="Page 404" element={<Page404 />} />
           <Route exact path="/500" name="Page 500" element={<Page500 />} />
           <Route exact path="/verification" name="Verification" element={<Verification />} />

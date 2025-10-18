@@ -61,7 +61,7 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     // ✅ FIXED: Removed quotes around variable
-    fetch(globalThis.apiBaseUrl)
+    fetch(`${globalThis.apiBaseUrl}/`)
       .then(async (res) => {
         const contentType = res.headers.get('content-type')
         if (contentType && contentType.includes('application/json')) {

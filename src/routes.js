@@ -59,6 +59,7 @@ const Projects = React.lazy(() => import('./views/pages/register/Projects'))
 const newProjects = React.lazy(() => import('./views/pages/newProjects'))
 const Profile = React.lazy(() => import('./views/pages/Profile'))
 const ARegister = React.lazy(() => import('./views/pages/register/ARegister'))
+const AgentRegister = React.lazy(() => import('./views/pages/register/register_agent'))
 const venture = React.lazy(() => import('./views/pages/Projects/venture'))
 
 //Projects
@@ -157,6 +158,7 @@ const routes = [
   { path: '/ForgotUId', name: 'Forgot User ID', element: ForgotUserId },
   { path: '/ForgotPassword', name: 'Forgot Password', element: ForgotPassword },
   { path: '/ARegister', name: 'Agent Register', element: ARegister },
+  { path: '/register_agent', name: 'Agent Register', element: AgentRegister },
   { path: '/Targets', name: 'Targets', element: Targets },
   { path: '/GetBookVisit', name: 'Get Book Visit', element: GetBookVisit },
   { path: '/VisitCalender', name: 'Visit Calender', element: VisitCalender },
