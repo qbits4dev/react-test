@@ -122,7 +122,7 @@ const navigationConfig = [
     allowedRoles: [ROLES.ADMIN, ROLES.AGENT, ROLES.CLIENT],
     items: [
       { component: CNavItem, name: 'Profile', to: '/Profile', allowedRoles: [ROLES.ADMIN, ROLES.AGENT, ROLES.CLIENT] },
-      { component: CNavItem, name: 'Forgot User ID', to: '/ForgotUID', allowedRoles: [ROLES.ADMIN, ROLES.AGENT, ROLES.CLIENT] },
+      { component: CNavItem, name: 'Forgot User ID', to: '/ForgotUID', allowedRoles: [ROLES.ADMIN] },
       { component: CNavItem, name: 'Forgot Password', to: '/ForgotPassword', allowedRoles: [ROLES.ADMIN, ROLES.AGENT, ROLES.CLIENT] },
     ],
   },
