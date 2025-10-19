@@ -39,7 +39,7 @@ const AppHeaderDropdown = () => {
   useEffect(() => {
     // Try to use cached photo from localStorage (per-user key) to avoid repeated API calls
     const userId = JSON.parse(localStorage.getItem('user') || '{}').u_id || '';
-    const storageKey = `profile_photo_${userId || 'anon'}`;
+    const storageKey = `profile_photo`;
     try {
       const stored = localStorage.getItem(storageKey);
       if (stored) {
