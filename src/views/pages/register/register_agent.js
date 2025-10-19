@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
   CCard, CCardBody, CCol, CContainer, CRow, CForm, CFormInput, CFormSelect, CSpinner, CFormLabel,
-  CButton, CDropdown, CDropdownToggle, CDropdownMenu, CDropdownItem, CAlert, CInputGroup, CFormTextarea
+  CButton, CDropdown, CDropdownToggle, CDropdownMenu, CDropdownItem, CAlert, CInputGroup, CFormTextarea,
+  CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter
 } from '@coreui/react';
 import { useNavigate } from 'react-router-dom';
 import CIcon from '@coreui/icons-react';
@@ -29,6 +30,12 @@ export default function RegisterAgentWizard() {
 
   const [errors, setErrors] = useState({});
   const [alert, setAlert] = useState({ visible: false, message: '', color: 'success' });
+  
+  // New state for submission and success modal
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [registeredUID, setRegisteredUID] = useState('');
+
 
   // Fetch designations on mount
   useEffect(() => {
@@ -168,6 +175,9 @@ export default function RegisterAgentWizard() {
 
   const handleSubmit = async () => {
     if (!validateStep()) return;
+    
+    setIsSubmitting(true);
+    setAlert({ visible: false, message: '' });
 
     const formData = new FormData();
 
@@ -198,15 +208,22 @@ export default function RegisterAgentWizard() {
 
       const result = await response.json();
       if (response.ok) {
-        setAlert({ visible: true, message: 'Registration successful! Redirecting to Dashboard...', color: 'success' });
-        setTimeout(() => navigate('/AdminDashboard'), 3000);
+        setRegisteredUID(result.u_id || result.user_id || "N/A");
+        setShowSuccessModal(true);
       } else {
         setAlert({ visible: true, message: result.message || 'Registration failed.', color: 'danger' });
       }
     } catch (error) {
       setAlert({ visible: true, message: 'Network error.', color: 'danger' });
+    } finally {
+      setIsSubmitting(false);
     }
   };
+
+  const handleModalClose = () => {
+    setShowSuccessModal(false);
+    navigate('/AdminDashboard');
+  }
 
   return (
     <div className="bg-light min-vh-100 d-flex flex-row align-items-center py-5">
@@ -478,7 +495,13 @@ export default function RegisterAgentWizard() {
                       </div>
                       <div className="d-flex justify-content-between mt-4">
                         <CButton color="secondary" onClick={prevStep}>Back</CButton>
-                        <CButton color="success" onClick={handleSubmit}>Submit</CButton>
+                        <CButton color="success" onClick={handleSubmit} disabled={isSubmitting}>
+                          {isSubmitting ? (
+                            <><CSpinner size="sm" className="me-2" />Submitting...</>
+                          ) : (
+                            'Submit'
+                          )}
+                        </CButton>
                       </div>
                     </CCard>
                   )}
@@ -487,6 +510,23 @@ export default function RegisterAgentWizard() {
             </CCard>
           </CCol>
         </CRow>
+        
+        {/* Success Modal */}
+        <CModal visible={showSuccessModal} onClose={handleModalClose} alignment="center" backdrop="static">
+          <CModalHeader>
+            <CModalTitle>Registration Successful!</CModalTitle>
+          </CModalHeader>
+          <CModalBody>
+            <p>The agent has been registered successfully.</p>
+            <p><strong>Agent UID:</strong> {registeredUID}</p>
+          </CModalBody>
+          <CModalFooter>
+            <CButton color="primary" onClick={handleModalClose}>
+              Go to Dashboard
+            </CButton>
+          </CModalFooter>
+        </CModal>
+
       </CContainer>
     </div>
   );

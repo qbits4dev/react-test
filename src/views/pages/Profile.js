@@ -50,7 +50,8 @@ export default function UserProfile() {
 
     useEffect(() => {
         console.log("working");
-        const userId = localStorage.getItem('user_id');
+        const userId = JSON.parse(localStorage.getItem('user') || '{}').u_id || '';
+        console.log("User ID in profile:", userId);
         if (!userId) return;
 
         // Fetch user data
@@ -93,10 +94,12 @@ export default function UserProfile() {
 
         // Fetch profile photo
         const photoUrl = `${apiBaseUrl}/photo?u_id=${userId}`;
+        let photoObjectUrl = null;
         fetch(photoUrl)
             .then((response) => response.blob())
             .then((imageBlob) => {
                 const imageObjectURL = URL.createObjectURL(imageBlob);
+                photoObjectUrl = imageObjectURL;
                 setProfile((prev) => ({
                     ...prev,
                     photoUrl: imageObjectURL,
@@ -110,6 +113,10 @@ export default function UserProfile() {
                     photoUrl: 'src/assets/images/avatars/3.jpg',
                 }));
             });
+
+        return () => {
+            if (photoObjectUrl) URL.revokeObjectURL(photoObjectUrl);
+        };
     }, []);
 
     const [errors, setErrors] = useState({ email: "", phone: "", photoFile: "" });
