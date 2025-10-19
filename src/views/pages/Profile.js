@@ -50,7 +50,7 @@ export default function UserProfile() {
 
     useEffect(() => {
         console.log("working");
-        const userId = ${JSON.parse(localStorage.getItem('user') || '{}').u_id || ''};
+        const userId = JSON.parse(localStorage.getItem('user') || '{}').u_id || '';
         console.log("User ID in profile:", userId);
         if (!userId) return;
 
