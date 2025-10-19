@@ -1,5 +1,5 @@
 import React, { Suspense, useEffect } from 'react'
-import { HashRouter, Route, Routes, Navigate } from 'react-router-dom'
+import { HashRouter, Route, Routes } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 
 import { CSpinner, useColorModes } from '@coreui/react'
@@ -25,14 +25,7 @@ const ClientRegister = React.lazy(() =>
   import('./views/pages/register/cilent_register')
 )
 
-// ProtectedRoute component
-const ProtectedRoute = ({ children }) => {
-  const token = localStorage.getItem('access_token')
-  if (!token) {
-    return <Navigate to="/login" replace />
-  }
-  return children
-}
+import ProtectedRoute from './components/ProtectedRoute'
 
 const App = () => {
   const { setColorMode } = useColorModes(
@@ -41,7 +34,7 @@ const App = () => {
 
   useEffect(() => {
     setColorMode('light')
-  }, []) 
+  }, [])
 
   return (
     <HashRouter>

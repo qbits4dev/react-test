@@ -17,6 +17,7 @@ const VisitCalender = React.lazy(() => import('./views/pages/register/VisitCalen
 const Loginheader = React.lazy(() => import('./components/LoginHeader/LoginHeader.js'))
 const venture2 = React.lazy(() => import('./views/pages/Projects/venture2.js'))
 const CoastalGardenPhase2 = React.lazy(() => import('./views/pages/Projects/CoastalGardenPhase2.js'))
+const Unauthorized = React.lazy(() => import('./views/pages/Unauthorized'))
 
 
 const Colors = React.lazy(() => import('./views/theme/colors/Colors'))
@@ -93,9 +94,10 @@ const Widgets = React.lazy(() => import('./views/widgets/Widgets'))
 const routes = [
   { path: '/', exact: true, name: 'Home' },
   { path: '/dashboard', name: 'Dashboard', element: Dashboard },
-  { path: '/Clientdashboard', name: 'Dashboard', element: ClientDashboard },
-  { path: '/Admindashboard', name: 'Dashboard', element: AdminDashboard },
-  { path: '/Agentdashboard', name: 'Dashboard', element: AgentDashboard },
+  { path: '/Clientdashboard', name: 'Client Dashboard', element: ClientDashboard, roles: ['customer'] },
+  { path: '/Admindashboard', name: 'Admin Dashboard', element: AdminDashboard, roles: ['admin'] },
+  { path: '/Agentdashboard', name: 'Agent Dashboard', element: AgentDashboard, roles: ['agent'] },
+  { path: '/unauthorized', name: 'Unauthorized', element: Unauthorized },
   { path: '/theme', name: 'Theme', element: Colors, exact: true },
   { path: '/theme/colors', name: 'Colors', element: Colors },
   { path: '/theme/typography', name: 'Typography', element: Typography },
