@@ -51,6 +51,7 @@ export default function UserProfile() {
     useEffect(() => {
         console.log("working");
         const userId = localStorage.getItem('user_id');
+        console.log("User ID in profile:", userId);
         if (!userId) return;
 
         // Fetch user data
