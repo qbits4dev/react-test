@@ -70,7 +70,7 @@ const AppHeader = () => {
 
         <CHeaderNav className="d-none d-md-flex mx-auto">
           <CNavItem>
-            <CNavLink onClick={handleDashboardClick} style={{ cursor: 'pointer' }}>
+            <CNavLink style={{ cursor: 'pointer' }}>
               Dashboard
             </CNavLink>
           </CNavItem>
