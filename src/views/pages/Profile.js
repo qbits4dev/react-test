@@ -55,6 +55,7 @@ export default function UserProfile() {
 
         // Fetch user data
         const apiBaseUrl = globalThis.apiBaseUrl;
+        console.log("API Base URLin profile:", apiBaseUrl);
         fetch(`${apiBaseUrl}/users/${userId}`)
             .then((response) => response.json())
             .then((data) => {
