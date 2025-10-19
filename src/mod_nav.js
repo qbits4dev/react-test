@@ -27,7 +27,7 @@ const navigationConfig = [
   {
     component: CNavTitle,
     name: 'User Management',
-    allowedRoles: [ROLES.ADMIN],
+    allowedRoles: [ROLES.ADMIN, ROLES.AGENT],
   },
   {
     component: CNavGroup,
@@ -35,7 +35,7 @@ const navigationConfig = [
     icon: <CIcon icon={cilUser} customClassName="nav-icon" />,
     allowedRoles: [ROLES.ADMIN],
     items: [
-      { component: CNavItem, name: 'View Agents', to: '/GetAgents', allowedRoles: [ROLES.ADMIN] },
+      { component: CNavItem, name: 'View Agents', to: '/GetAgents', allowedRoles: [ROLES.ADMIN, ROLES.AGENT] },
       { component: CNavItem, name: 'Register Agent', to: '/register_agent', allowedRoles: [ROLES.ADMIN] },
     ],
   },
@@ -167,7 +167,7 @@ export const getNavigationForRole = () => {
     try {
       const userData = JSON.parse(userDataString)
       userRole = userData?.role?.toLowerCase() || null // Adjusted to get role from user object
-      console.log('Navigation filter - User role:', userRole)
+      // console.log('Navigation filter - User role:', userRole)
     } catch (error) {
       console.error('Error parsing user data from localStorage:', error)
     }
