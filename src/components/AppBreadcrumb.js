@@ -10,16 +10,19 @@ const AppBreadcrumb = () => {
   const navigate = useNavigate()
 
   const handleHomeClick = () => {
-    const userRole = localStorage.getItem('user_role')
+    const user = localStorage.getItem('user')
+    const userData = JSON.parse(user)
+    let userRole = userData?.role?.toLowerCase() ||null
     if (userRole === 'admin') {
       navigate('/AdminDashboard')
     } else if (userRole === 'agent') {
       navigate('/AgentDashboard')
     } else if (userRole === 'customer') {
       navigate('/ClientDashboard')
-    } else {
-      navigate('/dashboard') // Fallback route
-    }
+    } 
+    // else {
+    //   navigate('/dashboard') // Fallback route
+    // }
   }
 
   const getRouteName = (pathname, routes) => {
