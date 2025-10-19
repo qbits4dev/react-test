@@ -38,7 +38,7 @@ const AppHeaderDropdown = () => {
   globalThis.apiBaseUrl = import.meta.env.VITE_API_BASE_URL
   useEffect(() => {
     // Replace with your actual API endpoint
-    fetch('${globalThis.apiBaseUrl}/photo?u_id=' + localStorage.getItem('user_id'))
+    fetch('${globalThis.apiBaseUrl}/photo?u_id=' + localStorage.getItem(JSON.parse(localStorage.getItem('user_info')).u_id))
       .then(res => res.json())
       .then(data => {
         if (data.photo_base64) {
