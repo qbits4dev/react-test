@@ -54,6 +54,7 @@ import avatar6 from 'src/assets/images/avatars/6.jpg'
 import WidgetsBrand from '../widgets/WidgetsBrand'
 import WidgetsDropdown from '../widgets/WidgetsCardsAd'
 import MainChart from './MainChart'
+import { color } from 'framer-motion'
 
 const AdminDashboard = () => {
   const [data, setData] = useState(null)
@@ -182,7 +183,7 @@ const AdminDashboard = () => {
     },
     {
       id: 'site-visits',
-      title: 'Site Visits',
+      title: 'Schedule a Site Visit',
       value: '30',
       color: 'warning',
       buttonLink: '/bookvisit',
@@ -190,7 +191,7 @@ const AdminDashboard = () => {
     },
     {
       id: 'Book Site',
-      title: 'Book Site',
+      title: 'Site Booking',
       value: '40',
       color: 'danger',
       buttonLink: '/booksite',
@@ -217,6 +218,12 @@ const AdminDashboard = () => {
       title: 'Create an Agent Profile',
       color: 'primary',
       buttonLink: '/register_agent',
+    },
+    {
+      id: 'client_register',
+      title:'Client Registration',
+      color:'info',
+      buttonLink:'/cilent_register',
     },
   ]
 

@@ -14,7 +14,7 @@ import {
   CTableDataCell
 } from '@coreui/react'
 import WidgetsDropdown from '../widgets/WidgetsCardsAd'
-import UpcomingVisitsWidget from '../pages/register/VisitCalender'
+//import UpcomingVisitsWidget from '../pages/register/VisitCalender'
 
 const AgentDashboard = () => {
   // Sample widget data
@@ -50,6 +50,12 @@ const AgentDashboard = () => {
       color: 'info',
       buttonLink: '/GetTargets',
     },
+    {
+      id: 'client_register',
+      title: 'Client Registration',
+      color: 'info',
+      buttonLink: '/cilent_register',
+    }, 
   ]
 
   const [targets, setTargets] = useState([
@@ -78,8 +84,8 @@ const AgentDashboard = () => {
           </CCard>
         </CCol> */}
 
-        {/* Right Side (Keep empty for now or use later) */}
-        {/* <CCol md={6}></CCol>
+      {/* Right Side (Keep empty for now or use later) */}
+      {/* <CCol md={6}></CCol>
       </CRow> */}
 
 
