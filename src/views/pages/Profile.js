@@ -20,6 +20,9 @@ export default function UserProfile() {
         photoFile: null,
         aadhaarFileName: "dummy_aadhaar.pdf",
         panFileName: "dummy_pan.pdf",
+        // add file holders for document inputs
+        aadhaarFile: null,
+        panFile: null,
         firstName: '',
         lastName: '',
         fatherName: '',
@@ -183,6 +186,24 @@ export default function UserProfile() {
                 }));
                 setErrors((prev) => ({ ...prev, photoFile: "" }));
             }
+        } else if (name === "aadhaarFile" || name === "panFile") {
+            if (files.length > 0) {
+                const file = files[0];
+                // allow PDFs and common image types for documents
+                const allowed = ["application/pdf", "image/jpeg", "image/jpg", "image/png"];
+                if (!allowed.includes(file.type)) {
+                    setErrors((prev) => ({ ...prev, photoFile: "Only PDF/JPG/PNG allowed for documents" }));
+                    return;
+                }
+                setProfile((prev) => ({
+                    ...prev,
+                    // store file object as well as human-readable filename
+                    [name]: file,
+                    // map aadhaarFile -> aadhaarFileName, panFile -> panFileName
+                    [name === 'aadhaarFile' ? 'aadhaarFileName' : 'panFileName']: file.name,
+                }));
+                setErrors((prev) => ({ ...prev, photoFile: "" }));
+            }
         } else {
             setProfile((prev) => ({ ...prev, [name]: value }));
         }
@@ -216,15 +237,25 @@ export default function UserProfile() {
             );
         }
         if (type === "file") {
+            // determine accept string based on field name
+            let accept = "image/jpeg,image/png";
+            if (name === 'aadhaarFile' || name === 'panFile') {
+                accept = "application/pdf,image/jpeg,image/png";
+            }
             return (
                 <>
                     <CFormInput
                         type="file"
                         name={name}
-                        accept="image/jpeg,image/png"
+                        accept={accept}
                         onChange={handleChange}
                         className="mb-3"
                     />
+                    {/* show current filename (value) if present. value may be a string (stored filename) or a File object */}
+                    {(() => {
+                        const filename = value && typeof value === 'string' ? value : value && value.name ? value.name : null;
+                        return filename ? <div className="mb-2"><small>Current: {filename}</small></div> : null;
+                    })()}
                     {errors.photoFile && <small className="text-danger">{errors.photoFile}</small>}
                 </>
             );
@@ -344,9 +375,9 @@ export default function UserProfile() {
                             <CFormLabel>Photo (JPG/PNG)</CFormLabel>
                             {renderField("Photo", profile.photoFile, "photoFile", "file")}
                             <CFormLabel>Aadhaar Document</CFormLabel>
-                            {renderField("Aadhaar", profile.aadhaarFileName, "aadhaarFileName", "readonly")}
+                            {renderField("Aadhaar", profile.aadhaarFileName, "aadhaarFile", "file")}
                             <CFormLabel>PAN Document</CFormLabel>
-                            {renderField("PAN", profile.panFileName, "panFileName", "readonly")}
+                            {renderField("PAN", profile.panFileName, "panFile", "file")}
                         </CCard>
 
                         <div className="d-flex justify-content-center mb-5">
