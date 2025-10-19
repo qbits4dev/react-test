@@ -13,8 +13,8 @@ import {
 } from "@coreui/react";
 
 export default function UserProfile() {
-    const [profile, setProfile] = useState({
-        userId: localStorage.getItem('user_id'),
+    const [profile, setProfile] = useState(() => ({
+        userId: JSON.parse(localStorage.getItem('user') || '{}').u_id || '',
 
         photoUrl: "src/assets/images/avatars/3.jpg",
         photoFile: null,
@@ -46,7 +46,7 @@ export default function UserProfile() {
         presentAddress: '',
         referenceagent: '',
         agentteam: '',
-    });
+    }));
 
     useEffect(() => {
         console.log("working");
@@ -92,30 +92,44 @@ export default function UserProfile() {
                 console.error('Error fetching user data:', error);
             });
 
-        // Fetch profile photo
-        const photoUrl = `${apiBaseUrl}/photo?u_id=${userId}`;
-        let photoObjectUrl = null;
-        fetch(photoUrl)
-            .then((response) => response.blob())
-            .then((imageBlob) => {
-                const imageObjectURL = URL.createObjectURL(imageBlob);
-                photoObjectUrl = imageObjectURL;
+        // Use profile photo from localStorage instead of fetching from API
+        try {
+            const storedPhoto = localStorage.getItem('profile_photo');
+            if (storedPhoto) {
                 setProfile((prev) => ({
                     ...prev,
-                    photoUrl: imageObjectURL,
+                    photoUrl: storedPhoto,
                 }));
-            })
-            .catch((error) => {
-                console.error('Error fetching profile photo:', error);
-                // Fallback to default avatar if photo fetch fails
-                setProfile((prev) => ({
-                    ...prev,
-                    photoUrl: 'src/assets/images/avatars/3.jpg',
-                }));
-            });
+            } else {
+                // keep the default avatar if no photo in localStorage
+                setProfile((prev) => ({ ...prev, photoUrl: 'src/assets/images/avatars/3.jpg' }));
+            }
+        } catch (e) {
+            console.error('Error reading profile photo from localStorage:', e);
+            setProfile((prev) => ({ ...prev, photoUrl: 'src/assets/images/avatars/3.jpg' }));
+        }
 
+        // Listen for changes to localStorage (e.g., updated in another tab) and update photoUrl
+        const onStorage = (e) => {
+            if (e.key === 'profile_photo') {
+                try {
+                    const newPhoto = e.newValue;
+                    if (newPhoto) {
+                        setProfile((prev) => ({ ...prev, photoUrl: newPhoto }));
+                    } else {
+                        setProfile((prev) => ({ ...prev, photoUrl: 'src/assets/images/avatars/3.jpg' }));
+                    }
+                } catch (err) {
+                    console.error('Error handling storage event for profile_photo:', err);
+                }
+            }
+        };
+
+        window.addEventListener('storage', onStorage);
+
+        // cleanup listener on unmount
         return () => {
-            if (photoObjectUrl) URL.revokeObjectURL(photoObjectUrl);
+            window.removeEventListener('storage', onStorage);
         };
     }, []);
 
