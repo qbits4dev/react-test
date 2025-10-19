@@ -77,7 +77,7 @@ const App = () => {
           <Route exact path="/404" name="Page 404" element={<Page404 />} />
           <Route exact path="/500" name="Page 500" element={<Page500 />} />
           <Route exact path="/verification" name="Verification" element={<Verification />} />
-          <Route
+          {/* <Route
             exact
             path="/register_agent"
             name="Agent Registration"
@@ -88,7 +88,7 @@ const App = () => {
             path="/cilent_register"
             name="Client Registration"
             element={<ClientRegister />}
-          />
+          /> */}
           {/* Protected routes */}
           <Route
             path="/*"

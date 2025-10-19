@@ -37,12 +37,41 @@ const AppHeaderDropdown = () => {
   const [profilePhoto, setProfilePhoto] = useState(null);
   globalThis.apiBaseUrl = import.meta.env.VITE_API_BASE_URL
   useEffect(() => {
-    // Replace with your actual API endpoint
-    fetch(`${globalThis.apiBaseUrl}/photo?u_id=${JSON.parse(localStorage.getItem('user') || '{}').u_id || ''}`)
-      .then(res => res.json())
-      .then(data => {
+    // Try to use cached photo from localStorage (per-user key) to avoid repeated API calls
+    const userId = JSON.parse(localStorage.getItem('user') || '{}').u_id || '';
+    const storageKey = `profile_photo_${userId || 'anon'}`;
+    try {
+      const stored = localStorage.getItem(storageKey);
+      if (stored) {
+        // stored may be either a raw base64 string or a full data URL
+        if (stored.startsWith('data:')) {
+          setProfilePhoto(stored);
+        } else {
+          setProfilePhoto(`data:image/png;base64,${stored}`);
+        }
+        return; // don't fetch if we have a cached image
+      }
+    } catch (e) {
+      console.warn('Unable to read profile photo from localStorage:', e);
+    }
+
+    // No cached photo, fetch from API and cache the base64 payload
+    const apiBase = import.meta.env.VITE_API_BASE_URL || globalThis.apiBaseUrl || '';
+    globalThis.apiBaseUrl = apiBase;
+    const photoEndpoint = `${apiBase}/photo?u_id=${userId}`;
+    fetch(photoEndpoint)
+      .then((res) => res.json())
+      .then((data) => {
         if (data.photo_base64) {
-          setProfilePhoto(`data:image/png;base64,${data.photo_base64}`);
+          const dataUrl = `data:image/png;base64,${data.photo_base64}`;
+          setProfilePhoto(dataUrl);
+          try {
+            // Save full data URL to localStorage under the key to avoid raw base64 fragments
+            // being interpreted as relative URLs by <img src="...">.
+            localStorage.setItem(storageKey, dataUrl);
+          } catch (e) {
+            console.warn('Failed to save profile photo to localStorage:', e);
+          }
         }
       })
       .catch(() => {
@@ -137,7 +166,7 @@ const AppHeaderDropdown = () => {
   return (
     <CDropdown variant="nav-item">
       <CDropdownToggle placement="bottom-end" className="py-0 pe-0" caret={false}>
-        <CAvatar src={profilePhoto} size="md" />
+        <CAvatar src={profilePhoto || avatar8} size="md" />
       </CDropdownToggle>
       <CDropdownMenu className="pt-0" placement="bottom-end">
         <CDropdownItem onClick={handleLogoutClick} style={{ cursor: 'pointer' }}>
