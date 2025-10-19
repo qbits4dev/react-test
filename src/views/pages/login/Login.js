@@ -27,6 +27,8 @@ const Login = () => {
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
 
+
+
   const validateForm = () => {
     const newErrors = {}
     if (!username.trim()) newErrors.username = 'Username is required.'
@@ -96,6 +98,9 @@ const Login = () => {
       setLoading(false)
     }
   }
+
+  const [showPassword, setShowPassword] = useState(false)
+
 
   return (
     <div className="wrapper d-flex flex-column min-vh-100">
@@ -171,8 +176,9 @@ const Login = () => {
                         <CInputGroupText style={{ backgroundColor: '#f0f0f0' }}>
                           <CIcon icon={cilLockLocked} />
                         </CInputGroupText>
+
                         <CFormInput
-                          type="password"
+                          type={showPassword ? 'text' : 'password'}
                           placeholder="Password"
                           autoComplete="current-password"
                           value={password}
@@ -181,10 +187,20 @@ const Login = () => {
                           required
                           style={{ fontSize: '0.95rem' }}
                         />
+
+                        {/* Toggle Button */}
+                        <CInputGroupText
+                          onClick={() => setShowPassword(!showPassword)}
+                          style={{ cursor: 'pointer', backgroundColor: '#f0f0f0' }}
+                        >
+                          {showPassword ? 'Hide' : 'Show'}
+                        </CInputGroupText>
                       </CInputGroup>
+
                       {errors.password && (
                         <CFormText className="text-danger mb-3">{errors.password}</CFormText>
                       )}
+
 
                       <CButton
                         type="submit"
