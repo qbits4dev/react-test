@@ -59,6 +59,9 @@ export default function CoreUIProfileCropper({ onChange }) {
     const reader = new FileReader();
     reader.onload = () => setImageSrc(reader.result);
     reader.readAsDataURL(file);
+
+    // Reset capture attribute after selecting
+    inputRef.current.removeAttribute('capture');
   };
 
   const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
@@ -100,9 +103,19 @@ export default function CoreUIProfileCropper({ onChange }) {
               border: '2px solid #ccc',
             }}
           />
-          <div className="mt-2">
+          <div className="mt-2 d-flex justify-content-center gap-2">
             <CButton color="info" size="sm" onClick={() => inputRef.current.click()}>
               Change Photo
+            </CButton>
+            <CButton
+              color="success"
+              size="sm"
+              onClick={() => {
+                inputRef.current.setAttribute('capture', 'user'); // front camera
+                inputRef.current.click();
+              }}
+            >
+              Take Photo
             </CButton>
           </div>
         </div>
@@ -145,9 +158,20 @@ export default function CoreUIProfileCropper({ onChange }) {
           </div>
         </>
       ) : !preview ? (
-        <CButton color="info" onClick={() => inputRef.current.click()}>
-          Upload Photo
-        </CButton>
+        <div className="d-flex justify-content-center gap-2">
+          <CButton color="info" onClick={() => inputRef.current.click()}>
+            Upload Photo
+          </CButton>
+          <CButton
+            color="success"
+            onClick={() => {
+              inputRef.current.setAttribute('capture', 'user'); // front camera
+              inputRef.current.click();
+            }}
+          >
+            Take Photo
+          </CButton>
+        </div>
       ) : null}
 
       <input
