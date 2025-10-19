@@ -39,7 +39,7 @@ const AppHeaderDropdown = () => {
   useEffect(() => {
     // Try to use cached photo from localStorage (per-user key) to avoid repeated API calls
     const userId = JSON.parse(localStorage.getItem('user') || '{}').u_id || '';
-    const storageKey = `profile_photo`;
+    const storageKey = `profile_photo_${userId || 'anon'}`;
     try {
       const stored = localStorage.getItem(storageKey);
       if (stored) {
@@ -66,8 +66,9 @@ const AppHeaderDropdown = () => {
           const dataUrl = `data:image/png;base64,${data.photo_base64}`;
           setProfilePhoto(dataUrl);
           try {
-            // Save raw base64 to localStorage under a user-scoped key
-            localStorage.setItem(storageKey, data.photo_base64);
+            // Save full data URL to localStorage under the key to avoid raw base64 fragments
+            // being interpreted as relative URLs by <img src="...">.
+            localStorage.setItem(storageKey, dataUrl);
           } catch (e) {
             console.warn('Failed to save profile photo to localStorage:', e);
           }
