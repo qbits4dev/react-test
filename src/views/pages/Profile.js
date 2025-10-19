@@ -13,8 +13,8 @@ import {
 } from "@coreui/react";
 
 export default function UserProfile() {
-    const [profile, setProfile] = useState({
-        userId: localStorage.getItem('user_id'),
+    const [profile, setProfile] = useState(() => ({
+        userId: JSON.parse(localStorage.getItem('user') || '{}').u_id || '',
 
         photoUrl: "src/assets/images/avatars/3.jpg",
         photoFile: null,
@@ -46,7 +46,7 @@ export default function UserProfile() {
         presentAddress: '',
         referenceagent: '',
         agentteam: '',
-    });
+    }));
 
     useEffect(() => {
         console.log("working");
@@ -92,31 +92,77 @@ export default function UserProfile() {
                 console.error('Error fetching user data:', error);
             });
 
-        // Fetch profile photo
-        const photoUrl = `${apiBaseUrl}/photo?u_id=${userId}`;
-        let photoObjectUrl = null;
-        fetch(photoUrl)
-            .then((response) => response.blob())
-            .then((imageBlob) => {
-                const imageObjectURL = URL.createObjectURL(imageBlob);
-                photoObjectUrl = imageObjectURL;
-                setProfile((prev) => ({
-                    ...prev,
-                    photoUrl: imageObjectURL,
-                }));
-            })
-            .catch((error) => {
-                console.error('Error fetching profile photo:', error);
-                // Fallback to default avatar if photo fetch fails
-                setProfile((prev) => ({
-                    ...prev,
-                    photoUrl: 'src/assets/images/avatars/3.jpg',
-                }));
-            });
+        // Use profile photo from localStorage instead of fetching from API
+        try {
+            const userId = JSON.parse(localStorage.getItem('user') || '{}').u_id || '';
+            const storageKey = `profile_photo_${userId || 'anon'}`;
+            // Try per-user key first
+            let storedPhoto = localStorage.getItem(storageKey);
+            // If not present, try legacy global key and migrate it to per-user key
+            if (!storedPhoto) {
+                const legacy = localStorage.getItem('profile_photo');
+                if (legacy) {
+                    // Normalize legacy before saving: detect data/http/blob or raw base64
+                    let normalized = legacy;
+                    const isData = normalized.startsWith('data:');
+                    const isHttp = /^https?:\/\//i.test(normalized);
+                    const isBlob = normalized.startsWith('blob:');
+                    if (!isData && !isHttp && !isBlob) {
+                        const trimmed = normalized.replace(/^\/+/, '');
+                        if (/^9j\//.test(trimmed) || /^9j/.test(trimmed)) {
+                            normalized = 'data:image/jpeg;base64,' + trimmed;
+                        } else {
+                            // default to png if it doesn't look like jpeg
+                            normalized = 'data:image/png;base64,' + trimmed;
+                        }
+                    }
+                    try {
+                        localStorage.setItem(storageKey, normalized);
+                        // Remove legacy global key after successful migration
+                        localStorage.removeItem('profile_photo');
+                        storedPhoto = normalized;
+                      } catch (e) {
+                        // If migration fails, fall back to using the raw legacy value without removing it
+                        storedPhoto = legacy;
+                      }
+                }
+            }
+             if (storedPhoto) {
+                 // Normalize different stored formats:
+                 // - full data URL (data:image/...) -> use as-is
+                 // - absolute/relative URL (http:// or /path or blob:) -> use as-is
+                 // - raw base64 fragment (e.g. starting with /9j/4AAQ or 9j/4AAQ) -> prefix with data URL
+                 let photoUrl = storedPhoto;
+                 const isDataUrl = photoUrl.startsWith('data:');
+                 const isHttpUrl = /^https?:\/\//i.test(photoUrl);
+                 const isBlobUrl = photoUrl.startsWith('blob:');
+                 if (!isDataUrl && !isHttpUrl && !isBlobUrl) {
+                     // Remove accidental leading slashes
+                     const trimmed = photoUrl.replace(/^\/+/, '');
+                     // Heuristic: base64 JPEG often starts with '/9j/' or '9j/' (base64 of JPEG header)
+                     if (/^9j\//.test(trimmed) || /^9j/.test(trimmed)) {
+                         photoUrl = 'data:image/jpeg;base64,' + trimmed;
+                     } else {
+                         // If it doesn't look like base64, keep the trimmed value so it resolves as a relative path
+                         photoUrl = trimmed;
+                     }
+                 }
+                 setProfile((prev) => ({
+                     ...prev,
+                     photoUrl,
+                 }));
+             } else {
+                 // keep the default avatar if no photo in localStorage
+                 setProfile((prev) => ({ ...prev, photoUrl: 'src/assets/images/avatars/3.jpg' }));
+             }
+         } catch (e) {
+             console.error('Error reading profile photo from localStorage:', e);
+             setProfile((prev) => ({ ...prev, photoUrl: 'src/assets/images/avatars/3.jpg' }));
+         }
 
-        return () => {
-            if (photoObjectUrl) URL.revokeObjectURL(photoObjectUrl);
-        };
+        // NOTE: storage event listener removed. The component now reads profile_photo from localStorage on mount only.
+
+        // cleanup: no storage listener to remove
     }, []);
 
     const [errors, setErrors] = useState({ email: "", phone: "", photoFile: "" });
