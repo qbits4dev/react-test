@@ -77,13 +77,13 @@ const Login = () => {
         // Role-based navigation
         switch (data.role) {
           case 'admin':
-            navigate('/AdminDashboard')
+            navigate('/Admindashboard')
             break
           case 'agent':
-            navigate('/AgentDashboard')
+            navigate('/Agentdashboard')
             break
           case 'customer':
-            navigate('/ClientDashboard')
+            navigate('/Clientdashboard')
             break
           default:
             navigate('/dashboard')

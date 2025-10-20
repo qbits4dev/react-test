@@ -17,6 +17,7 @@ const VisitCalender = React.lazy(() => import('./views/pages/register/VisitCalen
 const Loginheader = React.lazy(() => import('./components/LoginHeader/LoginHeader.js'))
 const venture2 = React.lazy(() => import('./views/pages/Projects/venture2.js'))
 const CoastalGardenPhase2 = React.lazy(() => import('./views/pages/Projects/CoastalGardenPhase2.js'))
+const Unauthorized = React.lazy(() => import('./views/pages/Unauthorized'))
 
 
 const Colors = React.lazy(() => import('./views/theme/colors/Colors'))
