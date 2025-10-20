@@ -97,6 +97,7 @@ const routes = [
   { path: '/Clientdashboard', name: 'Dashboard', element: ClientDashboard ,meta:{allowedRoles:["admin"]}},
   { path: '/Admindashboard', name: 'Dashboard', element: AdminDashboard,meta:{allowedRoles:["admin"]} },
   { path: '/Agentdashboard', name: 'Dashboard', element: AgentDashboard,meta:{allowedRoles:["agent"]} },
+  { path: '/unauthorized', name: 'Unauthorized', element: Unauthorized ,meta:{allowedRoles:["agent"]}},
   { path: '/theme', name: 'Theme', element: Colors, exact: true,meta:{allowedRoles:["admin","agent"]} },
   { path: '/theme/colors', name: 'Colors', element: Colors ,meta:{allowedRoles:["admin","agent"]}},
   { path: '/theme/typography', name: 'Typography', element: Typography,meta:{allowedRoles:["admin","agent"]} },
