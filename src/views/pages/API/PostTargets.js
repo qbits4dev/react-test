@@ -67,7 +67,7 @@ const PostTargets = () => {
             return
         }
 
-        fetch('http://localhost:5000/api/targets', {
+        fetch(`${globalThis.apiBaseUrl}/api/targets`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -105,7 +105,7 @@ const PostTargets = () => {
     }
 
     useEffect(() => {
-        fetch(`${apiBaseUrl}/register/?key=designation`, { headers: { accept: 'application/json' } })
+        fetch(`${globalThis.apiBaseUrl}/register/?key=designation`, { headers: { accept: 'application/json' } })
             .then((res) => res.json())
             .then((data) => {
                 if (data.status === 'ok' && Array.isArray(data.designation)) setDesignations(data.designation)

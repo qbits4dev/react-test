@@ -14,7 +14,7 @@ import {
   CSpinner,
 } from '@coreui/react';
 
-const apiBaseUrl = globalThis.apiBaseUrl || 'http://localhost:8000';
+const apiBaseUrl = globalThis.apiBaseUrl;
 
 export default function ProjectsList() {
   const [projects, setProjects] = useState([]);

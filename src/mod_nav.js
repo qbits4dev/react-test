@@ -33,7 +33,7 @@ const navigationConfig = [
     component: CNavGroup,
     name: 'Agents',
     icon: <CIcon icon={cilUser} customClassName="nav-icon" />,
-    allowedRoles: [ROLES.ADMIN],
+    allowedRoles: [ROLES.ADMIN,ROLES.AGENT],
     items: [
       { component: CNavItem, name: 'View Agents', to: '/GetAgents', allowedRoles: [ROLES.ADMIN, ROLES.AGENT] },
       { component: CNavItem, name: 'Register Agent', to: '/register_agent', allowedRoles: [ROLES.ADMIN] },

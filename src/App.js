@@ -1,10 +1,13 @@
 import React, { Suspense, useEffect } from 'react'
-import { HashRouter, Route, Routes, Navigate } from 'react-router-dom'
+import { HashRouter, Route, Routes, Navigate, useLocation, matchPath } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 
 import { CSpinner, useColorModes } from '@coreui/react'
 import './scss/style.scss'
 import './scss/examples.scss'
+
+// routes config
+import routes from './routes'
 
 // Containers
 const DefaultLayout = React.lazy(() => import('./layout/DefaultLayout'))
@@ -27,10 +30,20 @@ const ClientRegister = React.lazy(() =>
 
 // ProtectedRoute component
 const ProtectedRoute = ({ children }) => {
-  const token = localStorage.getItem('access_token')
-  if (!token) {
-    return <Navigate to="/login" replace />
+  const location = useLocation()
+  const token = localStorage.getItem('user')
+  const userData = JSON.parse(token)
+  const currentUserRole = userData?.role?.toLowerCase()
+
+  const matchedRoute = routes.find((route) => matchPath(route.path, location.pathname))
+
+  if (matchedRoute) {
+    const allowedRoles = matchedRoute.meta?.allowedRoles || []
+    if (allowedRoles.length > 0 && !allowedRoles.includes(currentUserRole)) {
+      return <Navigate to="/login" replace />
+    }
   }
+
   return children
 }
 
@@ -41,7 +54,7 @@ const App = () => {
 
   useEffect(() => {
     setColorMode('light')
-  }, []) 
+  }, [])
 
   return (
     <HashRouter>
@@ -56,27 +69,9 @@ const App = () => {
           {/* Public routes */}
           <Route exact path="/login" name="Login Page" element={<Login />} />
           <Route exact path="/register" name="Register Page" element={<Register />} />
-           {/* <Route
-            exact
-            path="/agent-register"
-            name="Agent Registration Page"
-            element={<AgentRegistration />}
-          /> */}
           <Route exact path="/404" name="Page 404" element={<Page404 />} />
           <Route exact path="/500" name="Page 500" element={<Page500 />} />
           <Route exact path="/verification" name="Verification" element={<Verification />} />
-          {/* <Route
-            exact
-            path="/register_agent"
-            name="Agent Registration"
-            element={<AgentRegistration />}
-          />
-          <Route
-            exact
-            path="/cilent_register"
-            name="Client Registration"
-            element={<ClientRegister />}
-          /> */}
           {/* Protected routes */}
           <Route
             path="/*"

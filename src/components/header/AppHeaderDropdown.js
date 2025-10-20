@@ -35,7 +35,7 @@ import avatar8 from './../../assets/images/avatars/blankprofile.png'
 const AppHeaderDropdown = () => {
   const navigate = useNavigate();
   const [profilePhoto, setProfilePhoto] = useState(null);
-  globalThis.apiBaseUrl = import.meta.env.VITE_API_BASE_URL
+
   useEffect(() => {
     // Try to use cached photo from localStorage (per-user key) to avoid repeated API calls
     const userId = JSON.parse(localStorage.getItem('user') || '{}').u_id || '';
@@ -56,9 +56,7 @@ const AppHeaderDropdown = () => {
     }
 
     // No cached photo, fetch from API and cache the base64 payload
-    const apiBase = import.meta.env.VITE_API_BASE_URL || globalThis.apiBaseUrl || '';
-    globalThis.apiBaseUrl = apiBase;
-    const photoEndpoint = `${apiBase}/photo?u_id=${userId}`;
+    const photoEndpoint = `${globalThis.apiBaseUrl}/photo?u_id=${userId}`;
     fetch(photoEndpoint)
       .then((res) => res.json())
       .then((data) => {
@@ -98,7 +96,7 @@ const AppHeaderDropdown = () => {
     setLoggingOut(true);
     setLogoutError('');
     try {
-      const apiUrl = globalThis.apiBaseUrl || 'http://localhost:8000'
+      const apiUrl = globalThis.apiBaseUrl;
       const accessToken = localStorage.getItem('access_token') || ''
       const refreshToken = localStorage.getItem('refresh_token') || ''
 

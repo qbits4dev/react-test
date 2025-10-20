@@ -57,7 +57,7 @@ const Login = () => {
     }
 
     try {
-      const apiUrl = globalThis.apiBaseUrl || 'http://localhost:8000' // fallback
+      const apiUrl = globalThis.apiBaseUrl
       const formBody = new URLSearchParams(payload).toString()
 
       const response = await fetch(`${apiUrl}/auth/login`, {

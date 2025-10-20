@@ -27,7 +27,7 @@ const Register = () => {
   const [InterstedInList, setInterstedInList] = useState([])
 
   useEffect(() => {
-    fetch('http://127.0.0.1:5000/test?key=InterstedIn')
+    fetch(`${globalThis.apiBaseUrl}/test?key=InterstedIn`)
       .then((res) => res.json())
       .then((data) => {
         console.log('InterstedIn Data:', data)
@@ -71,7 +71,7 @@ const Register = () => {
     e.preventDefault()
 
     try {
-      const res = await fetch('http://127.0.0.1:5000/test', {
+      const res = await fetch(`${globalThis.apiBaseUrl}/test`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
