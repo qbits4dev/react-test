@@ -49,13 +49,10 @@ export default function ProjectsList() {
     setPlots([]);
     setPlotsLoading(true);
     try {
-      const res = await fetch(`${globalThis.apiBaseUrl}/projects/?project_name=${project.name}`);
-      console.log(`${globalThis.apiBaseUrl}/projects/plots?project_name=${project.name}`)
+      const res = await fetch(`${globalThis.apiBaseUrl}/projects/plots?project_name=${project.name}`);
       if (!res.ok) throw new Error('Failed to fetch plots');
       const data = await res.json();
-      console.log("here")
-      console.log(data)
-      setProjects(Array.isArray(data.data) ? data.data : []);
+      setPlots(Array.isArray(data) ? data : []);
     } catch (err) {
       alert('Error fetching plots: ' + err.message);
     } finally {
@@ -158,14 +155,16 @@ export default function ProjectsList() {
                       <CTableRow>
                         <CTableHeaderCell>Plot Number</CTableHeaderCell>
                         <CTableHeaderCell>Size</CTableHeaderCell>
+                        <CTableHeaderCell>Price</CTableHeaderCell>
                         <CTableHeaderCell>Status</CTableHeaderCell>
                       </CTableRow>
                     </CTableHead>
                     <CTableBody>
                       {plots.map((plot) => (
-                        <CTableRow key={plot.id}>
-                          <CTableDataCell>{plot.number}</CTableDataCell>
+                        <CTableRow key={plot.plot_number}>
+                          <CTableDataCell>{plot.plot_number}</CTableDataCell>
                           <CTableDataCell>{plot.size}</CTableDataCell>
+                          <CTableDataCell>{plot.price}</CTableDataCell>
                           <CTableDataCell>
                             <CBadge color={getPlotBadgeColor(plot.status)}>{plot.status}</CBadge>
                           </CTableDataCell>
