@@ -27,6 +27,9 @@ const Login = () => {
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
 
+  useEffect(() => {
+    localStorage.clear()
+  }, [])
 
 
   const validateForm = () => {

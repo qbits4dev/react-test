@@ -14,7 +14,7 @@ import {
   CSpinner,
 } from '@coreui/react';
 
-const apiBaseUrl = globalThis.apiBaseUrl;
+// const apiBaseUrl = globalThis.apiBaseUrl;
 
 export default function ProjectsList() {
   const [projects, setProjects] = useState([]);
@@ -28,10 +28,12 @@ export default function ProjectsList() {
     async function fetchProjects() {
       setLoading(true);
       try {
-        const res = await fetch(`${apiBaseUrl}/projects/`);
+        const res = await fetch(`${globalThis.apiBaseUrl}/projects/`);
         if (!res.ok) throw new Error('Failed to fetch projects');
         const data = await res.json();
-        setProjects(Array.isArray(data) ? data : data.projects || []);
+        console.log("coming")
+        console.log(data)
+        setProjects(Array.isArray(data.data) ? data.data : []);
         setError('');
       } catch (err) {
         setError('Error fetching projects: ' + err.message);
@@ -47,7 +49,7 @@ export default function ProjectsList() {
     setPlots([]);
     setPlotsLoading(true);
     try {
-      const res = await fetch(`${apiBaseUrl}/plots?projectId=${project.id}`);
+      const res = await fetch(`${globalThis.apiBaseUrl}/plots?projectId=${project.id}`);
       if (!res.ok) throw new Error('Failed to fetch plots');
       const data = await res.json();
       setPlots(Array.isArray(data) ? data : data.plots || []);
