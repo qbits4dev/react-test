@@ -31,8 +31,8 @@ export default function ProjectsList() {
         const res = await fetch(`${globalThis.apiBaseUrl}/projects/`);
         if (!res.ok) throw new Error('Failed to fetch projects');
         const data = await res.json();
-        console.log("coming")
-        console.log(data)
+        // console.log("coming")
+        // console.log(data)
         setProjects(Array.isArray(data.data) ? data.data : []);
         setError('');
       } catch (err) {
@@ -49,10 +49,13 @@ export default function ProjectsList() {
     setPlots([]);
     setPlotsLoading(true);
     try {
-      const res = await fetch(`${globalThis.apiBaseUrl}/plots?projectId=${project.id}`);
+      const res = await fetch(`${globalThis.apiBaseUrl}/projects/?project_name=${project.name}`);
+      console.log(`${globalThis.apiBaseUrl}/projects/plots?project_name=${project.name}`)
       if (!res.ok) throw new Error('Failed to fetch plots');
       const data = await res.json();
-      setPlots(Array.isArray(data) ? data : data.plots || []);
+      console.log("here")
+      console.log(data)
+      setProjects(Array.isArray(data.data) ? data.data : []);
     } catch (err) {
       alert('Error fetching plots: ' + err.message);
     } finally {
