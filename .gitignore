@@ -28,3 +28,4 @@ yarn-error.log*
 logs/react-test-app-error.log
 logs/react-test-app-out.log
 .dockerignore
+/.vs/
