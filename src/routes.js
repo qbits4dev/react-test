@@ -61,6 +61,8 @@ const newProjects = React.lazy(() => import('./views/pages/newProjects'))
 const Profile = React.lazy(() => import('./views/pages/Profile'))
 const ARegister = React.lazy(() => import('./views/pages/register/ARegister'))
 const AgentRegister = React.lazy(() => import('./views/pages/register/register_agent'))
+const ClientRegister = React.lazy(() => import('./views/pages/register/cilent_register'))
+
 const venture = React.lazy(() => import('./views/pages/Projects/venture'))
 
 //Projects
@@ -161,6 +163,7 @@ const routes = [
   { path: '/ForgotPassword', name: 'Forgot Password', element: ForgotPassword ,meta:{allowedRoles:["admin","agent"]}},
   { path: '/ARegister', name: 'Agent Register', element: ARegister ,meta:{allowedRoles:["admin","agent"]}},
   { path: '/register_agent', name: 'Agent Register', element: AgentRegister ,meta:{allowedRoles:["admin","agent"]}},
+  { path: '/register_client', name: 'Client Register', element: ClientRegister ,meta:{allowedRoles:["admin","agent"]}},
   { path: '/Targets', name: 'Targets', element: Targets ,meta:{allowedRoles:["admin","agent"]}},
   { path: '/GetBookVisit', name: 'Get Book Visit', element: GetBookVisit ,meta:{allowedRoles:["admin","agent"]}},
   { path: '/VisitCalender', name: 'Visit Calender', element: VisitCalender ,meta:{allowedRoles:["admin","agent"]}},
