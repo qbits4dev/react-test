@@ -164,7 +164,10 @@ export default function ProjectsList() {
                         <CTableRow key={plot.plot_number}>
                           <CTableDataCell>{plot.plot_number}</CTableDataCell>
                           <CTableDataCell>{plot.size}</CTableDataCell>
-                          <CTableDataCell>{plot.price}</CTableDataCell>
+                          <CTableDataCell> {new Intl.NumberFormat('en-IN', {
+                              style: 'currency',
+                              currency: 'INR',
+                            }).format(plot.price)}</CTableDataCell>
                           <CTableDataCell>
                             <CBadge color={getPlotBadgeColor(plot.status)}>{plot.status}</CBadge>
                           </CTableDataCell>
