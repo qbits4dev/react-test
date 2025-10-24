@@ -79,7 +79,7 @@ export default function ForgotPassword() {
       console.log('Submitting forgot password request for UID:', formData.uid)
 
       // Make API call
-      const response = await fetch('https://q.qbits4dev.com/register/forgot-password', {
+      const response = await fetch(`${globalThis.apiBaseUrl}/register/forgot-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',

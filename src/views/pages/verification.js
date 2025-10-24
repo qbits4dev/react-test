@@ -21,7 +21,7 @@ const Verification = () => {
                             <CCardBody className="p-4">
                                 <h2 className="text-center mb-3 text-primary fw-bold">Account Verification</h2>
                                 <p className="text-center text-muted mb-4">
-                                    Enter the 6-digit OTP sent to your email address
+                                    Enter the 6-digit OTP sent to your email address/mobile number
                                 </p>
 
                                 <CForm>
