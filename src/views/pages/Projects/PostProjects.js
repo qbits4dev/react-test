@@ -122,7 +122,7 @@ export default function ProjectForm() {
           <CRow className="g-3 mb-3">
             <CCol md={6}>
               <CFormInput
-                floating
+                floating="true"
                 label="Project Name"
                 name="name"
                 value={form.name}
@@ -134,7 +134,7 @@ export default function ProjectForm() {
             </CCol>
             <CCol md={6}>
               <CFormInput
-                floating
+                floating="true"
                 label="Developer"
                 name="developer"
                 value={form.developer}
@@ -150,7 +150,7 @@ export default function ProjectForm() {
           <CRow className="g-3 mb-3">
             <CCol md={6}>
               <CFormInput
-                floating
+                floating="true"
                 label="Location"
                 name="location"
                 value={form.location}
@@ -162,7 +162,7 @@ export default function ProjectForm() {
             </CCol>
             <CCol md={6}>
               <CFormInput
-                floating
+                floating="true"
                 label="Total Area (sq. ft)"
                 name="total_area"
                 type="number"
@@ -179,7 +179,7 @@ export default function ProjectForm() {
           <CRow className="g-3 mb-3">
             <CCol>
               <CFormTextarea
-                floating
+                floating="true"
                 label="Project Description"
                 name="description"
                 value={form.description}
@@ -196,7 +196,7 @@ export default function ProjectForm() {
           <CRow className="g-3 mb-3">
             <CCol md={6}>
               <CFormInput
-                floating
+                floating="true"
                 label="Start Date"
                 name="start_date"
                 type="date"
@@ -208,7 +208,7 @@ export default function ProjectForm() {
             </CCol>
             <CCol md={6}>
               <CFormInput
-                floating
+                floating="true"
                 label="End Date"
                 name="end_date"
                 type="date"
@@ -224,7 +224,7 @@ export default function ProjectForm() {
           <CRow className="g-3 mb-4">
             <CCol>
               <CFormSelect
-                floating
+                floating="true"
                 label="Project Status"
                 name="status"
                 value={form.status}

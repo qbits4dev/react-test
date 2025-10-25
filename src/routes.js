@@ -12,6 +12,7 @@ const Reports = React.lazy(() => import('./views/pages/Reports'))
 const Invoice = React.lazy(() => import('./views/pages/Invoice'))
 const ForgotUserId = React.lazy(() => import('./views/pages/register/ForgotUID'))
 const ForgotPassword = React.lazy(() => import('./views/pages/register/ForgotPassword'))
+const Verification = React.lazy(() => import('./views/pages/verification'))
 const Targets = React.lazy(() => import('./views/pages/API/Targets'))
 const VisitCalender = React.lazy(() => import('./views/pages/register/VisitCalender'))
 const Loginheader = React.lazy(() => import('./components/LoginHeader/LoginHeader.js'))
@@ -61,6 +62,8 @@ const newProjects = React.lazy(() => import('./views/pages/newProjects'))
 const Profile = React.lazy(() => import('./views/pages/Profile'))
 const ARegister = React.lazy(() => import('./views/pages/register/ARegister'))
 const AgentRegister = React.lazy(() => import('./views/pages/register/register_agent'))
+const ClientRegister = React.lazy(() => import('./views/pages/register/cilent_register'))
+
 const venture = React.lazy(() => import('./views/pages/Projects/venture'))
 
 //Projects
@@ -92,7 +95,7 @@ const GetBookVisit = React.lazy(() => import('./views/pages/register/GetBookVisi
 const Widgets = React.lazy(() => import('./views/widgets/Widgets'))
 
 const routes = [
-  { path: '/', exact: true, name: 'Home',meta:{allowedRoles:["admin","agent"]} },
+  // { path: '/', exact: true, name: 'Home',meta:{allowedRoles:["admin","agent"]} },
   { path: '/dashboard', name: 'Dashboard', element: Dashboard ,meta:{allowedRoles:["admin","agent"]}},
   { path: '/Clientdashboard', name: 'Dashboard', element: ClientDashboard ,meta:{allowedRoles:["admin"]}},
   { path: '/Admindashboard', name: 'Dashboard', element: AdminDashboard,meta:{allowedRoles:["admin"]} },
@@ -159,8 +162,10 @@ const routes = [
   { path: '/Invoice', name: 'Invoice', element: Invoice,meta:{allowedRoles:["admin","agent"]} },
   { path: '/ForgotUId', name: 'Forgot User ID', element: ForgotUserId ,meta:{allowedRoles:["admin","agent"]}},
   { path: '/ForgotPassword', name: 'Forgot Password', element: ForgotPassword ,meta:{allowedRoles:["admin","agent"]}},
+  { path: '/verification', name: 'Verification', element: Verification ,meta:{allowedRoles:["admin","agent"]}},
   { path: '/ARegister', name: 'Agent Register', element: ARegister ,meta:{allowedRoles:["admin","agent"]}},
   { path: '/register_agent', name: 'Agent Register', element: AgentRegister ,meta:{allowedRoles:["admin","agent"]}},
+  { path: '/register_client', name: 'Client Register', element: ClientRegister ,meta:{allowedRoles:["admin","agent"]}},
   { path: '/Targets', name: 'Targets', element: Targets ,meta:{allowedRoles:["admin","agent"]}},
   { path: '/GetBookVisit', name: 'Get Book Visit', element: GetBookVisit ,meta:{allowedRoles:["admin","agent"]}},
   { path: '/VisitCalender', name: 'Visit Calender', element: VisitCalender ,meta:{allowedRoles:["admin","agent"]}},
