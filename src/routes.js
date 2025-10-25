@@ -12,6 +12,7 @@ const Reports = React.lazy(() => import('./views/pages/Reports'))
 const Invoice = React.lazy(() => import('./views/pages/Invoice'))
 const ForgotUserId = React.lazy(() => import('./views/pages/register/ForgotUID'))
 const ForgotPassword = React.lazy(() => import('./views/pages/register/ForgotPassword'))
+const Verification = React.lazy(() => import('./views/pages/verification'))
 const Targets = React.lazy(() => import('./views/pages/API/Targets'))
 const VisitCalender = React.lazy(() => import('./views/pages/register/VisitCalender'))
 const Loginheader = React.lazy(() => import('./components/LoginHeader/LoginHeader.js'))
@@ -161,6 +162,7 @@ const routes = [
   { path: '/Invoice', name: 'Invoice', element: Invoice,meta:{allowedRoles:["admin","agent"]} },
   { path: '/ForgotUId', name: 'Forgot User ID', element: ForgotUserId ,meta:{allowedRoles:["admin","agent"]}},
   { path: '/ForgotPassword', name: 'Forgot Password', element: ForgotPassword ,meta:{allowedRoles:["admin","agent"]}},
+  { path: '/verification', name: 'Verification', element: Verification ,meta:{allowedRoles:["admin","agent"]}},
   { path: '/ARegister', name: 'Agent Register', element: ARegister ,meta:{allowedRoles:["admin","agent"]}},
   { path: '/register_agent', name: 'Agent Register', element: AgentRegister ,meta:{allowedRoles:["admin","agent"]}},
   { path: '/register_client', name: 'Client Register', element: ClientRegister ,meta:{allowedRoles:["admin","agent"]}},
