@@ -205,7 +205,7 @@ export default function RegisterAgentWizard() {
     <div className="bg-light min-vh-100 d-flex flex-row align-items-center py-5">
       <CContainer>
         <CRow className="justify-content-center">
-          <CCol md={10} lg={8}>
+          <CCol md={10} lg={6}>
             <CCard className="shadow-sm rounded-4">
               <CCardBody className="p-5">
 
