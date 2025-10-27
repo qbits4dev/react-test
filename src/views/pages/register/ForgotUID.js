@@ -49,53 +49,34 @@ const ForgotUserId = () => {
         setAlert({ visible: false, message: '', color: 'info' })
 
         try {
-            // Create URLSearchParams for application/x-www-form-urlencoded
-            const params = new URLSearchParams()
-            params.append('mobile', mobile)
-
-            console.log('Submitting forgot UID request for mobile:', mobile)
+            console.log('Sending SMS to mobile:', mobile)
 
             // Make API call
-            const response = await fetch('https://q.qbits4dev.com/register/forgot-uid', {
+            const response = await fetch(`${globalThis.apiBaseUrl}/send-sms/${mobile}`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                    'Content-Type': 'application/json',
                 },
-                body: params.toString(),
             })
 
             const result = await response.json()
             console.log('API Response:', result)
 
             if (response.ok) {
-                // Success - Display the UID from response
+                // Success - Display the success message from response
                 setAlert({
                     visible: true,
-                    message: result.message || `Your User ID has been sent to your mobile number.`,
+                    message: result.message || 'SMS sent successfully.',
                     color: 'success',
                 })
-
-                // If UID is in the response, show it
-                if (result.uid || result.u_id) {
-                    setAlert({
-                        visible: true,
-                        message: `Your User ID is: ${result.uid || result.u_id}`,
-                        color: 'success',
-                    })
-                }
-
                 // Clear the mobile input after successful submission
                 setMobile('')
 
-                // Optional: Redirect to login after showing UID
-                // setTimeout(() => {
-                //     navigate('/login')
-                // }, 5000)
             } else {
                 // Error from server
                 setAlert({
                     visible: true,
-                    message: result.message || result.detail || 'Mobile number not found. Please check and try again.',
+                    message: result.message || result.detail || 'Failed to send SMS. Please try again.',
                     color: 'danger',
                 })
             }
@@ -122,7 +103,7 @@ const ForgotUserId = () => {
                             </CCardHeader>
                             <CCardBody className="p-4">
                                 <p className="text-muted text-center mb-4">
-                                    Enter your registered mobile number to recover your User ID.
+                                    Enter your registered mobile number to receive your User ID.
                                 </p>
 
                                 {/* Alert Message */}
@@ -164,10 +145,10 @@ const ForgotUserId = () => {
                                             {isSubmitting ? (
                                                 <>
                                                     <CSpinner size="sm" className="me-2" />
-                                                    Submitting...
+                                                    Sending...
                                                 </>
                                             ) : (
-                                                'Submit'
+                                                'Send User ID'
                                             )}
                                         </CButton>
 
@@ -176,10 +157,10 @@ const ForgotUserId = () => {
                                             color="secondary"
                                             variant="outline"
                                             className="rounded-pill"
-                                            onClick={() => navigate('/login')}
+                                            onClick={() => navigate('/AdminDashboard')}
                                             disabled={isSubmitting}
                                         >
-                                            Back to Login
+                                            Back
                                         </CButton>
                                     </div>
                                 </CForm>
