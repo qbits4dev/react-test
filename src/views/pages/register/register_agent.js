@@ -202,12 +202,12 @@ export default function RegisterAgentWizard() {
   }
 
   return (
-    <div className="bg-light min-vh-100 d-flex flex-row align-items-center py-5">
+    <div className="bg-light min-vh-100 d-flex flex-row align-items-center py-3">
       <CContainer>
         <CRow className="justify-content-center">
-          <CCol md={10} lg={6}>
+          <CCol md={12} lg={6}>
             <CCard className="shadow-sm rounded-4">
-              <CCardBody className="p-5">
+              <CCardBody className="p-0">
 
                 {alert.visible && (
                   <CAlert color={alert.color} dismissible onClose={() => setAlert({ ...alert, visible: false })}>
@@ -215,15 +215,27 @@ export default function RegisterAgentWizard() {
                   </CAlert>
                 )}
 
-                <div className="d-flex justify-content-between align-items-center mb-4">
-                  <CButton color="primary" variant="ghost" onClick={() => navigate(-1)}>
+                <div className="d-flex align-items-center justify-content-between flex-wrap mb-4 px-2 px-md-4">
+                  <CButton color="primary" variant="ghost" onClick={() => navigate(-1)} className="mb-2 mb-md-0">
                     <CIcon icon={cilArrowLeft} className="me-2" />
                   </CButton>
 
                   <div className="flex-grow-1 text-center">
-                    <h3 className="text-primary fw-bold m-0">Agent Registration</h3>
+                    <h3
+                      className="text-primary fw-bold m-0"
+                      style={{
+                        fontSize: 'clamp(1.25rem, 2vw + 0.5rem, 2rem)',
+                        lineHeight: '1.2',
+                      }}
+                    >
+                      Agent Registration
+                    </h3>
                   </div>
+
+                  {/* Spacer div to balance layout */}
+                  <div className="d-none d-md-block" style={{ width: '42px' }}></div>
                 </div>
+
 
 
                 <CForm noValidate>
