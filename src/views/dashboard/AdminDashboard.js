@@ -231,10 +231,10 @@ const AdminDashboard = () => {
     <>
       <WidgetsDropdown widgetsData={agentWidgetsData} className="mb-4" />
 
-      <div>
+      {/* <div>
         <h3>Fetched Users</h3>
         <p>{data?.Hello || 'No data received'}</p>
-      </div>
+      </div> */}
       {/* <div>
             <h2>API Response Details:</h2>
             {product ? (
@@ -247,7 +247,7 @@ const AdminDashboard = () => {
                 <p>API data not available after loading.</p>
             )}
         </div> */}
-      Working
+      {/* Working
       <CCard className="mb-4">
         <CCardBody>
           <CRow>
@@ -449,7 +449,7 @@ const AdminDashboard = () => {
             </CCardBody>
           </CCard>
         </CCol>
-      </CRow>
+      </CRow> */}
     </>
   )
 }
