@@ -33,14 +33,15 @@ const Verification = () => {
       })
       const verifyData = await verifyResp.json()
       // console.log('Response from server:', verifyData)
-      if (!verifyResp.ok || verifyData.message !== 'OTP verified successfully') throw new Error('OTP verification failed.')
+      // if (!verifyResp.ok || verifyData.message !== 'OTP verified successfully') throw new Error('OTP verification failed.')
 
       // Step 2: Call forgot-password API
       const params = new URLSearchParams()
       params.append('uid', uid)
       params.append('new_password', new_password)
-
-      const passwordResp = await fetch(`${globalThis.apiBaseUrl}/register/forgot-password`, {
+      
+      if(verifyData.message == 'OTP verified successfully'){
+        const passwordResp = await fetch(`${globalThis.apiBaseUrl}/register/forgot-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
         body: params.toString(),
@@ -48,9 +49,13 @@ const Verification = () => {
       // console.log('Response from server:', passwordResp)
       const passwordResult = await passwordResp.json()
       if (!passwordResp.ok) throw new Error(passwordResult.message || 'Password update failed.')
-
+      
       setAlert({ visible: true, message: 'Password updated successfully! Redirecting to login...', color: 'success' })
       setTimeout(() => navigate('/login'), 3000)
+    } 
+    else {
+      throw new Error('OTP verification failed.')
+    }
     } catch (error) {
       console.error('Error:', error)
       setAlert({ visible: true, message: error.message, color: 'danger' })
