@@ -608,7 +608,7 @@ export default function RegisterAgentWizard() {
                 {/* Address */}
                 <h5 className="text-primary mb-3 mt-4">Address</h5>
                 <CRow className="g-3 mb-3">
-                  <CCol md={12}><CFormTextarea floating="true" label="Address Line 1" name="address" rows={2} value={form.address} onChange={handleChange} />{renderError('address')}</CCol>
+                  <CCol md={12}><CFormTextarea floating="true" label="Address" name="address" rows={2} value={form.address} onChange={handleChange} />{renderError('address')}</CCol>
                 </CRow>
 
                 <CRow className="g-3 mb-3">
