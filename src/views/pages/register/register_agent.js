@@ -1,18 +1,16 @@
 import React, { useState, useEffect } from 'react'
 import {
   CCard, CCardBody, CCol, CContainer, CRow, CForm, CFormInput, CFormSelect,
-  CSpinner, CFormLabel, CButton, CDropdown, CDropdownToggle, CDropdownMenu, CDropdownItem,
-  CAlert, CInputGroup, CFormTextarea, CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter
+  CSpinner, CFormLabel, CButton, CAlert, CFormTextarea, CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter
 } from '@coreui/react'
 import { useNavigate } from 'react-router-dom'
 import CIcon from '@coreui/icons-react'
 import { cilArrowLeft } from '@coreui/icons'
-import CoreUIProfileCropper from './CoreUIProfileCropper'
 
 export default function RegisterAgentWizard() {
   const navigate = useNavigate()
 
-  // --- form state (all fields from code1 + structure/UX from code2) ---
+  // --- form state with all fields ---
   const [form, setForm] = useState({
     first_name: '',
     last_name: '',
@@ -44,9 +42,8 @@ export default function RegisterAgentWizard() {
     nominee_mobile: '',
     aadhaar_file: null,
     pan_file: null,
-    photo: null, // will hold { file, previewUrl }
+    photo: null,
     u_id: '',
-    // address splitted (code1 had more address pieces) - keep both single and parts
     address_line1: '',
     address_line2: '',
     city: '',
@@ -55,9 +52,8 @@ export default function RegisterAgentWizard() {
   })
 
   const [designations, setDesignations] = useState([])
-  const [designationName, setDesignationName] = useState('Select Designation')
-  const [loadingDesignations, setLoadingDesignations] = useState(true)
   const [designationError, setDesignationError] = useState('')
+  const [loadingDesignations, setLoadingDesignations] = useState(true)
 
   const [errors, setErrors] = useState({})
   const [alert, setAlert] = useState({ visible: false, message: '', color: 'success' })
@@ -65,8 +61,22 @@ export default function RegisterAgentWizard() {
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [registeredUID, setRegisteredUID] = useState('')
 
+  // Restore form state from localStorage when page loads
   useEffect(() => {
-    // fetch designations - keep endpoint flexible via globalThis.apiBaseUrl
+    const saved = localStorage.getItem('registerAgentForm')
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        // Files cannot be persisted, always null on reload
+        parsed.aadhaar_file = null
+        parsed.pan_file = null
+        parsed.photo = null
+        setForm(parsed)
+      } catch {}
+    }
+  }, [])
+
+  useEffect(() => {
     fetch(`${globalThis.apiBaseUrl}/register/?key=designation`, { headers: { accept: 'application/json' } })
       .then(res => res.json())
       .then(data => {
@@ -77,12 +87,19 @@ export default function RegisterAgentWizard() {
       .finally(() => setLoadingDesignations(false))
   }, [])
 
-  // --- helpers ---
+  // Helper: updates field and persists to localStorage
   const setFormField = (name, value) => {
-    setForm(prev => ({ ...prev, [name]: value }))
+    setForm(prev => {
+      const updated = { ...prev, [name]: value }
+      // Only primitive values, files are not persisted
+      const serializable = { ...updated, aadhaar_file: null, pan_file: null, photo: null }
+      localStorage.setItem('registerAgentForm', JSON.stringify(serializable))
+      return updated
+    })
     setErrors(prev => ({ ...prev, [name]: '' }))
   }
 
+  // Handle file input (do not persist file/blobs)
   const handleFileChange = (e) => {
     const { name, files } = e.target
     if (!files || files.length === 0) return
@@ -91,19 +108,16 @@ export default function RegisterAgentWizard() {
       setErrors(prev => ({ ...prev, [name]: 'File size must be less than 2MB' }))
       setForm(prev => ({ ...prev, [name]: null }))
     } else {
-      setForm(prev => ({ ...prev, [name]: file }))
-      setErrors(prev => ({ ...prev, [name]: '' }))
+      setFormField(name, file)
     }
   }
 
+  // Universal change handler (persists on every change)
   const handleChange = (e) => {
     const name = e.target.name
     let value = e.target.value
 
-    // map some UI names to state keys if needed
-    // many inputs use exact state key names below, so ensure they match
-
-    // sanitize input depending on field
+    // Input sanitation
     if (name === 'pan') value = value.toUpperCase().replace(/[^A-Z0-9]/g, '')
     else if (['first_name', 'last_name', 'father_name', 'nominiee', 'relationship', 'language', 'education', 'occupation', 'work_location', 'branch', 'bank_name', 'address_line1', 'address_line2', 'city', 'state'].includes(name))
       value = value.replace(/[^A-Za-z0-9 ,\-\/]/g, '')
@@ -121,12 +135,6 @@ export default function RegisterAgentWizard() {
       if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--
       if (age < 18) setErrors(prev => ({ ...prev, dob: 'Age must be at least 18' }))
     }
-  }
-
-  const handleDesignationSelect = (designation) => {
-    setDesignationName(designation.name)
-    setForm(prev => ({ ...prev, designation: designation.name }))
-    setErrors(prev => ({ ...prev, designation: '' }))
   }
 
   const renderError = (field) => errors[field] && (
@@ -197,7 +205,7 @@ export default function RegisterAgentWizard() {
   }
 
   const handleSubmit = async (e) => {
-    e?.preventDefault()
+    e && e.preventDefault()
     if (!validateAll()) {
       setAlert({ visible: true, message: 'Please fix the validation errors.', color: 'danger' })
       window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -218,12 +226,12 @@ export default function RegisterAgentWizard() {
       })
       formData.append('role', 'agent')
 
-      // API endpoint is left for user to configure (globalThis.apiBaseUrl)
       const res = await fetch(`${globalThis.apiBaseUrl}/auth/register`, { method: 'POST', body: formData })
       const data = await res.json()
       if (res.ok) {
         setRegisteredUID(data.u_id || data.user_id || 'N/A')
         setShowSuccessModal(true)
+        localStorage.removeItem('registerAgentForm')
       } else {
         setAlert({ visible: true, message: data.message || 'Registration failed.', color: 'danger' })
       }
@@ -236,10 +244,12 @@ export default function RegisterAgentWizard() {
   }
 
   const handleModalClose = () => {
+    localStorage.removeItem('registerAgentForm')
     setShowSuccessModal(false)
     navigate('/AdminDashboard')
   }
 
+  // --- UI ---
   return (
     <CContainer className="py-5">
       <CRow className="justify-content-center">
@@ -254,9 +264,9 @@ export default function RegisterAgentWizard() {
                 <div style={{ width: 80 }} />
               </div>
 
-              {alert.visible && (
+              {alert.visible &&
                 <CAlert color={alert.color} dismissible onClose={() => setAlert({ ...alert, visible: false })}>{alert.message}</CAlert>
-              )}
+              }
 
               <CForm onSubmit={handleSubmit}>
                 {/* Personal Details */}
@@ -265,17 +275,14 @@ export default function RegisterAgentWizard() {
                   <CCol md={6}><CFormInput floating="true" label="First Name" name="first_name" value={form.first_name} onChange={handleChange} required />{renderError('first_name')}</CCol>
                   <CCol md={6}><CFormInput floating="true" label="Last Name" name="last_name" value={form.last_name} onChange={handleChange} required />{renderError('last_name')}</CCol>
                 </CRow>
-
                 <CRow className="g-3 mb-3">
                   <CCol md={6}><CFormInput floating="true" label="Father's Name" name="father_name" value={form.father_name} onChange={handleChange} required />{renderError('father_name')}</CCol>
                   <CCol md={6}><CFormInput floating="true" label="Email" name="email" type="email" value={form.email} onChange={handleChange} required />{renderError('email')}</CCol>
                 </CRow>
-
                 <CRow className="g-3 mb-3">
                   <CCol md={6}><CFormInput floating="true" label="Mobile" name="mobile" maxLength={10} value={form.mobile} onChange={handleChange} required />{renderError('mobile')}</CCol>
                   <CCol md={6}><CFormInput floating="true" label="Password" name="password" type="password" value={form.password} onChange={handleChange} required />{renderError('password')}</CCol>
                 </CRow>
-
                 <CRow className="g-3 mb-3">
                   <CCol md={6}><CFormInput floating="true" label="Date of Birth" type="date" name="dob" value={form.dob} onChange={handleChange} required />{renderError('dob')}</CCol>
                   <CCol md={6}>
@@ -287,7 +294,6 @@ export default function RegisterAgentWizard() {
                     {renderError('gender')}
                   </CCol>
                 </CRow>
-
                 <CRow className="g-3 mb-3">
                   <CCol md={4}><CFormSelect floating="true" label="Marital Status" name="marital_status" value={form.marital_status} onChange={handleChange}>
                     <option value="">Select</option>
@@ -302,17 +308,14 @@ export default function RegisterAgentWizard() {
                     <option>Telugu</option>
                   </CFormSelect>{renderError('language')}</CCol>
                 </CRow>
-
                 <CRow className="g-3 mb-3">
                   <CCol md={6}><CFormInput floating="true" label="Occupation" name="occupation" value={form.occupation} onChange={handleChange} />{renderError('occupation')}</CCol>
                   <CCol md={6}><CFormInput floating="true" label="Work Experience (Years)" name="work_experience" maxLength={2} value={form.work_experience} onChange={handleChange} />{renderError('work_experience')}</CCol>
                 </CRow>
-
                 <CRow className="g-3 mb-3">
                   <CCol md={6}><CFormInput floating="true" label="Annual Income" name="income" value={form.income} onChange={handleChange} />{renderError('income')}</CCol>
                   <CCol md={6}><CFormInput floating="true" label="Aadhaar Number" name="adhar" maxLength={12} value={form.adhar} onChange={handleChange} />{renderError('adhar')}</CCol>
                 </CRow>
-
                 <CRow className="g-3 mb-3">
                   <CCol md={6}><CFormInput floating="true" label="PAN Number" name="pan" maxLength={10} value={form.pan} onChange={handleChange} />{renderError('pan')}</CCol>
                   <CCol md={6}>
@@ -332,7 +335,6 @@ export default function RegisterAgentWizard() {
                     {designationError && <div className="text-danger small mt-1">{designationError}</div>}
                     {renderError('designation')}
                   </CCol>
-
                 </CRow>
 
                 {/* Work & Bank */}
@@ -341,30 +343,25 @@ export default function RegisterAgentWizard() {
                   <CCol md={6}><CFormInput floating="true" label="Reference Agent Code" name="reference_agent" value={form.reference_agent} onChange={handleChange} />{renderError('reference_agent')}</CCol>
                   <CCol md={6}><CFormInput floating="true" label="Agent Team" name="agent_team" value={form.agent_team} onChange={handleChange} />{renderError('agent_team')}</CCol>
                 </CRow>
-
                 <CRow className="g-3 mb-3">
                   <CCol md={6}><CFormInput floating="true" label="Work Location" name="work_location" value={form.work_location} onChange={handleChange} />{renderError('work_location')}</CCol>
                   <CCol md={6}><CFormInput floating="true" label="Bank Name" name="bank_name" value={form.bank_name} onChange={handleChange} />{renderError('bank_name')}</CCol>
                 </CRow>
-
                 <CRow className="g-3 mb-3">
                   <CCol md={6}><CFormInput floating="true" label="Branch" name="branch" value={form.branch} onChange={handleChange} />{renderError('branch')}</CCol>
                   <CCol md={6}><CFormInput floating="true" label="Account Number" name="account_number" value={form.account_number} onChange={handleChange} />{renderError('account_number')}</CCol>
                 </CRow>
-
                 <CRow className="g-3 mb-3">
                   <CCol md={6}><CFormInput floating="true" label="IFSC Code" name="ifsc_code" maxLength={11} value={form.ifsc_code} onChange={handleChange} />{renderError('ifsc_code')}</CCol>
                   <CCol md={6}><CFormInput floating="true" label="Nominee Name" name="nominiee" value={form.nominiee} onChange={handleChange} />{renderError('nominiee')}</CCol>
                 </CRow>
-
                 <CRow className="g-3 mb-3">
                   <CCol md={6}><CFormInput floating="true" label="Relation with Nominee" name="relationship" value={form.relationship} onChange={handleChange} />{renderError('relationship')}</CCol>
                   <CCol md={6}><CFormInput floating="true" label="Nominee Mobile" name="nominee_mobile" maxLength={10} value={form.nominee_mobile} onChange={handleChange} />{renderError('nominee_mobile')}</CCol>
                 </CRow>
 
-                {/* Uploads */}
+                {/* Upload Documents */}
                 <h5 className="text-primary mb-3 mt-4">Upload Documents</h5>
-
                 <CRow className="g-4 align-items-stretch text-center mb-4">
                   {/* Profile Photo */}
                   <CCol xs={12} md={6}>
@@ -375,8 +372,7 @@ export default function RegisterAgentWizard() {
                       <CFormLabel className="fw-semibold d-block mb-3 fs-5 text-primary">
                         Profile Photo
                       </CFormLabel>
-
-                      {form.photo ? (
+                      {form.photo ?
                         <>
                           <img
                             src={form.photo.previewUrl}
@@ -396,107 +392,48 @@ export default function RegisterAgentWizard() {
                               color="danger"
                               variant="outline"
                               size="sm"
-                              onClick={() => setForm(prev => ({ ...prev, photo: null }))}
+                              onClick={() => setFormField('photo', null)}
                             >
                               Remove Photo
                             </CButton>
                           </div>
                         </>
-                      ) : (
-                        <div
-                          className="d-flex flex-column align-items-center justify-content-center p-3 rounded-3 border border-dashed w-100"
-                          style={{
-                            borderStyle: 'dashed',
-                            borderColor: '#6c757d',
-                            minHeight: 200,
-                            maxWidth: 260,
-                          }}
-                        >
-                          <CButton
-                            color="primary"
-                            variant="ghost"
-                            className="fw-semibold mb-2"
-                            onClick={() => document.getElementById('photoInput').click()}
-                          >
-                            Upload Photo
-                          </CButton>
-                          <CButton
-                            color="secondary"
-                            variant="outline"
-                            size="sm"
-                            onClick={async () => {
-                              try {
-                                const stream = await navigator.mediaDevices.getUserMedia({ video: true })
-                                const video = document.createElement('video')
-                                video.srcObject = stream
-                                await video.play()
-
-                                const capture = document.createElement('canvas')
-                                const modal = document.createElement('div')
-                                modal.style.position = 'fixed'
-                                modal.style.inset = '0'
-                                modal.style.background = 'rgba(0,0,0,0.7)'
-                                modal.style.display = 'flex'
-                                modal.style.alignItems = 'center'
-                                modal.style.justifyContent = 'center'
-                                modal.style.zIndex = '2000'
-
-                                const wrapper = document.createElement('div')
-                                wrapper.style.background = '#fff'
-                                wrapper.style.padding = '20px'
-                                wrapper.style.borderRadius = '12px'
-                                wrapper.style.textAlign = 'center'
-                                wrapper.appendChild(video)
-
-                                const snapBtn = document.createElement('button')
-                                snapBtn.textContent = 'Capture'
-                                snapBtn.className = 'btn btn-primary mt-3'
-                                wrapper.appendChild(snapBtn)
-                                modal.appendChild(wrapper)
-                                document.body.appendChild(modal)
-
-                                snapBtn.onclick = () => {
-                                  capture.width = video.videoWidth
-                                  capture.height = video.videoHeight
-                                  const ctx = capture.getContext('2d')
-                                  ctx.drawImage(video, 0, 0)
-                                  stream.getTracks().forEach(track => track.stop())
-
-                                  capture.toBlob(blob => {
-                                    if (!blob) return
-                                    const file = new File([blob], 'photo.png', { type: 'image/png' })
-                                    const previewUrl = URL.createObjectURL(file)
-                                    setForm(prev => ({ ...prev, photo: { file, previewUrl } }))
-                                    document.body.removeChild(modal)
-                                  }, 'image/png')
-                                }
-                              } catch (err) {
-                                console.error('Camera Error:', err)
-                                window.alert('Camera access denied or unavailable.')
-                              }
+                        : (
+                          <div
+                            className="d-flex flex-column align-items-center justify-content-center p-3 rounded-3 border border-dashed w-100"
+                            style={{
+                              borderStyle: 'dashed',
+                              borderColor: '#6c757d',
+                              minHeight: 200,
+                              maxWidth: 260,
                             }}
                           >
-                            Take Photo
-                          </CButton>
-                          <small className="text-muted mt-2">JPG / PNG • Max 2 MB</small>
-                          <input
-                            id="photoInput"
-                            type="file"
-                            accept="image/*"
-                            hidden
-                            onChange={e => {
-                              const file = e.target.files[0]
-                              if (!file) return
-                              const previewUrl = URL.createObjectURL(file)
-                              setForm(prev => ({ ...prev, photo: { file, previewUrl } }))
-                            }}
-                          />
-                        </div>
-                      )}
+                            <CButton
+                              color="primary"
+                              variant="ghost"
+                              className="fw-semibold mb-2"
+                              onClick={() => document.getElementById('photoInput').click()}
+                            >
+                              Upload Photo
+                            </CButton>
+                            <small className="text-muted mt-2">JPG / PNG • Max 2 MB</small>
+                            <input
+                              id="photoInput"
+                              type="file"
+                              accept="image/*"
+                              hidden
+                              onChange={e => {
+                                const file = e.target.files[0]
+                                if (!file) return
+                                const previewUrl = URL.createObjectURL(file)
+                                setFormField('photo', { file, previewUrl })
+                              }}
+                            />
+                          </div>
+                        )}
                       {renderError('photo')}
                     </div>
                   </CCol>
-
                   {/* Aadhaar + PAN Upload */}
                   <CCol xs={12} md={6}>
                     <div
@@ -506,9 +443,7 @@ export default function RegisterAgentWizard() {
                       <CFormLabel className="fw-semibold d-block mb-4 fs-5 text-primary text-center">
                         Aadhaar & PAN Uploads
                       </CFormLabel>
-
                       <CRow className="g-4 text-center flex-grow-1">
-                        {/* Aadhaar */}
                         <CCol xs={12} sm={6}>
                           {form.aadhaar_file ? (
                             <div className="border border-success rounded-3 p-3 bg-light d-flex flex-column align-items-center justify-content-between h-100">
@@ -521,7 +456,7 @@ export default function RegisterAgentWizard() {
                                 variant="outline"
                                 size="sm"
                                 className="mt-3"
-                                onClick={() => setForm(prev => ({ ...prev, aadhaar_file: null }))}
+                                onClick={() => setFormField('aadhaar_file', null)}
                               >
                                 Remove Aadhaar
                               </CButton>
@@ -545,15 +480,13 @@ export default function RegisterAgentWizard() {
                                 type="file"
                                 accept="application/pdf"
                                 hidden
-                                onChange={handleFileChange}
                                 name="aadhaar_file"
+                                onChange={handleFileChange}
                               />
                             </div>
                           )}
                           {renderError('aadhaar_file')}
                         </CCol>
-
-                        {/* PAN */}
                         <CCol xs={12} sm={6}>
                           {form.pan_file ? (
                             <div className="border border-success rounded-3 p-3 bg-light d-flex flex-column align-items-center justify-content-between h-100">
@@ -566,7 +499,7 @@ export default function RegisterAgentWizard() {
                                 variant="outline"
                                 size="sm"
                                 className="mt-3"
-                                onClick={() => setForm(prev => ({ ...prev, pan_file: null }))}
+                                onClick={() => setFormField('pan_file', null)}
                               >
                                 Remove PAN
                               </CButton>
@@ -590,8 +523,8 @@ export default function RegisterAgentWizard() {
                                 type="file"
                                 accept="application/pdf"
                                 hidden
-                                onChange={handleFileChange}
                                 name="pan_file"
+                                onChange={handleFileChange}
                               />
                             </div>
                           )}
@@ -602,20 +535,15 @@ export default function RegisterAgentWizard() {
                   </CCol>
                 </CRow>
 
-
-
-
                 {/* Address */}
                 <h5 className="text-primary mb-3 mt-4">Address</h5>
                 <CRow className="g-3 mb-3">
                   <CCol md={12}><CFormTextarea floating="true" label="Address Line 1" name="address" rows={2} value={form.address} onChange={handleChange} />{renderError('address')}</CCol>
                 </CRow>
-
                 <CRow className="g-3 mb-3">
                   <CCol md={6}><CFormInput floating="true" label="City" name="city" value={form.city} onChange={handleChange} />{renderError('city')}</CCol>
                   <CCol md={6}><CFormInput floating="true" label="State" name="state" value={form.state} onChange={handleChange} />{renderError('state')}</CCol>
                 </CRow>
-
                 <CRow className="g-3 mb-3">
                   <CCol md={6}><CFormInput floating="true" label="Pincode" name="pincode" maxLength={6} value={form.pincode} onChange={handleChange} />{renderError('pincode')}</CCol>
                 </CRow>
@@ -625,7 +553,6 @@ export default function RegisterAgentWizard() {
                     {isSubmitting ? <><CSpinner size="sm" className="me-2" />Submitting...</> : 'Register Agent'}
                   </CButton>
                 </div>
-
               </CForm>
             </CCardBody>
           </CCard>
