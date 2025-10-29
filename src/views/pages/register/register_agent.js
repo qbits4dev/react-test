@@ -560,7 +560,7 @@ export default function RegisterAgentWizard() {
       </CRow>
 
       <CModal visible={showSuccessModal} onClose={handleModalClose} alignment="center" backdrop="static">
-        <CModalHeader><CModalTitle>Registration Successful!</CModalTitle></CModalHeader>
+        <CModalHeader><CModalTitle>Registration  Successful!</CModalTitle></CModalHeader>
         <CModalBody>
           <p>The agent has been registered successfully.</p>
           <p><strong>Agent UID:</strong> {registeredUID}</p>
