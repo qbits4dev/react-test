@@ -6,6 +6,7 @@ import {
 import { useNavigate } from 'react-router-dom'
 import CIcon from '@coreui/icons-react'
 import { cilArrowLeft } from '@coreui/icons'
+import CoreUIProfileCropper from './CoreUIProfileCropper'
 
 export default function RegisterAgentWizard() {
   const navigate = useNavigate()
@@ -72,7 +73,7 @@ export default function RegisterAgentWizard() {
         parsed.pan_file = null
         parsed.photo = null
         setForm(parsed)
-      } catch {}
+      } catch { }
     }
   }, [])
 
@@ -372,7 +373,8 @@ export default function RegisterAgentWizard() {
                       <CFormLabel className="fw-semibold d-block mb-3 fs-5 text-primary">
                         Profile Photo
                       </CFormLabel>
-                      {form.photo ?
+
+                      {form.photo ? (
                         <>
                           <img
                             src={form.photo.previewUrl}
@@ -392,149 +394,160 @@ export default function RegisterAgentWizard() {
                               color="danger"
                               variant="outline"
                               size="sm"
-                              onClick={() => setFormField('photo', null)}
+                              onClick={() => setForm(prev => ({ ...prev, photo: null }))}
                             >
                               Remove Photo
                             </CButton>
                           </div>
                         </>
-                        : (
-                          <div
-                            className="d-flex flex-column align-items-center justify-content-center p-3 rounded-3 border border-dashed w-100"
-                            style={{
-                              borderStyle: 'dashed',
-                              borderColor: '#6c757d',
-                              minHeight: 200,
-                              maxWidth: 260,
-                            }}
-                          >
-                            <CButton
-                              color="primary"
-                              variant="ghost"
-                              className="fw-semibold mb-2"
-                              onClick={() => document.getElementById('photoInput').click()}
-                            >
-                              Upload Photo
-                            </CButton>
-                            <small className="text-muted mt-2">JPG / PNG • Max 2 MB</small>
-                            <input
-                              id="photoInput"
-                              type="file"
-                              accept="image/*"
-                              hidden
-                              onChange={e => {
-                                const file = e.target.files[0]
-                                if (!file) return
-                                const previewUrl = URL.createObjectURL(file)
-                                setFormField('photo', { file, previewUrl })
-                              }}
+                      ) : (
+                        <div
+                          className="d-flex flex-column align-items-center justify-content-center p-3 rounded-3 border border-dashed w-100"
+                          style={{
+                            borderStyle: 'dashed',
+                            borderColor: '#6c757d',
+                            minHeight: 240,
+                            maxWidth: 280,
+                          }}
+                        >
+                          {/* Instruction message */}
+                          <small className="text-muted mb-3">
+                            Uploading or cropping may take a few seconds. Please wait...
+                          </small>
+
+                          {/* Profile Cropper */}
+                          <div className="w-100 d-flex justify-content-center">
+                            <CoreUIProfileCropper
+                              onChange={({ file, previewUrl }) =>
+                                setForm(prev => ({ ...prev, photo: { file, previewUrl } }))
+                              }
                             />
                           </div>
-                        )}
+
+                          <small className="text-muted mt-3">JPG / PNG • Max 2 MB</small>
+                        </div>
+                      )}
                       {renderError('photo')}
                     </div>
                   </CCol>
+
+
                   {/* Aadhaar + PAN Upload */}
                   <CCol xs={12} md={6}>
                     <div
-                      className="p-4 rounded-4 shadow-sm border bg-white h-100 d-flex flex-column justify-content-between"
+                      className="p-4 rounded-4 shadow-sm border bg-white h-100 d-flex flex-column align-items-center"
                       style={{ minHeight: 400 }}
                     >
-                      <CFormLabel className="fw-semibold d-block mb-4 fs-5 text-primary text-center">
+                      <CFormLabel className="fw-semibold fs-5 text-primary mb-4 text-center">
                         Aadhaar & PAN Uploads
                       </CFormLabel>
-                      <CRow className="g-4 text-center flex-grow-1">
+
+                      <CRow className="g-4 w-100 text-center">
+                        {/* Aadhaar Upload */}
                         <CCol xs={12} sm={6}>
-                          {form.aadhaar_file ? (
-                            <div className="border border-success rounded-3 p-3 bg-light d-flex flex-column align-items-center justify-content-between h-100">
-                              <div>
-                                <i className="bi bi-file-earmark-pdf text-danger fs-1"></i>
-                                <div className="fw-semibold mt-2">{form.aadhaar_file.name}</div>
-                              </div>
-                              <CButton
-                                color="danger"
-                                variant="outline"
-                                size="sm"
-                                className="mt-3"
-                                onClick={() => setFormField('aadhaar_file', null)}
-                              >
-                                Remove Aadhaar
-                              </CButton>
-                            </div>
-                          ) : (
-                            <div
-                              className="d-flex flex-column align-items-center justify-content-center p-3 rounded-3 border border-dashed h-100"
-                              style={{ borderStyle: 'dashed', borderColor: '#6c757d', minHeight: 160 }}
-                            >
-                              <CButton
-                                color="primary"
-                                variant="ghost"
-                                className="fw-semibold"
-                                onClick={() => document.getElementById('aadhaarFileInput').click()}
-                              >
-                                Upload Aadhaar (PDF)
-                              </CButton>
-                              <small className="text-muted mt-2">PDF • Max 2 MB</small>
-                              <input
-                                id="aadhaarFileInput"
-                                type="file"
-                                accept="application/pdf"
-                                hidden
-                                name="aadhaar_file"
-                                onChange={handleFileChange}
-                              />
-                            </div>
-                          )}
-                          {renderError('aadhaar_file')}
+                          <div
+                            className="p-3 rounded-4 border h-100 d-flex flex-column align-items-center justify-content-center bg-light-subtle hover-shadow"
+                            style={{
+                              borderStyle: form.aadhaar_file ? 'solid' : 'dashed',
+                              borderColor: form.aadhaar_file ? '#198754' : '#adb5bd',
+                              transition: 'all 0.3s ease-in-out',
+                              minHeight: 180,
+                            }}
+                          >
+                            {form.aadhaar_file ? (
+                              <>
+                                <i className="bi bi-file-earmark-pdf text-danger fs-1 mb-2"></i>
+                                <div className="fw-semibold text-break small mb-3 px-2">
+                                  {form.aadhaar_file.name}
+                                </div>
+                                <CButton
+                                  color="danger"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setFormField('aadhaar_file', null)}
+                                >
+                                  Remove Aadhaar
+                                </CButton>
+                              </>
+                            ) : (
+                              <>
+                                <CButton
+                                  color="primary"
+                                  variant="ghost"
+                                  className="fw-semibold"
+                                  onClick={() => document.getElementById('aadhaarFileInput').click()}
+                                >
+                                  <i className="bi bi-upload me-2"></i>Upload Aadhaar (PDF)
+                                </CButton>
+                                <small className="text-muted mt-2">PDF • Max 2 MB</small>
+                                <input
+                                  id="aadhaarFileInput"
+                                  type="file"
+                                  accept="application/pdf"
+                                  hidden
+                                  name="aadhaar_file"
+                                  onChange={handleFileChange}
+                                />
+                              </>
+                            )}
+                            {renderError('aadhaar_file')}
+                          </div>
                         </CCol>
+
+                        {/* PAN Upload */}
                         <CCol xs={12} sm={6}>
-                          {form.pan_file ? (
-                            <div className="border border-success rounded-3 p-3 bg-light d-flex flex-column align-items-center justify-content-between h-100">
-                              <div>
-                                <i className="bi bi-file-earmark-pdf text-danger fs-1"></i>
-                                <div className="fw-semibold mt-2">{form.pan_file.name}</div>
-                              </div>
-                              <CButton
-                                color="danger"
-                                variant="outline"
-                                size="sm"
-                                className="mt-3"
-                                onClick={() => setFormField('pan_file', null)}
-                              >
-                                Remove PAN
-                              </CButton>
-                            </div>
-                          ) : (
-                            <div
-                              className="d-flex flex-column align-items-center justify-content-center p-3 rounded-3 border border-dashed h-100"
-                              style={{ borderStyle: 'dashed', borderColor: '#6c757d', minHeight: 160 }}
-                            >
-                              <CButton
-                                color="primary"
-                                variant="ghost"
-                                className="fw-semibold"
-                                onClick={() => document.getElementById('panFileInput').click()}
-                              >
-                                Upload PAN (PDF)
-                              </CButton>
-                              <small className="text-muted mt-2">PDF • Max 2 MB</small>
-                              <input
-                                id="panFileInput"
-                                type="file"
-                                accept="application/pdf"
-                                hidden
-                                name="pan_file"
-                                onChange={handleFileChange}
-                              />
-                            </div>
-                          )}
-                          {renderError('pan_file')}
+                          <div
+                            className="p-3 rounded-4 border h-100 d-flex flex-column align-items-center justify-content-center bg-light-subtle hover-shadow"
+                            style={{
+                              borderStyle: form.pan_file ? 'solid' : 'dashed',
+                              borderColor: form.pan_file ? '#198754' : '#adb5bd',
+                              transition: 'all 0.3s ease-in-out',
+                              minHeight: 180,
+                            }}
+                          >
+                            {form.pan_file ? (
+                              <>
+                                <i className="bi bi-file-earmark-pdf text-danger fs-1 mb-2"></i>
+                                <div className="fw-semibold text-break small mb-3 px-2">
+                                  {form.pan_file.name}
+                                </div>
+                                <CButton
+                                  color="danger"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setFormField('pan_file', null)}
+                                >
+                                  Remove PAN
+                                </CButton>
+                              </>
+                            ) : (
+                              <>
+                                <CButton
+                                  color="primary"
+                                  variant="ghost"
+                                  className="fw-semibold"
+                                  onClick={() => document.getElementById('panFileInput').click()}
+                                >
+                                  <i className="bi bi-upload me-2"></i>Upload PAN (PDF)
+                                </CButton>
+                                <small className="text-muted mt-2">PDF • Max 2 MB</small>
+                                <input
+                                  id="panFileInput"
+                                  type="file"
+                                  accept="application/pdf"
+                                  hidden
+                                  name="pan_file"
+                                  onChange={handleFileChange}
+                                />
+                              </>
+                            )}
+                            {renderError('pan_file')}
+                          </div>
                         </CCol>
                       </CRow>
                     </div>
                   </CCol>
                 </CRow>
-
                 {/* Address */}
                 <h5 className="text-primary mb-3 mt-4">Address</h5>
                 <CRow className="g-3 mb-3">
@@ -556,8 +569,8 @@ export default function RegisterAgentWizard() {
               </CForm>
             </CCardBody>
           </CCard>
-        </CCol>
-      </CRow>
+        </CCol >
+      </CRow >
 
       <CModal visible={showSuccessModal} onClose={handleModalClose} alignment="center" backdrop="static">
         <CModalHeader><CModalTitle>Registration  Successful!</CModalTitle></CModalHeader>
@@ -567,6 +580,6 @@ export default function RegisterAgentWizard() {
         </CModalBody>
         <CModalFooter><CButton color="primary" onClick={handleModalClose}>Go to Dashboard</CButton></CModalFooter>
       </CModal>
-    </CContainer>
+    </CContainer >
   )
 }
