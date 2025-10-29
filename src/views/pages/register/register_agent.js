@@ -257,13 +257,43 @@ export default function RegisterAgentWizard() {
         <CCol xs={12} lg={10} xl={8}>
           <CCard className="mb-4" style={{ borderRadius: '16px', border: 'none' }}>
             <CCardBody className="p-4 p-md-5">
-              <div className="d-flex justify-content-between align-items-center mb-4">
-                <CButton color="primary" variant="ghost" onClick={() => navigate(-1)}>
-                  <CIcon icon={cilArrowLeft} className="me-2" />
+              <div className="d-flex align-items-center justify-content-between flex-wrap mb-4">
+                {/* Back Button */}
+                <CButton
+                  color="primary"
+                  variant="ghost"
+                  className="d-flex align-items-center justify-content-center"
+                  style={{
+                    width: 42,
+                    height: 42,
+                    borderRadius: '50%',
+                  }}
+                  onClick={() => navigate(-1)}
+                >
+                  <CIcon icon={cilArrowLeft} size="lg" />
                 </CButton>
-                <h2 className="m-0">Agent Registration</h2>
-                <div style={{ width: 80 }} />
+
+                {/* Title */}
+                <h2
+                  className="fw-bold text-primary text-center flex-grow-1 mb-0"
+                  style={{
+                    fontSize: 'clamp(1.25rem, 2vw + 0.25rem, 2rem)',
+                    letterSpacing: '0.5px',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}
+                >
+                  Agent Registration
+                </h2>
+
+                {/* Spacer to balance layout */}
+                <div
+                  className="d-none d-sm-block"
+                  style={{ width: 42 }}
+                />
               </div>
+
 
               {alert.visible &&
                 <CAlert color={alert.color} dismissible onClose={() => setAlert({ ...alert, visible: false })}>{alert.message}</CAlert>
