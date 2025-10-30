@@ -142,28 +142,35 @@ const GetAgents = () => {
     };
   
     const fetchAgentTeam = async () => {
+
       try {
-        const res = await fetch(`${globalThis.apiBaseUrl}/teams/${userId}`);
-        const data = await res.json();
-        console.log('Agent Team Data:', data);
-        if (Array.isArray(data) && data.length > 0) {
-          const formattedAgents = data.map((agent, index) => ({
-            id: index, // Prefer actual agent id if available
-            agentId: agent.u_id, // Use agent's actual id if available
-            firstName: agent.first_name,
-            lastName: agent.last_name,
-            fatherName: 'no value',
-            maritalStatus: 'no value',
+        const res = await fetch(`${globalThis.apiBaseUrl}/teams/tree/${userId}`);
+        const rootData = await res.json(); // <-- This contains the full hierarchical JSON
+        
+        console.log('Root Data from API:', rootData); // DEBUG: See what you received
+    
+        // Helper recursive function to flatten the tree
+        const flattenAgents = (node, agentsArr = [], parentId = null) => {
+          if (!node) return agentsArr;
+          
+          // Add current node to the array
+          agentsArr.push({
+            id: Math.random().toString(36).slice(2),
+            agentId: node.agent_team,
+            firstName: node.first_name,
+            lastName: node.last_name,
+            fatherName: '',
+            maritalStatus: '',
             dob: '',
             gender: '',
             email: '',
-            phone: agent.mobile || '',
+            phone: node.mobile || '',
             occupation: '',
             education: '',
-            designation: agent.designation,
-            referenceAgent: agent.reference_agent || '',
-            agentTeam: agent.agent_team,
-            workLocation: agent.work_location || '',
+            designation: node.designation,
+            referenceAgent: node.reference_agent || parentId,
+            agentTeam: node.agent_team,
+            workLocation: node.work_location || '',
             bankName: '',
             branch: '',
             accountNumber: '',
@@ -174,15 +181,70 @@ const GetAgents = () => {
             permanentAddress: '',
             presentAddress: '',
             avatar: null,
-          }));
-          console.log('Formatted Agents:', formattedAgents);
-          if (isMounted) setAgents(formattedAgents);
-        } else {
-          if (isMounted) setAgents([]);
-        }
+          });
+    
+          // Recursively process children
+          if (Array.isArray(node.children) && node.children.length > 0) {
+            node.children.forEach(child => flattenAgents(child, agentsArr, node.agent_team));
+          }
+          
+          return agentsArr;
+        };
+    
+        // START HERE: Pass rootData to the flattening function
+        const formattedAgents = flattenAgents(rootData); // <-- rootData goes in here
+        
+        console.log('Flattened Agents:', formattedAgents); // DEBUG: See flattened result
+        
+        // UPDATE STATE: This triggers the table to re-render with the new data
+        if (isMounted) setAgents(formattedAgents); // <-- This updates your UI
+        
       } catch (error) {
-        console.error('Error fetching agent team:', error);
+        console.error('Error fetching agent tree:', error);
+        if (isMounted) setAgents([]);
       }
+
+      // try {
+      //   const res = await fetch(`${globalThis.apiBaseUrl}/teams/${userId}`);
+      //   const data = await res.json();
+      //   console.log('Agent Team Data:', data);
+      //   if (Array.isArray(data) && data.length > 0) {
+      //     const formattedAgents = data.map((agent, index) => ({
+      //       id: index, // Prefer actual agent id if available
+      //       agentId: agent.u_id, // Use agent's actual id if available
+      //       firstName: agent.first_name,
+      //       lastName: agent.last_name,
+      //       fatherName: 'no value',
+      //       maritalStatus: 'no value',
+      //       dob: '',
+      //       gender: '',
+      //       email: '',
+      //       phone: agent.mobile || '',
+      //       occupation: '',
+      //       education: '',
+      //       designation: agent.designation,
+      //       referenceAgent: agent.reference_agent || '',
+      //       agentTeam: agent.agent_team,
+      //       workLocation: agent.work_location || '',
+      //       bankName: '',
+      //       branch: '',
+      //       accountNumber: '',
+      //       ifscCode: '',
+      //       nomineeName: '',
+      //       nomineeRelation: '',
+      //       nomineeMobile: '',
+      //       permanentAddress: '',
+      //       presentAddress: '',
+      //       avatar: null,
+      //     }));
+      //     console.log('Formatted Agents:', formattedAgents);
+      //     if (isMounted) setAgents(formattedAgents);
+      //   } else {
+      //     if (isMounted) setAgents([]);
+      //   }
+      // } catch (error) {
+      //   console.error('Error fetching agent team:', error);
+      // }
     };
   
     if (userRole === 'admin') {
@@ -202,7 +264,8 @@ const GetAgents = () => {
 
   // Filtering, sorting logic
   const processedAgents = useMemo(() => {
-    let filtered = agents.filter((agent) => agent.gender === 'Male')
+    // let filtered = agents.filter((agent) => agent.gender === 'Male')
+    let filtered = [...agents];
 
     if (searchTerm) {
       filtered = filtered.filter(
