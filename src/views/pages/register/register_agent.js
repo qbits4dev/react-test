@@ -1,533 +1,615 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'
 import {
-  CCard, CCardBody, CCol, CContainer, CRow, CForm, CFormInput, CFormSelect, CSpinner, CFormLabel,
-  CButton, CDropdown, CDropdownToggle, CDropdownMenu, CDropdownItem, CAlert, CInputGroup, CFormTextarea,
-  CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter
-} from '@coreui/react';
-import { useNavigate } from 'react-router-dom';
-import CIcon from '@coreui/icons-react';
-import { cilArrowLeft } from '@coreui/icons';
-import CoreUIProfileCropper from './CoreUIProfileCropper';
+  CCard, CCardBody, CCol, CContainer, CRow, CForm, CFormInput, CFormSelect,
+  CSpinner, CFormLabel, CButton, CAlert, CFormTextarea, CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter
+} from '@coreui/react'
+import { useNavigate } from 'react-router-dom'
+import CIcon from '@coreui/icons-react'
+import { cilArrowLeft } from '@coreui/icons'
+import CoreUIProfileCropper from './CoreUIProfileCropper'
 
 export default function RegisterAgentWizard() {
-  const navigate = useNavigate();
-  const [step, setStep] = useState(1);
+  const navigate = useNavigate()
 
-  const [designations, setDesignations] = useState([]);
-  const [designationName, setDesignationName] = useState('Select Designation');
-  const [loadingDesignations, setLoadingDesignations] = useState(true);
-  const [designationError, setDesignationError] = useState('');
-
+  // --- form state with all fields ---
   const [form, setForm] = useState({
-    firstName: '', lastName: '', fatherName: '', age: '', dob: '', email: '', phone: '',
-    occupation: '', workExperience: '', language: '', maritalStatus: '', education: '',
-    gender: '', designation: '', nomineeName: '', nomineeRelation: '', nomineeMobile: '',
-    bankName: '', branch: '', accountNumber: '', ifscCode: '',
-    presentAddress: '',
-    password: '', income: '', adhar: '', pan: '', referenceAgent: '', agentTeam: '', workLocation: '',
-    photo: null, aadhaarFile: null, panFile: null
-  });
+    first_name: '',
+    last_name: '',
+    father_name: '',
+    dob: '',
+    gender: '',
+    email: '',
+    mobile: '',
+    password: '',
+    marital_status: '',
+    education: '',
+    language: '',
+    occupation: '',
+    work_experience: '',
+    income: '',
+    adhar: '',
+    pan: '',
+    designation: '',
+    reference_agent: '',
+    agent_team: '',
+    work_location: '',
+    bank_name: '',
+    branch: '',
+    account_number: '',
+    ifsc_code: '',
+    address: '',
+    nominiee: '',
+    relationship: '',
+    nominee_mobile: '',
+    aadhaar_file: null,
+    pan_file: null,
+    photo: null,
+    u_id: '',
+    address_line1: '',
+    address_line2: '',
+    city: '',
+    state: '',
+    pincode: ''
+  })
 
-  const [errors, setErrors] = useState({});
-  const [alert, setAlert] = useState({ visible: false, message: '', color: 'success' });
-  
-  // New state for submission and success modal
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [registeredUID, setRegisteredUID] = useState('');
+  const [designations, setDesignations] = useState([])
+  const [designationError, setDesignationError] = useState('')
+  const [loadingDesignations, setLoadingDesignations] = useState(true)
 
+  const [errors, setErrors] = useState({})
+  const [alert, setAlert] = useState({ visible: false, message: '', color: 'success' })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [registeredUID, setRegisteredUID] = useState('')
 
-  // Fetch designations on mount
+  // Restore form state from localStorage when page loads
+  useEffect(() => {
+    const saved = localStorage.getItem('registerAgentForm')
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        // Files cannot be persisted, always null on reload
+        parsed.aadhaar_file = null
+        parsed.pan_file = null
+        parsed.photo = null
+        setForm(parsed)
+      } catch { }
+    }
+  }, [])
+
   useEffect(() => {
     fetch(`${globalThis.apiBaseUrl}/register/?key=designation`, { headers: { accept: 'application/json' } })
       .then(res => res.json())
       .then(data => {
-        if (data.status === 'ok' && Array.isArray(data.designation)) setDesignations(data.designation);
-        else setDesignationError('No designations found');
+        if (data && data.status === 'ok' && Array.isArray(data.designation)) setDesignations(data.designation)
+        else setDesignationError('No designations found')
       })
       .catch(() => setDesignationError('Failed to fetch designations'))
-      .finally(() => setLoadingDesignations(false));
-  }, []);
+      .finally(() => setLoadingDesignations(false))
+  }, [])
 
+  // Helper: updates field and persists to localStorage
+  const setFormField = (name, value) => {
+    setForm(prev => {
+      const updated = { ...prev, [name]: value }
+      // Only primitive values, files are not persisted
+      const serializable = { ...updated, aadhaar_file: null, pan_file: null, photo: null }
+      localStorage.setItem('registerAgentForm', JSON.stringify(serializable))
+      return updated
+    })
+    setErrors(prev => ({ ...prev, [name]: '' }))
+  }
+
+  // Handle file input (do not persist file/blobs)
   const handleFileChange = (e) => {
-    const { name, files } = e.target;
-    if (files.length === 0) return;
-    const file = files[0];
+    const { name, files } = e.target
+    if (!files || files.length === 0) return
+    const file = files[0]
     if (file.size > 2 * 1024 * 1024) {
-      setErrors(prev => ({ ...prev, [name]: 'File size must be less than 2MB' }));
-      setForm(prev => ({ ...prev, [name]: null }));
+      setErrors(prev => ({ ...prev, [name]: 'File size must be less than 2MB' }))
+      setForm(prev => ({ ...prev, [name]: null }))
     } else {
-      setForm(prev => ({ ...prev, [name]: file }));
-      setErrors(prev => ({ ...prev, [name]: '' }));
+      setFormField(name, file)
     }
-  };
+  }
 
+  // Universal change handler (persists on every change)
   const handleChange = (e) => {
-    let { name, value } = e.target;
+    const name = e.target.name
+    let value = e.target.value
 
-    if (['aadhaarFile', 'panFile'].includes(name)) {
-      handleFileChange(e);
-      return;
-    }
+    // Input sanitation
+    if (name === 'pan') value = value.toUpperCase().replace(/[^A-Z0-9]/g, '')
+    else if (['first_name', 'last_name', 'father_name', 'nominiee', 'relationship', 'language', 'education', 'occupation', 'work_location', 'branch', 'bank_name', 'address_line1', 'address_line2', 'city', 'state'].includes(name))
+      value = value.replace(/[^A-Za-z0-9 ,\-\/]/g, '')
+    else if (['mobile', 'work_experience', 'account_number', 'income', 'adhar', 'nominee_mobile', 'pincode'].includes(name))
+      value = value.replace(/[^0-9]/g, '')
+    else if (name === 'ifsc_code') value = value.toUpperCase().replace(/[^A-Z0-9]/g, '')
 
-    if (name === 'pan') value = value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-    else if (['firstName', 'lastName', 'fatherName', 'nomineeName', 'nomineeRelation', 'language', 'education', 'occupation', 'workLocation'].includes(name)) value = value.replace(/[^A-Za-z ]/g, '');
-    else if (['phone', 'workExperience', 'accountNumber', 'income', 'adhar', 'nomineeMobile'].includes(name)) value = value.replace(/[^0-9]/g, '');
-    else if (name === 'ifscCode') value = value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-    else if (['presentAddress', 'bankName', 'branch'].includes(name)) value = value.replace(/[^A-Za-z0-9 ,/-]/g, '');
+    setFormField(name, value)
 
-    setForm(prev => ({ ...prev, [name]: value }));
-    setErrors(prev => ({ ...prev, [name]: '' }));
-
-    // Auto-calculate age
     if (name === 'dob' && value) {
-      const birthDate = new Date(value);
-      const today = new Date();
-      let age = today.getFullYear() - birthDate.getFullYear();
-      const m = today.getMonth() - birthDate.getMonth();
-      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
-      setForm(prev => ({ ...prev, age: age.toString() }));
-
-      if (age < 18) setErrors(prev => ({ ...prev, dob: 'Age must be at least 18' }));
-      else setErrors(prev => ({ ...prev, dob: '' }));
+      const birthDate = new Date(value)
+      const today = new Date()
+      let age = today.getFullYear() - birthDate.getFullYear()
+      const m = today.getMonth() - birthDate.getMonth()
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--
+      if (age < 18) setErrors(prev => ({ ...prev, dob: 'Age must be at least 18' }))
     }
-  };
+  }
 
-  const handleDesignationSelect = (designation) => {
-    setDesignationName(designation.name);
-    setForm(prev => ({ ...prev, designation: designation.name }));
-    setErrors(prev => ({ ...prev, designation: '' }));
-  };
-
-  const renderError = (field) => errors[field] && <small className="text-danger d-block mt-1">{errors[field]}</small>;
+  const renderError = (field) => errors[field] && (
+    <small className="text-danger d-block mt-1">{errors[field]}</small>
+  )
 
   const validateField = (name, value) => {
     switch (name) {
-      case 'firstName': case 'lastName': case 'fatherName': case 'nomineeName': case 'nomineeRelation':
-      case 'referenceAgent': case 'agentTeam': case 'branch': case 'bankName': case 'workLocation':
-        if (!value) return 'This field is required';
-        break;
-      case 'phone': case 'nomineeMobile':
-        if (!/^[0-9]{10}$/.test(value)) return 'Enter a valid 10-digit phone number';
-        break;
+      case 'first_name': case 'last_name': case 'father_name': case 'nominiee': case 'relationship':
+      case 'reference_agent': case 'agent_team': case 'branch': case 'bank_name': case 'work_location':
+      case 'address': case 'address_line1': case 'city': case 'state': case 'pincode':
+        if (!value) return 'This field is required'
+        break
+      case 'mobile': case 'nominee_mobile':
+        if (!/^[0-9]{10}$/.test(value)) return 'Enter a valid 10-digit phone number'
+        break
       case 'email':
-        if (!value || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Invalid email format';
-        break;
-      case 'workExperience':
-        if (!/^[0-9]{1,2}$/.test(value)) return 'Enter valid years of experience';
-        break;
-      case 'accountNumber':
-        if (!/^[0-9]{9,18}$/.test(value)) return 'Enter a valid account number (9-18 digits)';
-        break;
-      case 'ifscCode':
-        if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(value)) return 'Invalid IFSC code format';
-        break;
+        if (!value || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Invalid email'
+        break
+      case 'work_experience':
+        if (value && !/^[0-9]{1,2}$/.test(value)) return 'Enter valid experience'
+        break
+      case 'account_number':
+        if (value && !/^[0-9]{9,18}$/.test(value)) return 'Invalid account number'
+        break
+      case 'ifsc_code':
+        if (value && !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(value)) return 'Invalid IFSC code'
+        break
       case 'adhar':
-        if (!/^[0-9]{12}$/.test(value)) return 'Aadhaar must be 12 digits';
-        break;
+        if (!/^[0-9]{12}$/.test(value)) return 'Aadhaar must be 12 digits'
+        break
       case 'pan':
-        if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(value)) return 'Invalid PAN format';
-        break;
-      case 'income':
-        if (!/^[0-9]+$/.test(value)) return 'Income must be numeric';
-        break;
+        if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(value)) return 'Invalid PAN format'
+        break
       case 'password':
-        if (!value) return 'Password is required';
-        if (value.length < 6) return 'Password must be at least 6 characters';
-        break;
+        if (!value) return 'Password required'
+        if (value.length < 6) return 'Password must be ≥ 6 chars'
+        break
       case 'dob':
-        if (!value) return 'This field is required';
-        const birthDate = new Date(value);
-        const today = new Date();
-        let age = today.getFullYear() - birthDate.getFullYear();
-        const m = today.getMonth() - birthDate.getMonth();
-        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
-        if (age < 18) return 'Age must be at least 18';
-        break;
-      case 'photo': case 'aadhaarFile': case 'panFile':
-        if (!value) return 'A file is required';
-        break;
-      case 'presentAddress':
-        if (!value) return 'This field is required';
-        break;
-      default: return '';
+        if (!value) return 'Required'
+        const birthDate = new Date(value)
+        const today = new Date()
+        let age = today.getFullYear() - birthDate.getFullYear()
+        if (age < 18) return 'Age must be ≥ 18'
+        break
+      case 'photo': case 'aadhaar_file': case 'pan_file':
+        if (!value) return 'File required'
+        break
+      default:
+        return ''
     }
-    return '';
-  };
-
-  const validateStep = () => {
-    let newErrors = {};
-    const fieldsToValidate = {
-      1: ['firstName', 'lastName', 'fatherName', 'maritalStatus', 'dob', 'gender', 'email', 'phone', 'occupation', 'workExperience', 'language', 'education', 'password', 'income', 'adhar', 'pan'],
-      2: ['designation', 'referenceAgent', 'agentTeam', 'workLocation', 'bankName', 'branch', 'accountNumber', 'ifscCode', 'nomineeName', 'nomineeRelation', 'nomineeMobile', 'photo', 'aadhaarFile', 'panFile'],
-      3: ['presentAddress']
-    };
-    fieldsToValidate[step]?.forEach(f => {
-      const err = validateField(f, form[f]);
-      if (err) newErrors[f] = err;
-    });
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const nextStep = () => { if (validateStep()) setStep(prev => prev + 1); };
-  const prevStep = () => setStep(prev => prev - 1);
-
-  const handleSubmit = async () => {
-    if (!validateStep()) return;
-    
-    setIsSubmitting(true);
-    setAlert({ visible: false, message: '' });
-
-    const formData = new FormData();
-
-    // Required fields
-    formData.append('first_name', form.firstName);
-    formData.append('last_name', form.lastName);
-    formData.append('email', form.email.toLowerCase());
-    formData.append('password', form.password);
-
-    // Optional fields
-    Object.entries(form).forEach(([key, value]) => {
-      if (value && !['photo', 'aadhaarFile', 'panFile'].includes(key)) formData.append(key, value);
-    });
-
-    // Files
-    if (form.photo?.file) formData.append('photo', form.photo.file);
-    if (form.aadhaarFile) formData.append('aadhaar_file', form.aadhaarFile);
-    if (form.panFile) formData.append('pan_file', form.panFile);
-
-    // Role
-    formData.append('role', 'agent');
-
-    try {
-      const response = await fetch(`${globalThis.apiBaseUrl}/auth/register`, {
-        method: 'POST',
-        body: formData
-      });
-
-      const result = await response.json();
-      if (response.ok) {
-        setRegisteredUID(result.u_id || result.user_id || "N/A");
-        setShowSuccessModal(true);
-      } else {
-        setAlert({ visible: true, message: result.message || 'Registration failed.', color: 'danger' });
-      }
-    } catch (error) {
-      setAlert({ visible: true, message: 'Network error.', color: 'danger' });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleModalClose = () => {
-    setShowSuccessModal(false);
-    navigate('/AdminDashboard');
+    return ''
   }
 
+  const validateAll = () => {
+    const requiredFields = [
+      'first_name', 'last_name', 'father_name', 'dob', 'gender', 'email', 'mobile', 'password', 'marital_status', 'education', 'language', 'occupation', 'work_experience', 'income', 'adhar', 'pan',
+      'designation', 'reference_agent', 'agent_team', 'work_location', 'bank_name', 'branch', 'account_number', 'ifsc_code', 'nominiee', 'relationship', 'nominee_mobile',
+      'aadhaar_file', 'pan_file', 'photo', 'address', 'city', 'state', 'pincode'
+    ]
+    const newErrors = {}
+    requiredFields.forEach(f => {
+      const err = validateField(f, form[f])
+      if (err) newErrors[f] = err
+    })
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  const handleSubmit = async (e) => {
+    e && e.preventDefault()
+    if (!validateAll()) {
+      setAlert({ visible: true, message: 'Please fix the validation errors.', color: 'danger' })
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
+
+    setIsSubmitting(true)
+    setAlert({ visible: false, message: '' })
+
+    try {
+      const formData = new FormData()
+      Object.entries(form).forEach(([key, val]) => {
+        if (val !== null && val !== undefined && val !== '') {
+          if (key === 'photo' && val?.file) formData.append('photo', val.file)
+          else if (['aadhaar_file', 'pan_file'].includes(key)) formData.append(key, val)
+          else formData.append(key, val)
+        }
+      })
+      formData.append('role', 'agent')
+
+      const res = await fetch(`${globalThis.apiBaseUrl}/auth/register`, { method: 'POST', body: formData })
+      const data = await res.json()
+      if (res.ok) {
+        setRegisteredUID(data.u_id || data.user_id || 'N/A')
+        setShowSuccessModal(true)
+        localStorage.removeItem('registerAgentForm')
+      } else {
+        setAlert({ visible: true, message: data.message || 'Registration failed.', color: 'danger' })
+      }
+    } catch (err) {
+      console.error(err)
+      setAlert({ visible: true, message: 'Network error.', color: 'danger' })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleModalClose = () => {
+    localStorage.removeItem('registerAgentForm')
+    setShowSuccessModal(false)
+    navigate('/AdminDashboard')
+  }
+
+  // --- UI ---
   return (
-    <div className="bg-light min-vh-100 d-flex flex-row align-items-center py-5">
-      <CContainer>
-        <CRow className="justify-content-center">
-          <CCol md={10} lg={8}>
-            <CCard className="shadow-sm rounded-4">
-              <CCardBody className="p-5">
-                {alert.visible && (
-                  <CAlert color={alert.color} dismissible onClose={() => setAlert(prev => ({ ...prev, visible: false }))}>
-                    {alert.message}
-                  </CAlert>
-                )}
+    <CContainer className="py-5">
+      <CRow className="justify-content-center">
+        <CCol xs={12} lg={10} xl={8}>
+          <CCard className="mb-4" style={{ borderRadius: '16px', border: 'none' }}>
+            <CCardBody className="p-4 p-md-5">
+              <div className="d-flex align-items-center justify-content-between flex-wrap mb-4">
+                {/* Back Button */}
+                <CButton
+                  color="primary"
+                  variant="ghost"
+                  className="d-flex align-items-center justify-content-center"
+                  style={{
+                    width: 42,
+                    height: 42,
+                    borderRadius: '50%',
+                  }}
+                  onClick={() => navigate(-1)}
+                >
+                  <CIcon icon={cilArrowLeft} size="lg" />
+                </CButton>
 
-                <div className="d-flex flex-column flex-sm-row align-items-center justify-content-between mb-3">
-                  <CButton
-                    color="primary"
-                    variant="ghost"
-                    onClick={() => navigate(-1)}
-                    className="p-0 mb-2 mb-sm-0"
-                  >
-                    <CIcon icon={cilArrowLeft} className="me-2 fs-5 fs-sm-4" />
-                  </CButton>
-                  <h1 className="text-center text-primary fw-bold mb-0 flex-grow-1 fs-4 fs-sm-3 fs-md-2">
-                    Agent Registration
-                  </h1>
-                </div>
+                {/* Title */}
+                <h2
+                  className="fw-bold text-primary text-center flex-grow-1 mb-0"
+                  style={{
+                    fontSize: 'clamp(1.25rem, 2vw + 0.25rem, 2rem)',
+                    letterSpacing: '0.5px',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}
+                >
+                  Agent Registration
+                </h2>
 
-                <CForm noValidate>
-                  {/* Step 1 */}
-                  {step === 1 && (
-                    <CCard className="mb-4 p-4 bg-white shadow-sm border-0">
-                      <h5 className="text-info mb-4">Personal Details</h5>
-                      <CRow>
-                        <CCol xs={12} md={6} className="mb-3">
-                          <CFormInput name="firstName" placeholder="First Name" value={form.firstName} onChange={handleChange} invalid={!!errors.firstName} />
-                          {renderError('firstName')}
-                        </CCol>
-                        <CCol xs={12} md={6} className="mb-3">
-                          <CFormInput name="lastName" placeholder="Last Name" value={form.lastName} onChange={handleChange} invalid={!!errors.lastName} />
-                          {renderError('lastName')}
-                        </CCol>
-                      </CRow>
-                      <div className="mb-3">
-                        <CFormInput name="fatherName" placeholder="Father's Name" value={form.fatherName} onChange={handleChange} invalid={!!errors.fatherName} />
-                        {renderError('fatherName')}
-                      </div>
-                      <div className="mb-3">
-                        <CFormSelect name="maritalStatus" value={form.maritalStatus} onChange={handleChange} invalid={!!errors.maritalStatus}>
-                          <option value="">Select Marital Status</option>
-                          <option value="Single">Single</option>
-                          <option value="Married">Married</option>
-                        </CFormSelect>
-                        {renderError('maritalStatus')}
-                      </div>
-                      <CRow>
-                        <CCol xs={12} md={6} className="mb-3">
-                          <CFormLabel>Date of Birth</CFormLabel>
-                          <CFormInput type="date" name="dob" value={form.dob} onChange={handleChange} invalid={!!errors.dob} />
-                          {renderError('dob')}
-                        </CCol>
-                        <CCol xs={12} md={6} className="mb-3">
-                          <CFormLabel>Age</CFormLabel>
-                          <CFormInput name="age" placeholder="Age" value={form.age} readOnly />
-                        </CCol>
-                      </CRow>
-                      <div className="mb-3">
-                        <CFormSelect name="gender" value={form.gender} onChange={handleChange} invalid={!!errors.gender}>
-                          <option value="">Select Gender</option>
-                          <option value="Male">Male</option>
-                          <option value="Female">Female</option>
-                        </CFormSelect>
-                        {renderError('gender')}
-                      </div>
-                      <CRow>
-                        <CCol xs={12} md={6} className="mb-3">
-                          <CFormInput name="email" placeholder="Email" autoComplete="email" value={form.email} onChange={handleChange} invalid={!!errors.email} />
-                          {renderError('email')}
-                        </CCol>
-                        <CCol xs={12} md={6} className="mb-3">
-                          <CFormInput name="phone" placeholder="Phone Number" maxLength={10} value={form.phone} onChange={handleChange} invalid={!!errors.phone} />
-                          {renderError('phone')}
-                        </CCol>
-                      </CRow>
-                      <CRow>
-                        <CCol xs={12} md={6} className="mb-3">
-                          <CFormInput name="occupation" placeholder="Occupation" value={form.occupation} onChange={handleChange} invalid={!!errors.occupation} />
-                          {renderError('occupation')}
-                        </CCol>
-                        <CCol xs={12} md={6} className="mb-3">
-                          <CFormInput name="workExperience" placeholder="Work Experience (Years)" maxLength={2} value={form.workExperience} onChange={handleChange} invalid={!!errors.workExperience} />
-                          {renderError('workExperience')}
-                        </CCol>
-                      </CRow>
-                      <CRow>
-                        <CCol xs={12} md={6} className="mb-3">
-                          <CFormSelect name="language" value={form.language} onChange={handleChange} invalid={!!errors.language}>
-                            <option value="">Select Language</option>
-                            <option value="English">English</option>
-                            <option value="Hindi">Hindi</option>
-                            <option value="Telugu">Telugu</option>
-                          </CFormSelect>
-                          {renderError('language')}
-                        </CCol>
-                        <CCol xs={12} md={6} className="mb-3">
-                          <CFormInput name="education" placeholder="Education" value={form.education} onChange={handleChange} invalid={!!errors.education} />
-                          {renderError('education')}
-                        </CCol>
-                      </CRow>
-                      <div className="mb-3">
-                        <CFormInput name="password" type="password" placeholder="Password" autoComplete="new-password" value={form.password} onChange={handleChange} invalid={!!errors.password} />
-                        {renderError('password')}
-                      </div>
-                      <div className="mb-3">
-                        <CFormInput name="income" placeholder="Annual Income" value={form.income} onChange={handleChange} invalid={!!errors.income} />
-                        {renderError('income')}
-                      </div>
-                      <div className="mb-3">
-                        <CFormInput name="adhar" placeholder="Aadhaar Number" maxLength={12} value={form.adhar} onChange={handleChange} invalid={!!errors.adhar} />
-                        {renderError('adhar')}
-                      </div>
-                      <div className="mb-3">
-                        <CFormInput name="pan" placeholder="PAN Number" maxLength={10} value={form.pan} onChange={handleChange} invalid={!!errors.pan} />
-                        {renderError('pan')}
-                      </div>
+                {/* Spacer to balance layout */}
+                <div
+                  className="d-none d-sm-block"
+                  style={{ width: 42 }}
+                />
+              </div>
 
-                      <div className="d-flex justify-content-end mt-3">
-                        <CButton color="primary" onClick={nextStep}>Next</CButton>
-                      </div>
-                    </CCard>
-                  )}
 
-                  {step === 2 && (
-                    <CCard className='mb-4 p-4 bg-white shadow-sm border-0'>
-                      <h5 className='text-info mb-4'>Designation, Bank & Nominee Details</h5>
+              {alert.visible &&
+                <CAlert color={alert.color} dismissible onClose={() => setAlert({ ...alert, visible: false })}>{alert.message}</CAlert>
+              }
 
-                      {/* Designation Dropdown */}
-                      <div className="mb-3">
-                        <CDropdown className='w-100'>
-                          <CDropdownToggle color='light' className='text-start w-100 d-flex justify-content-between align-items-center'>
-                            {loadingDesignations ? <span><CSpinner size="sm" className="me-2" />Loading...</span> : designationName}
-                          </CDropdownToggle>
-                          <CDropdownMenu className="w-100">
-                            {loadingDesignations && <CDropdownItem disabled>Loading...</CDropdownItem>}
-                            {!loadingDesignations && designationError && <CDropdownItem disabled>{designationError}</CDropdownItem>}
-                            {!loadingDesignations && !designationError && designations.map((d, idx) => (
-                              <CDropdownItem key={idx} onClick={() => handleDesignationSelect(d)}>{d.name}</CDropdownItem>
-                            ))}
-                          </CDropdownMenu>
-                        </CDropdown>
-                        {renderError('designation')}
-                      </div>
+              <CForm onSubmit={handleSubmit}>
+                {/* Personal Details */}
+                <h5 className="text-primary mb-3">Personal Details</h5>
+                <CRow className="g-3 mb-3">
+                  <CCol md={6}><CFormInput floating="true" label="First Name" name="first_name" value={form.first_name} onChange={handleChange} required />{renderError('first_name')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="Last Name" name="last_name" value={form.last_name} onChange={handleChange} required />{renderError('last_name')}</CCol>
+                </CRow>
+                <CRow className="g-3 mb-3">
+                  <CCol md={6}><CFormInput floating="true" label="Father's Name" name="father_name" value={form.father_name} onChange={handleChange} required />{renderError('father_name')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="Email" name="email" type="email" value={form.email} onChange={handleChange} required />{renderError('email')}</CCol>
+                </CRow>
+                <CRow className="g-3 mb-3">
+                  <CCol md={6}><CFormInput floating="true" label="Mobile" name="mobile" maxLength={10} value={form.mobile} onChange={handleChange} required />{renderError('mobile')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="Password" name="password" type="password" value={form.password} onChange={handleChange} required />{renderError('password')}</CCol>
+                </CRow>
+                <CRow className="g-3 mb-3">
+                  <CCol md={6}><CFormInput floating="true" label="Date of Birth" type="date" name="dob" value={form.dob} onChange={handleChange} required />{renderError('dob')}</CCol>
+                  <CCol md={6}>
+                    <CFormSelect floating="true" label="Gender" name="gender" value={form.gender} onChange={handleChange} required>
+                      <option value="">Select</option>
+                      <option>Male</option>
+                      <option>Female</option>
+                    </CFormSelect>
+                    {renderError('gender')}
+                  </CCol>
+                </CRow>
+                <CRow className="g-3 mb-3">
+                  <CCol md={4}><CFormSelect floating="true" label="Marital Status" name="marital_status" value={form.marital_status} onChange={handleChange}>
+                    <option value="">Select</option>
+                    <option>Single</option>
+                    <option>Married</option>
+                  </CFormSelect>{renderError('marital_status')}</CCol>
+                  <CCol md={4}><CFormInput floating="true" label="Education" name="education" value={form.education} onChange={handleChange} />{renderError('education')}</CCol>
+                  <CCol md={4}><CFormSelect floating="true" label="Language" name="language" value={form.language} onChange={handleChange}>
+                    <option value="">Select</option>
+                    <option>English</option>
+                    <option>Hindi</option>
+                    <option>Telugu</option>
+                  </CFormSelect>{renderError('language')}</CCol>
+                </CRow>
+                <CRow className="g-3 mb-3">
+                  <CCol md={6}><CFormInput floating="true" label="Occupation" name="occupation" value={form.occupation} onChange={handleChange} />{renderError('occupation')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="Work Experience (Years)" name="work_experience" maxLength={2} value={form.work_experience} onChange={handleChange} />{renderError('work_experience')}</CCol>
+                </CRow>
+                <CRow className="g-3 mb-3">
+                  <CCol md={6}><CFormInput floating="true" label="Annual Income" name="income" value={form.income} onChange={handleChange} />{renderError('income')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="Aadhaar Number" name="adhar" maxLength={12} value={form.adhar} onChange={handleChange} />{renderError('adhar')}</CCol>
+                </CRow>
+                <CRow className="g-3 mb-3">
+                  <CCol md={6}><CFormInput floating="true" label="PAN Number" name="pan" maxLength={10} value={form.pan} onChange={handleChange} />{renderError('pan')}</CCol>
+                  <CCol md={6}>
+                    <CFormSelect
+                      floating
+                      label="Designation"
+                      name="designation"
+                      value={form.designation}
+                      onChange={handleChange}
+                      disabled={loadingDesignations}
+                    >
+                      <option value="">Select Designation</option>
+                      {!loadingDesignations && !designationError && designations.map((d, idx) => (
+                        <option key={idx} value={d.id || d.name}>{d.name}</option>
+                      ))}
+                    </CFormSelect>
+                    {designationError && <div className="text-danger small mt-1">{designationError}</div>}
+                    {renderError('designation')}
+                  </CCol>
+                </CRow>
 
-                      <div className="mb-3">
-                        <CFormInput name="referenceAgent" placeholder="Reference Agent Code" value={form.referenceAgent} onChange={handleChange} invalid={!!errors.referenceAgent} />
-                        {renderError('referenceAgent')}
-                      </div>
-                      <div className="mb-3">
-                        <CFormInput name="agentTeam" placeholder="Agent Team" value={form.agentTeam} onChange={handleChange} invalid={!!errors.agentTeam} />
-                        {renderError('agentTeam')}
-                      </div>
-                      <div className="mb-3">
-                        <CFormInput name="workLocation" placeholder="Work Location" value={form.workLocation} onChange={handleChange} invalid={!!errors.workLocation} />
-                        {renderError('workLocation')}
-                      </div>
+                {/* Work & Bank */}
+                <h5 className="text-primary mb-3 mt-4">Work & Bank Details</h5>
+                <CRow className="g-3 mb-3">
+                  <CCol md={6}><CFormInput floating="true" label="Reference Agent Code" name="reference_agent" value={form.reference_agent} onChange={handleChange} />{renderError('reference_agent')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="Agent Team" name="agent_team" value={form.agent_team} onChange={handleChange} />{renderError('agent_team')}</CCol>
+                </CRow>
+                <CRow className="g-3 mb-3">
+                  <CCol md={6}><CFormInput floating="true" label="Work Location" name="work_location" value={form.work_location} onChange={handleChange} />{renderError('work_location')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="Bank Name" name="bank_name" value={form.bank_name} onChange={handleChange} />{renderError('bank_name')}</CCol>
+                </CRow>
+                <CRow className="g-3 mb-3">
+                  <CCol md={6}><CFormInput floating="true" label="Branch" name="branch" value={form.branch} onChange={handleChange} />{renderError('branch')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="Account Number" name="account_number" value={form.account_number} onChange={handleChange} />{renderError('account_number')}</CCol>
+                </CRow>
+                <CRow className="g-3 mb-3">
+                  <CCol md={6}><CFormInput floating="true" label="IFSC Code" name="ifsc_code" maxLength={11} value={form.ifsc_code} onChange={handleChange} />{renderError('ifsc_code')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="Nominee Name" name="nominiee" value={form.nominiee} onChange={handleChange} />{renderError('nominiee')}</CCol>
+                </CRow>
+                <CRow className="g-3 mb-3">
+                  <CCol md={6}><CFormInput floating="true" label="Relation with Nominee" name="relationship" value={form.relationship} onChange={handleChange} />{renderError('relationship')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="Nominee Mobile" name="nominee_mobile" maxLength={10} value={form.nominee_mobile} onChange={handleChange} />{renderError('nominee_mobile')}</CCol>
+                </CRow>
 
-                      {/* Bank Details */}
-                      <CCard className="p-3 bg-light shadow-sm mb-3 rounded-3">
-                        <h6 className="text-primary mb-3 fw-semibold">Bank Details</h6>
-                        <div className="mb-3"><CFormInput name="bankName" placeholder="Bank Name" value={form.bankName} onChange={handleChange} invalid={!!errors.bankName} />{renderError('bankName')}</div>
-                        <div className="mb-3"><CFormInput name="branch" placeholder="Branch Name" value={form.branch} onChange={handleChange} invalid={!!errors.branch} />{renderError('branch')}</div>
-                        <div className="mb-3"><CFormInput name="accountNumber" placeholder="Account Number" value={form.accountNumber} onChange={handleChange} invalid={!!errors.accountNumber} />{renderError('accountNumber')}</div>
-                        <div className="mb-3"><CFormInput name="ifscCode" placeholder="IFSC Code" maxLength={11} value={form.ifscCode} onChange={handleChange} invalid={!!errors.ifscCode} />{renderError('ifscCode')}</div>
-                      </CCard>
+                {/* Upload Documents */}
+                <h5 className="text-primary mb-3 mt-4">Upload Documents</h5>
+                <CRow className="g-4 align-items-stretch text-center mb-4">
+                  {/* Profile Photo */}
+                  <CCol xs={12} md={6}>
+                    <div
+                      className="p-4 rounded-4 shadow-sm border bg-white h-100 d-flex flex-column align-items-center justify-content-center"
+                      style={{ minHeight: 400 }}
+                    >
+                      <CFormLabel className="fw-semibold d-block mb-3 fs-5 text-primary">
+                        Profile Photo
+                      </CFormLabel>
 
-                      {/* Nominee Details */}
-                      <CCard className="p-3 bg-light shadow-sm mb-4 rounded-3">
-                        <h6 className="text-primary mb-3 fw-semibold">Nominee Details</h6>
-                        <div className="mb-3"><CFormInput name="nomineeName" placeholder="Nominee Name" value={form.nomineeName} onChange={handleChange} invalid={!!errors.nomineeName} />{renderError('nomineeName')}</div>
-                        <div className="mb-3"><CFormInput name="nomineeRelation" placeholder="Relation with Nominee" value={form.nomineeRelation} onChange={handleChange} invalid={!!errors.nomineeRelation} />{renderError('nomineeRelation')}</div>
-                        <div className="mb-3"><CFormInput name="nomineeMobile" placeholder="Nominee Mobile" maxLength={10} value={form.nomineeMobile} onChange={handleChange} invalid={!!errors.nomineeMobile} />{renderError('nomineeMobile')}</div>
-                      </CCard>
+                      {form.photo ? (
+                        <>
+                          <img
+                            src={form.photo.previewUrl}
+                            alt="Profile Preview"
+                            className="rounded-circle shadow-sm mb-3 border border-primary"
+                            style={{
+                              width: 140,
+                              height: 140,
+                              objectFit: 'cover',
+                              transition: 'transform 0.2s ease-in-out',
+                            }}
+                            onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.05)')}
+                            onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
+                          />
+                          <div className="d-flex justify-content-center gap-2">
+                            <CButton
+                              color="danger"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setForm(prev => ({ ...prev, photo: null }))}
+                            >
+                              Remove Photo
+                            </CButton>
+                          </div>
+                        </>
+                      ) : (
+                        <div
+                          className="d-flex flex-column align-items-center justify-content-center p-3 rounded-3 border border-dashed w-100"
+                          style={{
+                            borderStyle: 'dashed',
+                            borderColor: '#6c757d',
+                            minHeight: 240,
+                            maxWidth: 280,
+                          }}
+                        >
+                          {/* Instruction message */}
+                          <small className="text-muted mb-3">
+                            Uploading or cropping may take a few seconds. Please wait...
+                          </small>
 
-                      {/* Upload Files */}
-                      <CCard className="p-4 border-0 shadow-sm rounded-3 mb-3">
-                        <h5 className="mb-4 fw-semibold text-info">Upload Profile Photo & Documents</h5>
-
-                        {/* Profile Photo Upload */}
-                        <div className="mb-4 text-center">
-                          <CFormLabel className="fw-semibold mb-2 d-block">Profile Photo</CFormLabel>
-                          {form.photo ? (
-                            <>
-                              <img
-                                src={form.photo.previewUrl}
-                                alt="Profile Preview"
-                                className="rounded-circle mb-3 shadow-sm"
-                                style={{ width: '150px', height: '150px', objectFit: 'cover', border: '3px solid #0d6efd' }}
-                              />
-                              <CButton
-                                color="danger"
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setForm(prev => ({ ...prev, photo: null }))}
-                              >
-                                Remove Photo
-                              </CButton>
-                            </>
-                          ) : (
+                          {/* Profile Cropper */}
+                          <div className="w-100 d-flex justify-content-center">
                             <CoreUIProfileCropper
-                              onChange={({ file, previewUrl }) => {
-                                setForm(prev => ({ ...prev, photo: { file, previewUrl } }));
-                                setErrors(prev => ({ ...prev, photo: '' }));
-                              }}
+                              onChange={({ file, previewUrl }) =>
+                                setForm(prev => ({ ...prev, photo: { file, previewUrl } }))
+                              }
                             />
-                          )}
-                          {renderError('photo')}
+                          </div>
+
+                          <small className="text-muted mt-3">JPG / PNG • Max 2 MB</small>
                         </div>
+                      )}
+                      {renderError('photo')}
+                    </div>
+                  </CCol>
 
 
-                        {/* Aadhaar File Upload */}
-                        <div className="mb-3">
-                          <CFormLabel htmlFor="aadhaarFile">Aadhaar File (PDF only, max 2MB)</CFormLabel>
-                          {form.aadhaarFile ? (
-                            <CInputGroup>
-                              <CFormInput value={form.aadhaarFile.name} readOnly />
-                              <CButton type="button" color="danger" variant="outline" onClick={() => setForm(prev => ({ ...prev, aadhaarFile: null }))}>Clear</CButton>
-                            </CInputGroup>
-                          ) : (
-                            <CFormInput type="file" name="aadhaarFile" accept="application/pdf" onChange={handleFileChange} invalid={!!errors.aadhaarFile} />
-                          )}
-                          {renderError('aadhaarFile')}
-                        </div>
+                  {/* Aadhaar + PAN Upload */}
+                  <CCol xs={12} md={6}>
+                    <div
+                      className="p-4 rounded-4 shadow-sm border bg-white h-100 d-flex flex-column align-items-center"
+                      style={{ minHeight: 400 }}
+                    >
+                      <CFormLabel className="fw-semibold fs-5 text-primary mb-4 text-center">
+                        Aadhaar & PAN Uploads
+                      </CFormLabel>
 
-                        {/* PAN File Upload */}
-                        <div className="mb-3">
-                          <CFormLabel htmlFor="panFile">PAN File (PDF only, max 2MB)</CFormLabel>
-                          {form.panFile ? (
-                            <CInputGroup>
-                              <CFormInput value={form.panFile.name} readOnly />
-                              <CButton type="button" color="danger" variant="outline" onClick={() => setForm(prev => ({ ...prev, panFile: null }))}>Clear</CButton>
-                            </CInputGroup>
-                          ) : (
-                            <CFormInput type="file" name="panFile" accept="application/pdf" onChange={handleFileChange} invalid={!!errors.panFile} />
-                          )}
-                          {renderError('panFile')}
-                        </div>
-                      </CCard>
+                      <CRow className="g-4 w-100 text-center">
+                        {/* Aadhaar Upload */}
+                        <CCol xs={12} sm={6}>
+                          <div
+                            className="p-3 rounded-4 border h-100 d-flex flex-column align-items-center justify-content-center bg-light-subtle hover-shadow"
+                            style={{
+                              borderStyle: form.aadhaar_file ? 'solid' : 'dashed',
+                              borderColor: form.aadhaar_file ? '#198754' : '#adb5bd',
+                              transition: 'all 0.3s ease-in-out',
+                              minHeight: 180,
+                            }}
+                          >
+                            {form.aadhaar_file ? (
+                              <>
+                                <i className="bi bi-file-earmark-pdf text-danger fs-1 mb-2"></i>
+                                <div className="fw-semibold text-break small mb-3 px-2">
+                                  {form.aadhaar_file.name}
+                                </div>
+                                <CButton
+                                  color="danger"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setFormField('aadhaar_file', null)}
+                                >
+                                  Remove Aadhaar
+                                </CButton>
+                              </>
+                            ) : (
+                              <>
+                                <CButton
+                                  color="primary"
+                                  variant="ghost"
+                                  className="fw-semibold"
+                                  onClick={() => document.getElementById('aadhaarFileInput').click()}
+                                >
+                                  <i className="bi bi-upload me-2"></i>Upload Aadhaar (PDF)
+                                </CButton>
+                                <small className="text-muted mt-2">PDF • Max 2 MB</small>
+                                <input
+                                  id="aadhaarFileInput"
+                                  type="file"
+                                  accept="application/pdf"
+                                  hidden
+                                  name="aadhaar_file"
+                                  onChange={handleFileChange}
+                                />
+                              </>
+                            )}
+                            {renderError('aadhaar_file')}
+                          </div>
+                        </CCol>
 
-                      <div className="d-flex justify-content-between mt-4">
-                        <CButton color="secondary" onClick={prevStep}>Back</CButton>
-                        <CButton color="primary" onClick={nextStep}>Next</CButton>
-                      </div>
-                    </CCard>
-                  )}
+                        {/* PAN Upload */}
+                        <CCol xs={12} sm={6}>
+                          <div
+                            className="p-3 rounded-4 border h-100 d-flex flex-column align-items-center justify-content-center bg-light-subtle hover-shadow"
+                            style={{
+                              borderStyle: form.pan_file ? 'solid' : 'dashed',
+                              borderColor: form.pan_file ? '#198754' : '#adb5bd',
+                              transition: 'all 0.3s ease-in-out',
+                              minHeight: 180,
+                            }}
+                          >
+                            {form.pan_file ? (
+                              <>
+                                <i className="bi bi-file-earmark-pdf text-danger fs-1 mb-2"></i>
+                                <div className="fw-semibold text-break small mb-3 px-2">
+                                  {form.pan_file.name}
+                                </div>
+                                <CButton
+                                  color="danger"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setFormField('pan_file', null)}
+                                >
+                                  Remove PAN
+                                </CButton>
+                              </>
+                            ) : (
+                              <>
+                                <CButton
+                                  color="primary"
+                                  variant="ghost"
+                                  className="fw-semibold"
+                                  onClick={() => document.getElementById('panFileInput').click()}
+                                >
+                                  <i className="bi bi-upload me-2"></i>Upload PAN (PDF)
+                                </CButton>
+                                <small className="text-muted mt-2">PDF • Max 2 MB</small>
+                                <input
+                                  id="panFileInput"
+                                  type="file"
+                                  accept="application/pdf"
+                                  hidden
+                                  name="pan_file"
+                                  onChange={handleFileChange}
+                                />
+                              </>
+                            )}
+                            {renderError('pan_file')}
+                          </div>
+                        </CCol>
+                      </CRow>
+                    </div>
+                  </CCol>
+                </CRow>
+                {/* Address */}
+                <h5 className="text-primary mb-3 mt-4">Address</h5>
+                <CRow className="g-3 mb-3">
+                  <CCol md={12}><CFormTextarea floating="true" label="Address" name="address" rows={2} value={form.address} onChange={handleChange} />{renderError('address')}</CCol>
+                </CRow>
+                <CRow className="g-3 mb-3">
+                  <CCol md={6}><CFormInput floating="true" label="City" name="city" value={form.city} onChange={handleChange} />{renderError('city')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="State" name="state" value={form.state} onChange={handleChange} />{renderError('state')}</CCol>
+                </CRow>
+                <CRow className="g-3 mb-3">
+                  <CCol md={6}><CFormInput floating="true" label="Pincode" name="pincode" maxLength={6} value={form.pincode} onChange={handleChange} />{renderError('pincode')}</CCol>
+                </CRow>
 
-                  {step === 3 && (
-                    <CCard className="mb-4 p-4 bg-white shadow-sm border-0">
-                      <h5 className="text-info mb-4">Address Details</h5>
-                      <div className="mb-3">
-                        <CFormTextarea
-                          placeholder="Address"
-                          name="presentAddress"
-                          rows={4}
-                          value={form.presentAddress}
-                          onChange={handleChange}
-                          invalid={!!errors.presentAddress}
-                        />
-                        {renderError('presentAddress')}
-                      </div>
-                      <div className="d-flex justify-content-between mt-4">
-                        <CButton color="secondary" onClick={prevStep}>Back</CButton>
-                        <CButton color="success" onClick={handleSubmit} disabled={isSubmitting}>
-                          {isSubmitting ? (
-                            <><CSpinner size="sm" className="me-2" />Submitting...</>
-                          ) : (
-                            'Submit'
-                          )}
-                        </CButton>
-                      </div>
-                    </CCard>
-                  )}
-                </CForm>
-              </CCardBody>
-            </CCard>
-          </CCol>
-        </CRow>
-        
-        {/* Success Modal */}
-        <CModal visible={showSuccessModal} onClose={handleModalClose} alignment="center" backdrop="static">
-          <CModalHeader>
-            <CModalTitle>Registration Successful!</CModalTitle>
-          </CModalHeader>
-          <CModalBody>
-            <p>The agent has been registered successfully.</p>
-            <p><strong>Agent UID:</strong> {registeredUID}</p>
-          </CModalBody>
-          <CModalFooter>
-            <CButton color="primary" onClick={handleModalClose}>
-              Go to Dashboard
-            </CButton>
-          </CModalFooter>
-        </CModal>
+                <div className="d-grid mt-4">
+                  <CButton color="primary" size="lg" type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? <><CSpinner size="sm" className="me-2" />Submitting...</> : 'Register Agent'}
+                  </CButton>
+                </div>
+              </CForm>
+            </CCardBody>
+          </CCard>
+        </CCol >
+      </CRow >
 
-      </CContainer>
-    </div>
-  );
+      <CModal visible={showSuccessModal} onClose={handleModalClose} alignment="center" backdrop="static">
+        <CModalHeader><CModalTitle>Registration  Successful!</CModalTitle></CModalHeader>
+        <CModalBody>
+          <p>The agent has been registered successfully.</p>
+          <p><strong>Agent UID:</strong> {registeredUID}</p>
+        </CModalBody>
+        <CModalFooter><CButton color="primary" onClick={handleModalClose}>Go to Dashboard</CButton></CModalFooter>
+      </CModal>
+    </CContainer >
+  )
 }
