@@ -60,9 +60,11 @@ const BookSite = React.lazy(() => import('./views/pages/bookSite'))
 const Projects = React.lazy(() => import('./views/pages/register/Projects'))
 const newProjects = React.lazy(() => import('./views/pages/newProjects'))
 const Profile = React.lazy(() => import('./views/pages/Profile'))
+const ClientProfile = React.lazy(() => import('./views/pages/clientProfile'))
 const ARegister = React.lazy(() => import('./views/pages/register/ARegister'))
 const AgentRegister = React.lazy(() => import('./views/pages/register/register_agent'))
-const ClientRegister = React.lazy(() => import('./views/pages/register/cilent_register'))
+const ClientRegister = React.lazy(() => import('./views/pages/register/register_client'))
+const RegisterClient = React.lazy(() => import('./views/pages/register/cilent_register'))
 
 const venture = React.lazy(() => import('./views/pages/Projects/venture'))
 
@@ -158,6 +160,7 @@ const routes = [
   { path: '/GetTargets', name: 'Get Targets', element: GetTargets,meta:{allowedRoles:["admin","agent"]} },
   { path: '/GetAgents', name: 'Get Agents', element: GetAgents,meta:{allowedRoles:["admin","agent"]} },
   { path: '/Profile', name: 'User Profile', element: Profile ,meta:{allowedRoles:["admin","agent"]}},
+  { path: '/ClientProfile', name: 'Client Profile', element: ClientProfile ,meta:{allowedRoles:["admin","agent"]}},
   { path: '/Reports', name: 'Reports', element: Reports,meta:{allowedRoles:["admin","agent"]} },
   { path: '/Invoice', name: 'Invoice', element: Invoice,meta:{allowedRoles:["admin","agent"]} },
   { path: '/ForgotUId', name: 'Forgot User ID', element: ForgotUserId ,meta:{allowedRoles:["admin","agent"]}},
@@ -165,6 +168,7 @@ const routes = [
   { path: '/verification', name: 'Verification', element: Verification ,meta:{allowedRoles:["admin","agent"]}},
   { path: '/ARegister', name: 'Agent Register', element: ARegister ,meta:{allowedRoles:["admin","agent"]}},
   { path: '/register_agent', name: 'Agent Register', element: AgentRegister ,meta:{allowedRoles:["admin","agent"]}},
+  { path: '/register_cilent', name: 'Client Register', element: RegisterClient ,meta:{allowedRoles:["admin","agent"]}},
   { path: '/register_client', name: 'Client Register', element: ClientRegister ,meta:{allowedRoles:["admin","agent"]}},
   { path: '/Targets', name: 'Targets', element: Targets ,meta:{allowedRoles:["admin","agent"]}},
   { path: '/GetBookVisit', name: 'Get Book Visit', element: GetBookVisit ,meta:{allowedRoles:["admin","agent"]}},

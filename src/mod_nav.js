@@ -43,8 +43,9 @@ const navigationConfig = [
     component: CNavGroup,
     name: 'Clients',
     icon: <CIcon icon={cilPeople} customClassName="nav-icon" />,
-    allowedRoles: [ROLES.ADMIN],
+    allowedRoles: [ROLES.ADMIN,,ROLES.AGENT],
     items: [
+      { component: CNavItem, name: 'Client Register', to: '/register_cilent', allowedRoles: [ROLES.ADMIN] },
       { component: CNavItem, name: 'Register Client', to: '/register_client', allowedRoles: [ROLES.ADMIN] },
     ],
   },
@@ -122,6 +123,7 @@ const navigationConfig = [
     allowedRoles: [ROLES.ADMIN, ROLES.AGENT, ROLES.CLIENT],
     items: [
       { component: CNavItem, name: 'Profile', to: '/Profile', allowedRoles: [ROLES.ADMIN, ROLES.AGENT, ROLES.CLIENT] },
+      { component: CNavItem, name: 'Client Profile', to: '/ClientProfile', allowedRoles: [ROLES.ADMIN, ROLES.AGENT, ROLES.CLIENT] },
       { component: CNavItem, name: 'Forgot User ID', to: '/ForgotUID', allowedRoles: [ROLES.ADMIN] },
       { component: CNavItem, name: 'Forgot Password', to: '/ForgotPassword', allowedRoles: [ROLES.ADMIN, ROLES.AGENT, ROLES.CLIENT] },
     ],
