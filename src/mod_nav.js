@@ -45,7 +45,7 @@ const navigationConfig = [
     icon: <CIcon icon={cilPeople} customClassName="nav-icon" />,
     allowedRoles: [ROLES.ADMIN,,ROLES.AGENT],
     items: [
-      { component: CNavItem, name: 'Client Register', to: '/register_cilent', allowedRoles: [ROLES.ADMIN] },
+      { component: CNavItem, name: 'Client Register', to: '/register_cilent', allowedRoles: [ROLES.ADMIN,ROLES.AGENT] },
       { component: CNavItem, name: 'Register Client', to: '/register_client', allowedRoles: [ROLES.ADMIN] },
     ],
   },
