@@ -327,10 +327,10 @@ export default function UserProfile() {
                             {renderField("Language", profile.language, "language", "select", ["English", "Telugu", "Hindi"])}
                             <CFormLabel>Marital Status</CFormLabel>
                             {renderField("Marital Status", profile.maritalStatus, "maritalStatus", "select", ["Married", "Unmarried"])}
-                            <CFormLabel>Education</CFormLabel>
+                            {/* <CFormLabel>Education</CFormLabel>
                             {renderField("Education", profile.education, "education")}
                             <CFormLabel>Designation</CFormLabel>
-                            {renderField("Designation", profile.designation, "designation")}
+                            {renderField("Designation", profile.designation, "designation")} */}
                             <CFormLabel>Permanent Address</CFormLabel>
                             {renderField("Permanent Address", profile.permanentAddress, "permanentAddress")}
                             <CFormLabel>Present Address</CFormLabel>
