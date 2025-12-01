@@ -1,0 +1,12 @@
+{
+    "projects": {
+        "Project name": "",
+        "Location": "",
+        "Photo": ""
+    },
+    "Plots":{
+        "Total":"",
+        "Available":"",
+        "Occupied":""
+    }
+}
