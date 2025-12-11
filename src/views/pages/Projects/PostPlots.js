@@ -42,6 +42,14 @@ export default function PlotForm() {
     };
 
     console.log('Submitting payload:', payload);
+    console.log('API URL:', `${globalThis.apiBaseUrl}/projects/plots`);
+    console.log('Payload being sent:', {
+      project_name: form.project_name,
+      plot_number: form.plot_number,
+      size: Number(form.size),
+      price: Number(form.price),
+      status: form.status.toLowerCase(),
+    });
 
     try {
       const response = await fetch(`${globalThis.apiBaseUrl}/projects/plots`, {

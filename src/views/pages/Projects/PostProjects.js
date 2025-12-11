@@ -48,18 +48,28 @@ export default function ProjectForm() {
     e.preventDefault()
     setLoading(true)
 
-    const formData = new FormData()
-    Object.entries(form).forEach(([key, value]) => formData.append(key, value))
-    photos.forEach((photo) => formData.append('project_photos', photo))
+    // Prepare data as per API requirements
+    const payload = {
+      ...form,
+      status: form.status.toLowerCase(),
+      total_area: Number(form.total_area),
+    }
 
     try {
-      // ✅ Replace with your actual API endpoint
-      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/projects/`, {
+      // const apiUrl = `${globalThis.apiBaseUrl}/projects/`
+      // console.log('API:', apiUrl, '\nData:', payload)
+
+      const response = await fetch(apiUrl, {
         method: 'POST',
-        body: formData,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
       })
 
-      if (!response.ok) throw new Error('Failed to submit')
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('API Error:', errorText)
+        throw new Error('Failed to submit')
+      }
 
       alert('Project submitted successfully!')
       setForm({
