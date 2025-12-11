@@ -22,6 +22,8 @@ export default function PlotForm() {
     status: '',
   });
 
+  const [showModal, setShowModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
@@ -32,6 +34,8 @@ export default function PlotForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setModalMessage('Submitting...');
+    setShowModal(true);
 
     const payload = {
       project_name: form.project_name,
@@ -40,16 +44,6 @@ export default function PlotForm() {
       price: Number(form.price),
       status: form.status.toLowerCase(),
     };
-
-    console.log('Submitting payload:', payload);
-    console.log('API URL:', `${globalThis.apiBaseUrl}/projects/plots`);
-    console.log('Payload being sent:', {
-      project_name: form.project_name,
-      plot_number: form.plot_number,
-      size: Number(form.size),
-      price: Number(form.price),
-      status: form.status.toLowerCase(),
-    });
 
     try {
       const response = await fetch(`${globalThis.apiBaseUrl}/projects/plots`, {
@@ -60,13 +54,24 @@ export default function PlotForm() {
         body: JSON.stringify(payload),
       });
 
+      const responseText = await response.text();
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Error response:', errorText);
-        throw new Error(errorText || 'Failed to submit');
+        // Try to extract a readable error message
+        let errorMsg = responseText;
+        try {
+          const errorObj = JSON.parse(responseText);
+          errorMsg = errorObj.detail || errorObj.message || responseText;
+        } catch {
+          // If not JSON, just use the text
+          errorMsg = responseText;
+        }
+        // Remove curly braces and quotes
+        errorMsg = errorMsg.replace(/[{}"]/g, '');
+        setModalMessage(`Error: ${errorMsg}`);
+        throw new Error(errorMsg || 'Failed to submit');
       }
 
-      alert('Plot submitted successfully!');
+      setModalMessage('Success: Plot added successfully');
       setForm({
         project_name: '',
         plot_number: '',
@@ -75,7 +80,7 @@ export default function PlotForm() {
         status: '',
       });
     } catch (error) {
-      alert(`Error: ${error.message}`);
+      setModalMessage(`Error: ${error.message.replace(/[{}"]/g, '')}`);
     } finally {
       setLoading(false);
     }
@@ -223,6 +228,60 @@ export default function PlotForm() {
           </CForm>
         </CCardBody>
       </CCard>
+
+      {showModal && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            background: 'rgba(0,0,0,0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+          }}
+          onClick={() => setShowModal(false)}
+        >
+          <div
+            style={{
+              background: '#fff',
+              padding: '2rem',
+              borderRadius: '12px',
+              minWidth: '300px',
+              textAlign: 'center',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+            }}
+          >
+            <div
+              style={{
+                marginBottom: '1rem',
+                color: modalMessage.startsWith('Error:') ? '#d32f2f' : '#388e3c',
+                fontWeight: 600,
+                fontSize: '1.1rem',
+              }}
+            >
+              {modalMessage.replace(/^Error:\s*/, '').replace(/^Success:\s*/, '')}
+            </div>
+            <button
+              style={{
+                padding: '0.5rem 1.5rem',
+                borderRadius: '8px',
+                border: 'none',
+                background: '#4e54c8',
+                color: '#fff',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+              onClick={() => setShowModal(false)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -27,6 +27,8 @@ export default function ProjectForm() {
   })
   const [photos, setPhotos] = useState([])
   const [loading, setLoading] = useState(false)
+  const [showModal, setShowModal] = useState(false)
+  const [modalMessage, setModalMessage] = useState('')
 
   // Handle text & select input
   const handleChange = (e) => {
@@ -56,7 +58,7 @@ export default function ProjectForm() {
     }
 
     try {
-      // const apiUrl = `${globalThis.apiBaseUrl}/projects/`
+      const apiUrl = `${globalThis.apiBaseUrl}/projects/`
       // console.log('API:', apiUrl, '\nData:', payload)
 
       const response = await fetch(apiUrl, {
@@ -65,13 +67,24 @@ export default function ProjectForm() {
         body: JSON.stringify(payload),
       })
 
+      const responseText = await response.text()
       if (!response.ok) {
-        const errorText = await response.text()
-        console.error('API Error:', errorText)
-        throw new Error('Failed to submit')
+        // Try to extract a readable error message
+        let errorMsg = responseText
+        try {
+          const errorObj = JSON.parse(responseText)
+          errorMsg = errorObj.detail || errorObj.message || responseText
+        } catch {
+          errorMsg = responseText
+        }
+        errorMsg = errorMsg.replace(/[{}"]/g, '')
+        setModalMessage(`Error: ${errorMsg}`)
+        setShowModal(true)
+        throw new Error(errorMsg || 'Failed to submit')
       }
 
-      alert('Project submitted successfully!')
+      setModalMessage('Success: Project added successfully')
+      setShowModal(true)
       setForm({
         name: '',
         description: '',
@@ -83,7 +96,8 @@ export default function ProjectForm() {
       })
       setPhotos([])
     } catch (err) {
-      alert(`Error: ${err.message}`)
+      setModalMessage(`Error: ${err.message.replace(/[{}"]/g, '')}`)
+      setShowModal(true)
     } finally {
       setLoading(false)
     }
@@ -318,6 +332,61 @@ export default function ProjectForm() {
           </CForm>
         </CCardBody>
       </CCard>
+
+      {/* Modal for success/error messages */}
+      {showModal && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            background: 'rgba(0,0,0,0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+          }}
+          onClick={() => setShowModal(false)}
+        >
+          <div
+            style={{
+              background: '#fff',
+              padding: '2rem',
+              borderRadius: '12px',
+              minWidth: '300px',
+              textAlign: 'center',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+            }}
+          >
+            <div
+              style={{
+                marginBottom: '1rem',
+                color: modalMessage.startsWith('Error:') ? '#d32f2f' : '#388e3c',
+                fontWeight: 600,
+                fontSize: '1.1rem',
+              }}
+            >
+              {modalMessage.replace(/^Error:\s*/, '').replace(/^Success:\s*/, '')}
+            </div>
+            <button
+              style={{
+                padding: '0.5rem 1.5rem',
+                borderRadius: '8px',
+                border: 'none',
+                background: '#4e54c8',
+                color: '#fff',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+              onClick={() => setShowModal(false)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
