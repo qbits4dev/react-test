@@ -86,6 +86,7 @@ const Login = () => {
             navigate('/Agentdashboard')
             break
           case 'customer':
+            console.log('Navigating to Clientdashboard');
             navigate('/Clientdashboard')
             break
           default:
@@ -136,6 +137,12 @@ const Login = () => {
                         }}
                       />
                     </div>
+                    <h1
+                      className="text-center text-dark mb-2"
+                      style={{ fontWeight: '600' }}
+                    >
+                      Sri Aditya Developers
+                    </h1>
 
                     <h2
                       className="text-center text-dark mb-2"

@@ -99,7 +99,7 @@ const Widgets = React.lazy(() => import('./views/widgets/Widgets'))
 const routes = [
   // { path: '/', exact: true, name: 'Home',meta:{allowedRoles:["admin","agent"]} },
   { path: '/dashboard', name: 'Dashboard', element: Dashboard ,meta:{allowedRoles:["admin","agent"]}},
-  { path: '/Clientdashboard', name: 'Dashboard', element: ClientDashboard ,meta:{allowedRoles:["admin"]}},
+  { path: '/Clientdashboard', name: 'Dashboard', element: ClientDashboard ,meta:{allowedRoles:["admin","customer"]}},
   { path: '/Admindashboard', name: 'Dashboard', element: AdminDashboard,meta:{allowedRoles:["admin"]} },
   { path: '/Agentdashboard', name: 'Dashboard', element: AgentDashboard,meta:{allowedRoles:["agent"]} },
   { path: '/unauthorized', name: 'Unauthorized', element: Unauthorized ,meta:{allowedRoles:["agent"]}},

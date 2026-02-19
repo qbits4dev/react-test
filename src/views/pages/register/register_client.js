@@ -60,6 +60,8 @@ export default function RegisterClientWizard() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [registeredUID, setRegisteredUID] = useState('')
+  const [showModal, setShowModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
 
   // Restore form state from localStorage when page loads
   useEffect(() => {
@@ -191,10 +193,11 @@ export default function RegisterClientWizard() {
 
   const validateAll = () => {
     const requiredFields = [
-      'first_name', 'last_name', 'father_name', 'dob', 'gender', 'email', 'mobile', 'password', 'marital_status', 'education', 'language', 'occupation', 'work_experience', 'income', 'adhar', 'pan',
-      'designation', 'reference_agent', 'agent_team', 'work_location', 'bank_name', 'branch', 'account_number', 'ifsc_code', 'nominiee', 'relationship', 'nominee_mobile',
-      'aadhaar_file', 'pan_file', 'photo', 'address', 'city', 'state', 'pincode'
-    ]
+      'first_name', 'last_name', 'father_name', 'dob', 'gender', 'email', 'mobile', 'password']
+    //   , 'marital_status', 'education', 'language', 'occupation', 'work_experience', 'income', 'adhar', 'pan',
+    //   'designation', 'reference_agent', 'agent_team', 'work_location', 'bank_name', 'branch', 'account_number', 'ifsc_code', 'nominiee', 'relationship', 'nominee_mobile',
+    //   'aadhaar_file', 'pan_file', 'photo', 'address', 'city', 'state', 'pincode'
+    // ]
     const newErrors = {}
     requiredFields.forEach(f => {
       const err = validateField(f, form[f])
@@ -205,41 +208,56 @@ export default function RegisterClientWizard() {
   }
 
   const handleSubmit = async (e) => {
-    e && e.preventDefault()
+    e && e.preventDefault();
     if (!validateAll()) {
-      setAlert({ visible: true, message: 'Please fix the validation errors.', color: 'danger' })
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-      return
+      setAlert({ visible: true, message: 'Please fix the validation errors.', color: 'danger' });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
     }
 
-    setIsSubmitting(true)
-    setAlert({ visible: false, message: '' })
+    setIsSubmitting(true);
+    setAlert({ visible: false, message: '' });
+    setModalMessage('Submitting...');
+    setShowModal(true);
 
     try {
-      const formData = new FormData()
+      const formData = new FormData();
       Object.entries(form).forEach(([key, val]) => {
         if (val !== null && val !== undefined && val !== '') {
-          if (key === 'photo' && val?.file) formData.append('photo', val.file)
-          else if (['aadhaar_file', 'pan_file'].includes(key)) formData.append(key, val)
-          else formData.append(key, val)
+          if (key === 'photo' && val?.file) formData.append('photo', val.file);
+          else if (['aadhaar_file', 'pan_file'].includes(key)) formData.append(key, val);
+          else formData.append(key, val);
         }
-      })
-      formData.append('role', 'client')
-
-      const res = await fetch(`${globalThis.apiBaseUrl}/auth/client1`, { method: 'POST', body: formData })
-      const data = await res.json()
+      });
+      formData.append('role', 'customer');
+      // console.log('Submitting form data:', Array.from(formData.entries()));
+      for (let [key, value] of formData.entries()) {
+        console.log(`${key}:`, value);
+      }
+            const jsonObj = {};
+      for (let [key, value] of formData.entries()) {
+        // For files, print just the file name
+        jsonObj[key] = value instanceof File ? value.name : value;
+      }
+      console.log('Submitting form data (JSON):', JSON.stringify(jsonObj, null, 2));
+      const res = await fetch(`${globalThis.apiBaseUrl}/auth/register`, { method: 'POST', body: formData });
+      const data = await res.json();
       if (res.ok) {
-        setRegisteredUID(data.u_id || data.user_id || 'N/A')
-        setShowSuccessModal(true)
-        localStorage.removeItem('registerClientForm')
+        setRegisteredUID(data.u_id || data.user_id || 'N/A');
+        setModalMessage('Success: Client registered successfully');
+        setShowModal(true);
+        localStorage.removeItem('registerClientForm');
       } else {
-        setAlert({ visible: true, message: data.message || 'Registration failed.', color: 'danger' })
+        let errorMsg = data.message || 'Registration failed.';
+        errorMsg = errorMsg.replace(/[{}"]/g, '');
+        setModalMessage(`Error: ${errorMsg}`);
+        setShowModal(true);
       }
     } catch (err) {
-      console.error(err)
-      setAlert({ visible: true, message: 'Network error.', color: 'danger' })
+      setModalMessage('Error: Network error.');
+      setShowModal(true);
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
   }
 
@@ -569,6 +587,60 @@ export default function RegisterClientWizard() {
         </CModalBody>
         <CModalFooter><CButton color="primary" onClick={handleModalClose}>Go to Dashboard</CButton></CModalFooter>
       </CModal>
+
+      {showModal && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            background: 'rgba(0,0,0,0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+          }}
+          onClick={() => setShowModal(false)}
+        >
+          <div
+            style={{
+              background: '#fff',
+              padding: '2rem',
+              borderRadius: '12px',
+              minWidth: '300px',
+              textAlign: 'center',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+            }}
+          >
+            <div
+              style={{
+                marginBottom: '1rem',
+                color: modalMessage.startsWith('Error:') ? '#d32f2f' : '#388e3c',
+                fontWeight: 600,
+                fontSize: '1.1rem',
+              }}
+            >
+              {modalMessage.replace(/^Error:\s*/, '').replace(/^Success:\s*/, '')}
+            </div>
+            <button
+              style={{
+                padding: '0.5rem 1.5rem',
+                borderRadius: '8px',
+                border: 'none',
+                background: '#4e54c8',
+                color: '#fff',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+              onClick={() => setShowModal(false)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </CContainer>
   )
 }
