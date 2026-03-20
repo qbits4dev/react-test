@@ -14,7 +14,7 @@ RUN npm run build  # Vite outputs to /app/build (per vite.config.mjs)
 FROM nginx:1.27-alpine
 WORKDIR /usr/share/nginx/html
 
-# Custom nginx config for SPA fallback
+# Custom nginx config for SPA fallback and static pages
 RUN printf 'server {\n\
   listen 9001;\n\
   server_name _;\n\
@@ -22,10 +22,17 @@ RUN printf 'server {\n\
   index index.html;\n\
   include /etc/nginx/mime.types;\n\
 \n\
+  # Serve static policy pages directly (no JS routing needed)\n\
+  location = /privacy.html { try_files $uri =404; }\n\
+  location = /delete-account.html { try_files $uri =404; }\n\
+  location /privacy { try_files $uri $uri/ /privacy.html; }\n\
+  location /delete-account { try_files $uri $uri/ /delete-account.html; }\n\
+\n\
   location / {\n\
     try_files $uri $uri/ /index.html;\n\
   }\n\
-\n\
+\
+\
   location = /50x.html { root /usr/share/nginx/html; }\n\
 }\n' > /etc/nginx/conf.d/default.conf
 

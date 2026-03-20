@@ -492,12 +492,12 @@ const _nav = [
       {
         component: CNavItem,
         name: 'Privacy Policy',
-        to: '/privacy',
+        href: '/privacy.html',
       },
       {
         component: CNavItem,
         name: 'Delete Account',
-        to: '/delete-account',
+        href: '/delete-account.html',
       },
     ],
   },
