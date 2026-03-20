@@ -8,12 +8,12 @@ const AppFooter = () => {
         <a href="https://www.sriadityadevelopers.com/" target="_blank" rel="noopener noreferrer">
           Sri Aditya Developers
         </a>
-        <span className="ms-1">&copy; 2025.</span>
+        <span className="ms-1">&copy; 2026.</span>
       </div>
       <div className="text-center text-md-end mt-2 mt-md-0">
         <span className="me-1">Powered by</span>
-        <a href="https://qbits4dev.com/" target="_blank" rel="noopener noreferrer">
-          QBITS4DEVELOPERS PVT LTD
+        <a href="https://www.sriadityadevelopers.com/" target="_blank" rel="noopener noreferrer">
+          Sri Aditya Developers
         </a>
       </div>
     </CFooter>
