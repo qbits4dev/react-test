@@ -489,6 +489,16 @@ const _nav = [
         name: 'Invoice',
         to: '/invoice',
       },
+      {
+        component: CNavItem,
+        name: 'Privacy Policy',
+        to: '/privacy',
+      },
+      {
+        component: CNavItem,
+        name: 'Delete Account',
+        to: '/delete-account',
+      },
     ],
   },
 
