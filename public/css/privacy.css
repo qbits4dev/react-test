@@ -1,0 +1,80 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f8f9fa;
+    margin: 0;
+    padding: 0;
+    line-height: 1.7;
+    color: #333;
+}
+
+.container {
+    max-width: 850px;
+    margin: 40px auto;
+    background: #ffffff;
+    padding: 50px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+}
+
+h1 {
+    text-align: center;
+    color: #1a1a1a;
+    font-size: 2.2rem;
+    margin-bottom: 10px;
+}
+
+.effective-date {
+    text-align: center;
+    color: #777;
+    margin-bottom: 40px;
+    font-style: italic;
+}
+
+h2 {
+    margin-top: 35px;
+    color: #0056b3;
+    border-bottom: 2px solid #eef2f7;
+    padding-bottom: 10px;
+}
+
+h3 {
+    color: #444;
+    margin-top: 20px;
+}
+
+p, li {
+    font-size: 16px;
+    word-wrap: break-word;
+}
+
+ul {
+    margin-left: 20px;
+    padding-left: 0;
+}
+
+li {
+    margin-bottom: 8px;
+}
+
+.service-list {
+    background: #f1f4f9;
+    padding: 20px;
+    border-left: 4px solid #0056b3;
+    border-radius: 4px;
+}
+
+.footer {
+    text-align: center;
+    margin-top: 50px;
+    padding-top: 20px;
+    font-size: 14px;
+    color: #999;
+    border-top: 1px solid #eee;
+}
+
+@media (max-width: 600px) {
+    .container {
+        margin: 10px;
+        padding: 20px;
+    }
+}
