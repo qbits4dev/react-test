@@ -21,6 +21,7 @@ const Loginheader = React.lazy(() => import('./components/LoginHeader/LoginHeade
 const venture2 = React.lazy(() => import('./views/pages/Projects/venture2.js'))
 const CoastalGardenPhase2 = React.lazy(() => import('./views/pages/Projects/CoastalGardenPhase2.js'))
 const Unauthorized = React.lazy(() => import('./views/pages/Unauthorized'))
+const Page404 = React.lazy(() => import('./views/pages/page404/Page404'))
 
 
 const Colors = React.lazy(() => import('./views/theme/colors/Colors'))
@@ -183,6 +184,7 @@ const routes = [
   { path: '/venture', name: 'Venture Details', element: venture ,meta:{allowedRoles:["admin","agent"]}},
   { path: '/venture2', name: 'Varahi Gradens', element: venture2 ,meta:{allowedRoles:["admin","agent"]}},
   { path: '/CoastalGardenPhase2', name: 'Coastal Garden Phase II', element: CoastalGardenPhase2 ,meta:{allowedRoles:["admin","agent"]}},
+  { path: '*', name: 'Page 404', element: Page404 },
 ]
 
 export default routes
