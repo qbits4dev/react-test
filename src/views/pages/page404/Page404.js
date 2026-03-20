@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   CButton,
   CCol,
@@ -12,6 +12,23 @@ import CIcon from '@coreui/icons-react'
 import { cilMagnifyingGlass } from '@coreui/icons'
 
 const Page404 = () => {
+  const [secondsLeft, setSecondsLeft] = useState(2)
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setSecondsLeft((prev) => (prev > 0 ? prev - 1 : 0))
+    }, 1000)
+
+    const timeoutId = setTimeout(() => {
+      window.location.hash = '#/login'
+    }, 2000)
+
+    return () => {
+      clearTimeout(timeoutId)
+      clearInterval(intervalId)
+    }
+  }, [])
+
   return (
     <div className="bg-body-tertiary min-vh-100 d-flex flex-row align-items-center">
       <CContainer>
@@ -23,13 +40,18 @@ const Page404 = () => {
               <p className="text-body-secondary float-start">
                 The page you are looking for was not found.
               </p>
+              <p className="text-body-secondary float-start mt-2">
+                Redirecting to login in {secondsLeft} second{secondsLeft === 1 ? '' : 's'}...
+              </p>
             </div>
             <CInputGroup className="input-prepend">
               <CInputGroupText>
                 <CIcon icon={cilMagnifyingGlass} />
               </CInputGroupText>
               <CFormInput type="text" placeholder="What are you looking for?" />
-              <CButton color="info">Search</CButton>
+              <CButton color="info" onClick={() => (window.location.hash = '#/login')}>
+                Go to Login Now
+              </CButton>
             </CInputGroup>
           </CCol>
         </CRow>
