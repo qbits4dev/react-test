@@ -7,6 +7,7 @@ import './scss/examples.scss'
 
 // shared protected route component
 import ProtectedRoute from './components/ProtectedRoute'
+import ErrorBoundary from './components/ErrorBoundary'
 
 // Containers
 const DefaultLayout = React.lazy(() => import('./layout/DefaultLayout'))
@@ -34,17 +35,42 @@ const App = () => {
 
   useEffect(() => {
     setColorMode('light')
-  }, [])
+
+    const globalError = (event) => {
+      console.error('Global error:', event.error || event.message || event)
+      // Prevent default to avoid browser console duplication in production.
+      if (event.preventDefault) {
+        event.preventDefault()
+      }
+    }
+
+    const globalRejection = (event) => {
+      console.error('Unhandled promise rejection:', event.reason)
+      // Standard handle for event.
+      if (event.preventDefault) {
+        event.preventDefault()
+      }
+    }
+
+    window.addEventListener('error', globalError)
+    window.addEventListener('unhandledrejection', globalRejection)
+
+    return () => {
+      window.removeEventListener('error', globalError)
+      window.removeEventListener('unhandledrejection', globalRejection)
+    }
+  }, [setColorMode])
 
   return (
     <HashRouter>
-      <Suspense
-        fallback={
-          <div className="pt-3 text-center">
-            <CSpinner color="primary" variant="grow" />
-          </div>
-        }
-      >
+      <ErrorBoundary>
+        <Suspense
+          fallback={
+            <div className="pt-3 text-center">
+              <CSpinner color="primary" variant="grow" />
+            </div>
+          }
+        >
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<Navigate to="login" replace />} />
@@ -63,9 +89,11 @@ const App = () => {
               </ProtectedRoute>
             }
           />
+          <Route path="*" element={<Navigate to="/404" replace />} />
         </Routes>
       </Suspense>
-    </HashRouter>
+    </ErrorBoundary>
+  </HashRouter>
   )
 }
 
