@@ -1,13 +1,12 @@
 import React, { Suspense, useEffect } from 'react'
-import { HashRouter, Route, Routes, Navigate, useLocation, matchPath } from 'react-router-dom'
-import { useSelector } from 'react-redux'
+import { HashRouter, Route, Routes, Navigate } from 'react-router-dom'
 
 import { CSpinner, useColorModes } from '@coreui/react'
 import './scss/style.scss'
 import './scss/examples.scss'
 
-// routes config
-import routes from './routes'
+// shared protected route component
+import ProtectedRoute from './components/ProtectedRoute'
 
 // Containers
 const DefaultLayout = React.lazy(() => import('./layout/DefaultLayout'))
@@ -27,25 +26,6 @@ const AgentRegistration = React.lazy(() =>
 const ClientRegister = React.lazy(() =>
   import('./views/pages/register/cilent_register')
 )
-
-// ProtectedRoute component
-const ProtectedRoute = ({ children }) => {
-  const location = useLocation()
-  const token = localStorage.getItem('user')
-  const userData = JSON.parse(token)
-  const currentUserRole = userData?.role?.toLowerCase()
-
-  const matchedRoute = routes.find((route) => matchPath(route.path, location.pathname))
-
-  if (matchedRoute) {
-    const allowedRoles = matchedRoute.meta?.allowedRoles || []
-    if (allowedRoles.length > 0 && !allowedRoles.includes(currentUserRole)) {
-      return <Navigate to="/login" replace />
-    }
-  }
-
-  return children
-}
 
 const App = () => {
   const { setColorMode } = useColorModes(

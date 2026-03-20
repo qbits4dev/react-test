@@ -11,13 +11,24 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     try {
       const userJson = localStorage.getItem('user');
       const user = userJson ? JSON.parse(userJson) : null;
-      const role = user?.role || user?.data?.role || null;
-      // If role is not present or not allowed, redirect to unauthorized
-      if (!role || !allowedRoles.includes(role)) {
+      let role = user?.role || user?.data?.role || null;
+
+      if (typeof role === 'string') {
+        role = role.toLowerCase()
+      } else if (Array.isArray(role)) {
+        role = role.map((r) => String(r).toLowerCase())
+      }
+
+      const normalizedAllowedRoles = allowedRoles.map((r) => String(r).toLowerCase())
+
+      const hasRole = Array.isArray(role)
+        ? role.some((r) => normalizedAllowedRoles.includes(r))
+        : normalizedAllowedRoles.includes(String(role))
+
+      if (!role || !hasRole) {
         return <Navigate to="/unauthorized" replace />;
       }
     } catch (e) {
-      // If parsing fails, treat as unauthorized
       return <Navigate to="/unauthorized" replace />;
     }
   }
