@@ -36,6 +36,10 @@ if (!isValidHash) {
 
 import App from './App'
 import store from './store'
+import { setupAuthFetch } from './utils/authFetch'
+
+globalThis.apiBaseUrl = globalThis.apiBaseUrl || import.meta.env.VITE_API_BASE_URL
+setupAuthFetch()
 
 createRoot(document.getElementById('root')).render(
   <Provider store={store}>
