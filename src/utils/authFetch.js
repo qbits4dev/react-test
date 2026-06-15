@@ -9,9 +9,20 @@ const toAbsoluteUrl = (value) => {
 }
 
 const getApiBaseUrl = () => {
-  const baseUrl = globalThis.apiBaseUrl || import.meta.env.VITE_API_BASE_URL || ''
+  const runtimeApiUrl =
+    globalThis.apiBaseUrl ||
+    globalThis.__API_BASE_URL__ ||
+    import.meta.env.VITE_API_BASE_URL ||
+    ''
+
+  const baseUrl = typeof runtimeApiUrl === 'string' ? runtimeApiUrl.trim() : ''
   const normalized = toAbsoluteUrl(baseUrl)
-  return normalized ? normalized.href.replace(/\/$/, '') : ''
+  if (normalized) {
+    return normalized.href.replace(/\/$/, '')
+  }
+
+  // Fallback for deployments where env var is not injected at build time.
+  return window.location.origin
 }
 
 const isApiRequest = (inputUrl) => {
