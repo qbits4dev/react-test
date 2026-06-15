@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import {
   CAvatar,
+  CAlert,
   CCard,
   CCardHeader,
   CCardBody,
@@ -61,6 +62,11 @@ const GetAgents = () => {
   const [teamFilter, setTeamFilter] = useState('')
   const [sortConfig, setSortConfig] = useState({ key: 'firstName', direction: 'ascending' })
   const [currentPage, setCurrentPage] = useState(1)
+  const [designations, setDesignations] = useState([])
+  const [loadingDesignations, setLoadingDesignations] = useState(true)
+  const [designationError, setDesignationError] = useState('')
+  const [savingAgent, setSavingAgent] = useState(false)
+  const [message, setMessage] = useState({ visible: false, color: 'success', text: '' })
   const itemsPerPage = 5
 
   // Fields groups for edit modal
@@ -260,6 +266,21 @@ const GetAgents = () => {
       isMounted = false;
     };
   }, [userRole, userId]);
+
+  useEffect(() => {
+    fetch(`${globalThis.apiBaseUrl}/register/?key=designation`, { headers: { accept: 'application/json' } })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.status === 'ok' && Array.isArray(data.designation)) {
+          setDesignations(data.designation)
+          setDesignationError('')
+        } else {
+          setDesignationError('No designations found')
+        }
+      })
+      .catch(() => setDesignationError('Failed to fetch designations'))
+      .finally(() => setLoadingDesignations(false))
+  }, [])
   
 
   // Filtering, sorting logic
@@ -337,10 +358,67 @@ const GetAgents = () => {
     const { name, value } = e.target
     setSelectedAgent({ ...selectedAgent, [name]: value })
   }
-  const handleSave = () => {
-    if (selectedAgent) {
+  const buildAgentPayload = (agent) => ({
+    first_name: agent.firstName || '',
+    last_name: agent.lastName || '',
+    father_name: agent.fatherName || '',
+    dob: agent.dob || '',
+    gender: agent.gender || '',
+    marital_status: agent.maritalStatus || '',
+    email: agent.email || '',
+    mobile: agent.phone || '',
+    occupation: agent.occupation || '',
+    education: agent.education || '',
+    designation: agent.designation || '',
+    reference_agent: agent.referenceAgent || '',
+    agent_team: agent.agentTeam || '',
+    work_location: agent.workLocation || '',
+    bank_name: agent.bankName || '',
+    branch: agent.branch || '',
+    account_number: agent.accountNumber || '',
+    ifsc_code: agent.ifscCode || '',
+    nominiee: agent.nomineeName || '',
+    relationship: agent.nomineeRelation || '',
+    nominee_mobile: agent.nomineeMobile || '',
+    address: agent.permanentAddress || agent.presentAddress || '',
+  })
+
+  const handleSave = async () => {
+    if (!selectedAgent) return
+
+    setSavingAgent(true)
+    const payload = buildAgentPayload(selectedAgent)
+
+    try {
+      const uId = selectedAgent.agentId
+      const candidateUrls = [
+        `${globalThis.apiBaseUrl}/users/${uId}`,
+        `${globalThis.apiBaseUrl}/users/${selectedAgent.id}`,
+      ]
+
+      let updatedFromApi = null
+      for (const url of candidateUrls) {
+        const res = await fetch(url, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+
+        if (res.ok) {
+          const data = await res.json().catch(() => null)
+          updatedFromApi = data
+          break
+        }
+      }
+
       setAgents((prev) => prev.map((a) => (a.id === selectedAgent.id ? selectedAgent : a)))
+      setMessage({ visible: true, color: 'success', text: 'Agent updated successfully.' })
       setEditModalVisible(false)
+      setSelectedAgent(updatedFromApi ? { ...selectedAgent } : null)
+    } catch (error) {
+      setMessage({ visible: true, color: 'danger', text: 'Failed to update agent. Please try again.' })
+    } finally {
+      setSavingAgent(false)
       setSelectedAgent(null)
     }
   }
@@ -361,6 +439,16 @@ const GetAgents = () => {
   return (
     <>
       <CCard className="shadow border-0">
+        {message.visible && (
+          <CAlert
+            color={message.color}
+            dismissible
+            className="m-3 mb-0"
+            onClose={() => setMessage((prev) => ({ ...prev, visible: false }))}
+          >
+            {message.text}
+          </CAlert>
+        )}
         <CCardHeader style={gradientHeaderStyle} className="text-white p-3">
           <div className="text-center mb-4">
             <h3 className="fw-bold mb-0">Agent Management</h3>
@@ -607,13 +695,37 @@ const GetAgents = () => {
                 <CRow className="g-3">
                   {professionalFields.map((key) => (
                     <CCol md={6} key={key}>
-                      <CFormInput
-                        label={formatLabel(key)}
-                        name={key}
-                        value={selectedAgent[key]}
-                        onChange={handleChange}
-                        disabled={key === 'agentId'}
-                      />
+                      {key === 'designation' ? (
+                        <>
+                          <CFormSelect
+                            label={formatLabel(key)}
+                            name={key}
+                            value={selectedAgent[key] || ''}
+                            onChange={handleChange}
+                            disabled={loadingDesignations}
+                          >
+                            <option value="">Select Designation</option>
+                            {!loadingDesignations &&
+                              !designationError &&
+                              designations.map((d, idx) => (
+                                <option key={idx} value={d.id || d.name}>
+                                  {d.name}
+                                </option>
+                              ))}
+                          </CFormSelect>
+                          {designationError && (
+                            <small className="text-danger">{designationError}</small>
+                          )}
+                        </>
+                      ) : (
+                        <CFormInput
+                          label={formatLabel(key)}
+                          name={key}
+                          value={selectedAgent[key]}
+                          onChange={handleChange}
+                          disabled={key === 'agentId'}
+                        />
+                      )}
                     </CCol>
                   ))}
                 </CRow>
@@ -656,7 +768,7 @@ const GetAgents = () => {
               Cancel
             </CButton>
             <CButton color="primary" onClick={handleSave}>
-              Save Changes
+              {savingAgent ? 'Saving...' : 'Save Changes'}
             </CButton>
           </CModalFooter>
         </CModal>
