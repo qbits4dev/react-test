@@ -240,7 +240,9 @@ export default function RegisterClientWizard() {
         jsonObj[key] = value instanceof File ? value.name : value;
       }
       console.log('Submitting form data (JSON):', JSON.stringify(jsonObj, null, 2));
-      const res = await fetch(`${globalThis.apiBaseUrl}/auth/register`, { method: 'POST', body: formData });
+//      const res = await fetch(`${globalThis.apiBaseUrl}/auth/register`, { method: 'POST', body: formData });
+      const res = await fetch(`${globalThis.apiBaseUrl}/register/client`, { method: 'POST', body: formData });
+
       const data = await res.json();
       if (res.ok) {
         setRegisteredUID(data.u_id || data.user_id || 'N/A');
