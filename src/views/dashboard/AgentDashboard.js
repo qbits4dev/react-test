@@ -14,9 +14,21 @@ import {
   CTableDataCell
 } from '@coreui/react'
 import WidgetsDropdown from '../widgets/WidgetsCardsAd'
+import { useEffect } from 'react'
+import AnnouncementCarousel from '../pages/Announcements/AnnouncementCarousel'
+import { listAnnouncementsForUser } from '../pages/Announcements/announcementService'
 //import UpcomingVisitsWidget from '../pages/register/VisitCalender'
 
 const AgentDashboard = () => {
+  const [updates, setUpdates] = useState([])
+
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    listAnnouncementsForUser({ role: 'agent', user })
+      .then((items) => setUpdates(items))
+      .catch(() => setUpdates([]))
+  }, [])
+
   // Sample widget data
   const agentWidgetsData = [
     {
@@ -64,6 +76,7 @@ const AgentDashboard = () => {
 
   return (
     <CContainer fluid className="py-4 px-3">
+      <AnnouncementCarousel title="Agent Updates Carousel" items={updates} />
       {/* ===== Widgets Section ===== */}
       <CRow className="g-4">
         <CCol xs={12}>

@@ -1,6 +1,7 @@
 import React from 'react'
 import CIcon from '@coreui/icons-react'
 import {
+  cilBullhorn,
   cilSpeedometer,
   cilUser,
   cilPeople,
@@ -23,6 +24,14 @@ export const ROLES = {
 
 // ==================== NAVIGATION CONFIGURATION ====================
 const navigationConfig = [
+  {
+    component: CNavItem,
+    name: 'Announcements & Updates',
+    to: '/announcements',
+    icon: <CIcon icon={cilBullhorn} customClassName="nav-icon" />,
+    allowedRoles: [ROLES.ADMIN, ROLES.AGENT, ROLES.CLIENT],
+  },
+
   // CATEGORY 2: USER MANAGEMENT (ADMIN ONLY)
   {
     component: CNavTitle,

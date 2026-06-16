@@ -53,10 +53,21 @@ import avatar6 from 'src/assets/images/avatars/6.jpg'
 import WidgetsBrand from '../widgets/WidgetsBrand'
 // import WidgetsDropdown from '../widgets/WidgetsDropdown'
 import WidgetsDropdown from '../widgets/WidgetsCardsAd'
+import { useEffect, useState } from 'react'
+import AnnouncementCarousel from '../pages/Announcements/AnnouncementCarousel'
+import { listAnnouncementsForUser } from '../pages/Announcements/announcementService'
 
 import MainChart from './MainChart'
 
 const ClientDashboard = () => {
+  const [updates, setUpdates] = useState([])
+
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    listAnnouncementsForUser({ role: 'customer', user })
+      .then((items) => setUpdates(items))
+      .catch(() => setUpdates([]))
+  }, [])
 
   const agentWidgetsData = [
 
@@ -80,8 +91,10 @@ const ClientDashboard = () => {
   ]
 
   return (
-
-    <WidgetsDropdown widgetsData={agentWidgetsData} className="mb-4" />
+    <>
+      <AnnouncementCarousel title="Announcements Carousel" items={updates} />
+      <WidgetsDropdown widgetsData={agentWidgetsData} className="mb-4" />
+    </>
 
 
   )

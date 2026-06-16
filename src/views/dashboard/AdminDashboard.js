@@ -55,10 +55,13 @@ import WidgetsBrand from '../widgets/WidgetsBrand'
 import WidgetsDropdown from '../widgets/WidgetsCardsAd'
 import MainChart from './MainChart'
 import { color } from 'framer-motion'
+import { listAnnouncementsForUser } from '../pages/Announcements/announcementService'
+import AnnouncementCarousel from '../pages/Announcements/AnnouncementCarousel'
 
 const AdminDashboard = () => {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [updates, setUpdates] = useState([])
 
   useEffect(() => {
     // ✅ FIXED: Removed quotes around variable
@@ -81,6 +84,13 @@ const AdminDashboard = () => {
         console.error('Fetch error:', err)
         setLoading(false)
       })
+  }, [])
+
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    listAnnouncementsForUser({ role: 'admin', user })
+      .then((items) => setUpdates(items))
+      .catch(() => setUpdates([]))
   }, [])
 
   if (loading) return <div>Loading...</div>
@@ -229,6 +239,7 @@ const AdminDashboard = () => {
 
   return (
     <>
+      <AnnouncementCarousel title="Announcements Carousel" items={updates} />
       <WidgetsDropdown widgetsData={agentWidgetsData} className="mb-4" />
 
       {/* <div>

@@ -7,6 +7,7 @@ const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
 const ClientDashboard = React.lazy(() => import('./views/dashboard/ClientDashboard'))
 const AdminDashboard = React.lazy(() => import('./views/dashboard/AdminDashboard'))
 const AgentDashboard = React.lazy(() => import('./views/dashboard/AgentDashboard'))
+const AnnouncementsHub = React.lazy(() => import('./views/pages/Announcements/AnnouncementsHub'))
 const Plots = React.lazy(() => import('./views/pages/Plots'))
 const Reports = React.lazy(() => import('./views/pages/Reports'))
 const Invoice = React.lazy(() => import('./views/pages/Invoice'))
@@ -103,6 +104,7 @@ const Widgets = React.lazy(() => import('./views/widgets/Widgets'))
 const routes = [
   // { path: '/', exact: true, name: 'Home',meta:{allowedRoles:["admin","agent"]} },
   { path: '/dashboard', name: 'Dashboard', element: Dashboard ,meta:{allowedRoles:["admin","agent"]}},
+  { path: '/announcements', name: 'Announcements & Updates', element: AnnouncementsHub, meta:{allowedRoles:["admin","agent","customer"]}},
   { path: '/Clientdashboard', name: 'Dashboard', element: ClientDashboard ,meta:{allowedRoles:["admin","customer"]}},
   { path: '/Admindashboard', name: 'Dashboard', element: AdminDashboard,meta:{allowedRoles:["admin"]} },
   { path: '/Agentdashboard', name: 'Dashboard', element: AgentDashboard,meta:{allowedRoles:["agent"]} },
