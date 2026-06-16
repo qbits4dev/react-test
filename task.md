@@ -1,0 +1,25 @@
+- [ ] check every field validation
+- [ ] check api calls are working 
+- [ ] make forms, if there is any missing forms 
+- [ ] need to fix client registration 
+- [ ] view client not coming need to fix it 
+- [ ]
+- [ ]
+- [ ]
+- [ ]
+- [ ]
+- [ ]
+- [ ]
+- [ ]
+- [ ]
+- [ ]
+- [ ]
+- [ ]
+- [ ]
+- [ ]
+- [ ]
+- [ ]
+- [ ]
+- [ ]
+- [ ]
+- [ ]
