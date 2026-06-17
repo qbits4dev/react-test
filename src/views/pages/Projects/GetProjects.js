@@ -42,6 +42,7 @@ const getProjectBadgeColor = (status = '') => {
 const getPlotBadgeColor = (status = '') => (status.toLowerCase() === 'sold' ? 'danger' : 'success')
 
 const normalizePlot = (plot) => ({
+  id: plot.id || '',
   project_name: plot.project_name || '',
   plot_number: plot.plot_number || '',
   size: plot.size || '',
@@ -58,7 +59,9 @@ const updatePlotOnServer = async (plot) => {
     status: String(plot.status || '').toLowerCase(),
   }
 
+  const plotId = plot.id || plot.plot_number
   const urls = [
+    `${globalThis.apiBaseUrl}/projects/plots/${encodeURIComponent(plotId)}`,
     `${globalThis.apiBaseUrl}/projects/plots/${encodeURIComponent(plot.plot_number)}`,
     `${globalThis.apiBaseUrl}/projects/plots`,
   ]
@@ -98,6 +101,10 @@ export default function ProjectsList() {
   const [deletePlotModalVisible, setDeletePlotModalVisible] = useState(false)
   const [selectedPlot, setSelectedPlot] = useState(null)
   const [savingPlot, setSavingPlot] = useState(false)
+
+  const [editProjectModalVisible, setEditProjectModalVisible] = useState(false)
+  const [selectedProjectForEdit, setSelectedProjectForEdit] = useState(null)
+  const [savingProject, setSavingProject] = useState(false)
 
   const fetchProjects = async () => {
     setLoading(true)
@@ -142,6 +149,60 @@ export default function ProjectsList() {
   const handleEditPlotChange = (e) => {
     const { name, value } = e.target
     setSelectedPlot((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const handleEditProjectOpen = (project) => {
+    setSelectedProjectForEdit({ ...project })
+    setEditProjectModalVisible(true)
+  }
+
+  const handleEditProjectChange = (e) => {
+    const { name, value } = e.target
+    setSelectedProjectForEdit((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const handleSaveProject = async () => {
+    if (!selectedProjectForEdit) return
+    const { id, name, location, developer, status, total_area, start_date, end_date, description } = selectedProjectForEdit
+    if (!name || !location || !developer || !status) {
+      setMessage({ visible: true, color: 'danger', text: 'Please fill name, location, developer, and status before saving.' })
+      return
+    }
+
+    setSavingProject(true)
+    try {
+      const payload = {
+        name,
+        location,
+        developer,
+        status,
+        total_area: Number(total_area),
+        start_date: start_date || null,
+        end_date: end_date || null,
+        description: description || ''
+      }
+
+      const res = await fetch(`${globalThis.apiBaseUrl}/projects/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+
+      if (res.ok) {
+        setMessage({ visible: true, color: 'success', text: 'Project updated successfully.' })
+        setEditProjectModalVisible(false)
+        fetchProjects()
+      } else {
+        const errorData = await res.json().catch(() => null)
+        const errMsg = errorData?.message || 'Failed to save project changes.'
+        setMessage({ visible: true, color: 'danger', text: errMsg })
+      }
+    } catch (err) {
+      setMessage({ visible: true, color: 'danger', text: 'Failed to save project changes: ' + err.message })
+    } finally {
+      setSavingProject(false)
+      setSelectedProjectForEdit(null)
+    }
   }
 
   const handleSavePlot = async () => {
@@ -239,9 +300,14 @@ export default function ProjectsList() {
                         </CTableDataCell>
                         <CTableDataCell>{project.developer}</CTableDataCell>
                         <CTableDataCell>
-                          <CButton color="primary" size="sm" variant="outline" shape="rounded-pill" onClick={() => loadPlotsForProject(project)}>
-                            View Plots
-                          </CButton>
+                          <div className="d-flex gap-2">
+                            <CButton color="primary" size="sm" variant="outline" shape="rounded-pill" onClick={() => loadPlotsForProject(project)}>
+                              View Plots
+                            </CButton>
+                            <CButton color="info" size="sm" variant="outline" shape="rounded-pill" onClick={() => handleEditProjectOpen(project)}>
+                              Edit Project
+                            </CButton>
+                          </div>
                         </CTableDataCell>
                       </CTableRow>
                     ))
@@ -307,6 +373,51 @@ export default function ProjectsList() {
           )}
         </>
       )}
+
+      <CModal visible={editProjectModalVisible} onClose={() => setEditProjectModalVisible(false)} size="lg" backdrop="static">
+        <CModalHeader>
+          <CModalTitle>Edit Project</CModalTitle>
+        </CModalHeader>
+        <CModalBody>
+          {selectedProjectForEdit && (
+            <CRow className="g-3">
+              <CCol md={6}>
+                <CFormInput label="Project Name" name="name" value={selectedProjectForEdit.name} onChange={handleEditProjectChange} />
+              </CCol>
+              <CCol md={6}>
+                <CFormInput label="Developer" name="developer" value={selectedProjectForEdit.developer} onChange={handleEditProjectChange} />
+              </CCol>
+              <CCol md={6}>
+                <CFormInput label="Location" name="location" value={selectedProjectForEdit.location} onChange={handleEditProjectChange} />
+              </CCol>
+              <CCol md={6}>
+                <CFormInput label="Total Area" type="number" name="total_area" value={selectedProjectForEdit.total_area} onChange={handleEditProjectChange} />
+              </CCol>
+              <CCol md={6}>
+                <CFormInput label="Start Date" type="date" name="start_date" value={selectedProjectForEdit.start_date || ''} onChange={handleEditProjectChange} />
+              </CCol>
+              <CCol md={6}>
+                <CFormInput label="End Date" type="date" name="end_date" value={selectedProjectForEdit.end_date || ''} onChange={handleEditProjectChange} />
+              </CCol>
+              <CCol md={12}>
+                <CFormSelect label="Status" name="status" value={selectedProjectForEdit.status} onChange={handleEditProjectChange}>
+                  <option value="">Select Status</option>
+                  <option value="ongoing">ongoing</option>
+                  <option value="completed">completed</option>
+                  <option value="delayed">delayed</option>
+                </CFormSelect>
+              </CCol>
+              <CCol md={12}>
+                <CFormInput label="Description" name="description" value={selectedProjectForEdit.description} onChange={handleEditProjectChange} />
+              </CCol>
+            </CRow>
+          )}
+        </CModalBody>
+        <CModalFooter>
+          <CButton color="secondary" variant="ghost" onClick={() => setEditProjectModalVisible(false)}>Cancel</CButton>
+          <CButton color="primary" onClick={handleSaveProject} disabled={savingProject}>{savingProject ? 'Saving...' : 'Save'}</CButton>
+        </CModalFooter>
+      </CModal>
 
       <CModal visible={editPlotModalVisible} onClose={() => setEditPlotModalVisible(false)} backdrop="static">
         <CModalHeader>

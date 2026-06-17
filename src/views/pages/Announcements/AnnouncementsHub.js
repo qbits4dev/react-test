@@ -329,7 +329,7 @@ const AnnouncementsHub = () => {
 
   useEffect(() => {
     load()
-  }, [isAdmin, role])
+  }, [])
 
   const stats = useMemo(() => getAnnouncementStats(items), [items])
 

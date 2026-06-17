@@ -207,14 +207,18 @@ const GetClients = () => {
 
   const handleSave = async () => {
     if (!selectedClient) return
+    console.log('handleSave initiated with selectedClient:', selectedClient)
     setSaving(true)
     try {
-      const res = await fetch(`${globalThis.apiBaseUrl}/users/${selectedClient.u_id}`, {
-        method: 'PUT',
+      const url = `${globalThis.apiBaseUrl}/users/${selectedClient.u_id}`
+      console.log('Hitting PATCH API:', url)
+      const res = await fetch(url, {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(selectedClient),
       })
 
+      console.log('API Response status:', res.status)
       if (!res.ok) throw new Error('update failed')
 
       setMessage({ visible: true, color: 'success', text: 'Client updated successfully.' })

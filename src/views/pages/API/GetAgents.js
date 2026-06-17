@@ -119,30 +119,30 @@ const GetAgents = () => {
             .filter((u) => u.success)
             .map((u) => ({
               id: u.id,
-              agentId: u.u_id,
-              firstName: u.first_name,
-              lastName: u.last_name,
-              fatherName: u.father_name,
-              maritalStatus: u.marital_status,
-              dob: u.dob,
-              gender: u.gender,
-              email: u.email,
-              phone: u.mobile,
-              occupation: u.occupation,
-              education: u.education,
-              designation: u.designation,
-              referenceAgent: u.reference_agent,
-              agentTeam: u.agent_team,
-              workLocation: u.work_location,
-              bankName: u.bank_name,
-              branch: u.branch,
-              accountNumber: u.account_number,
-              ifscCode: u.ifsc_code,
-              nomineeName: u.nominiee || 'no value',
-              nomineeRelation: u.relationship || 'no value',
-              nomineeMobile: u.nominee_mobile || 'no value',
-              permanentAddress: u.address,
-              presentAddress: u.address,
+              agentId: u.u_id || '',
+              firstName: u.first_name || '',
+              lastName: u.last_name || '',
+              fatherName: u.father_name || '',
+              maritalStatus: u.marital_status || '',
+              dob: u.dob || '',
+              gender: u.gender || '',
+              email: u.email || '',
+              phone: u.mobile || '',
+              occupation: u.occupation || '',
+              education: u.education || '',
+              designation: u.designation || '',
+              referenceAgent: u.reference_agent || '',
+              agentTeam: u.agent_team || '',
+              workLocation: u.work_location || '',
+              bankName: u.bank_name || '',
+              branch: u.branch || '',
+              accountNumber: u.account_number || '',
+              ifscCode: u.ifsc_code || '',
+              nomineeName: u.nominiee || '',
+              nomineeRelation: u.relationship || '',
+              nomineeMobile: u.nominee_mobile || '',
+              permanentAddress: u.address || '',
+              presentAddress: u.address || '',
               avatar: null,
             }));
           if (isMounted) setAgents(filteredAgents);
@@ -270,7 +270,7 @@ const GetAgents = () => {
     return () => {
       isMounted = false;
     };
-  }, [userRole, userId]);
+  }, []);
 
   useEffect(() => {
     fetch(`${globalThis.apiBaseUrl}/register/?key=designation`, { headers: { accept: 'application/json' } })
@@ -548,36 +548,34 @@ const GetAgents = () => {
   const handleSave = async () => {
     if (!selectedAgent) return
 
+    console.log('handleSave initiated with selectedAgent:', selectedAgent)
+
     // Validate before saving
-    if (!validateEditAll()) {
+    const isValid = validateEditAll()
+    console.log('validateEditAll result:', isValid, editErrors)
+    if (!isValid) {
       setMessage({ visible: true, color: 'danger', text: 'Please fix the validation errors before saving.' })
       return
     }
 
     setSavingAgent(true)
     const payload = buildAgentPayload(selectedAgent)
+    console.log('Saving agent payload:', payload)
 
     try {
       const uId = selectedAgent.agentId
-      const candidateUrls = [
-        `${globalThis.apiBaseUrl}/users/${uId}`,
-        `${globalThis.apiBaseUrl}/users/${selectedAgent.id}`,
-      ]
+      const url = `${globalThis.apiBaseUrl}/users/${uId}`
+      console.log('Hitting PATCH API:', url)
+      const res = await fetch(url, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
 
-      let updatedFromApi = null
-      for (const url of candidateUrls) {
-        const res = await fetch(url, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        })
-
-        if (res.ok) {
-          const data = await res.json().catch(() => null)
-          updatedFromApi = data
-          break
-        }
-      }
+      console.log('API Response status:', res.status)
+      if (!res.ok) throw new Error('update failed')
+      const updatedFromApi = await res.json().catch(() => null)
+      console.log('API Response JSON:', updatedFromApi)
 
       setAgents((prev) => prev.map((a) => (a.id === selectedAgent.id ? selectedAgent : a)))
       setMessage({ visible: true, color: 'success', text: 'Agent updated successfully.' })
@@ -596,9 +594,21 @@ const GetAgents = () => {
     setAgentToDelete(agent)
     setDeleteModalVisible(true)
   }
-  const confirmDelete = () => {
-    if (agentToDelete) {
-      setAgents(agents.filter((a) => a.id !== agentToDelete.id))
+  const confirmDelete = async () => {
+    if (!agentToDelete) return
+    console.log('confirmDelete initiated for agent:', agentToDelete)
+    try {
+      const url = `${globalThis.apiBaseUrl}/users/${agentToDelete.agentId}`
+      console.log('Hitting DELETE API:', url)
+      const res = await fetch(url, { method: 'DELETE' })
+      console.log('DELETE API response status:', res.status)
+      if (!res.ok) throw new Error('delete failed')
+      setMessage({ visible: true, color: 'success', text: 'Agent deleted successfully.' })
+    } catch (error) {
+      console.error('Failed to delete agent:', error)
+      setMessage({ visible: true, color: 'warning', text: 'Deleted locally. Server delete is unavailable.' })
+    } finally {
+      setAgents((prev) => prev.filter((a) => a.id !== agentToDelete.id))
       setDeleteModalVisible(false)
       setAgentToDelete(null)
     }

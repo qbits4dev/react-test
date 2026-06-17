@@ -44,6 +44,7 @@ const getStatusBadge = (status = '') => {
 }
 
 const normalizePlot = (plot) => ({
+  id: plot.id || '',
   project_name: plot.project_name || '',
   plot_number: plot.plot_number || '',
   size: plot.size || '',
@@ -60,7 +61,9 @@ const updatePlotOnServer = async (plot) => {
     status: String(plot.status || '').toLowerCase(),
   }
 
+  const plotId = plot.id || plot.plot_number
   const urls = [
+    `${globalThis.apiBaseUrl}/projects/plots/${encodeURIComponent(plotId)}`,
     `${globalThis.apiBaseUrl}/projects/plots/${encodeURIComponent(plot.plot_number)}`,
     `${globalThis.apiBaseUrl}/projects/plots`,
   ]
