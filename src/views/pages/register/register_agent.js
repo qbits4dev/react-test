@@ -118,16 +118,37 @@ export default function RegisterAgentWizard() {
     const name = e.target.name
     let value = e.target.value
 
-    // Input sanitation
-    if (name === 'pan') value = value.toUpperCase().replace(/[^A-Z0-9]/g, '')
-    else if (['first_name', 'last_name', 'father_name', 'nominiee', 'relationship', 'language', 'education', 'occupation', 'work_location', 'branch', 'bank_name', 'address_line1', 'address_line2', 'city', 'state'].includes(name))
-      value = value.replace(/[^A-Za-z0-9 ,\-\/]/g, '')
-    else if (['mobile', 'work_experience', 'account_number', 'income', 'adhar', 'nominee_mobile', 'pincode'].includes(name))
-      value = value.replace(/[^0-9]/g, '')
-    else if (name === 'ifsc_code') value = value.toUpperCase().replace(/[^A-Z0-9]/g, '')
+    // Input sanitation per field type
+    if (name === 'pan') value = value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10)
+    else if (name === 'ifsc_code') value = value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 11)
+    else if (['first_name', 'last_name', 'father_name'].includes(name))
+      value = value.replace(/[^A-Za-z ]/g, '').slice(0, 50)
+    else if (['nominiee', 'relationship'].includes(name))
+      value = value.replace(/[^A-Za-z ]/g, '').slice(0, 60)
+    else if (['city', 'state'].includes(name))
+      value = value.replace(/[^A-Za-z ]/g, '').slice(0, 50)
+    else if (['language', 'education', 'occupation', 'work_location', 'branch', 'bank_name'].includes(name))
+      value = value.replace(/[^A-Za-z0-9 ,\-\/]/g, '').slice(0, 80)
+    else if (['address_line1', 'address_line2'].includes(name))
+      value = value.replace(/[^A-Za-z0-9 ,\-\/.#]/g, '').slice(0, 150)
+    else if (name === 'mobile' || name === 'nominee_mobile')
+      value = value.replace(/[^0-9]/g, '').slice(0, 10)
+    else if (name === 'adhar')
+      value = value.replace(/[^0-9]/g, '').slice(0, 12)
+    else if (name === 'pincode')
+      value = value.replace(/[^0-9]/g, '').slice(0, 6)
+    else if (name === 'account_number')
+      value = value.replace(/[^0-9]/g, '').slice(0, 18)
+    else if (name === 'work_experience')
+      value = value.replace(/[^0-9]/g, '').slice(0, 2)
+    else if (name === 'income')
+      value = value.replace(/[^0-9]/g, '').slice(0, 12)
+    else if (name === 'reference_agent' || name === 'agent_team')
+      value = value.replace(/[^A-Za-z0-9 \-_]/g, '').slice(0, 30)
 
     setFormField(name, value)
 
+    // Real-time DOB age check
     if (name === 'dob' && value) {
       const birthDate = new Date(value)
       const today = new Date()
@@ -138,52 +159,202 @@ export default function RegisterAgentWizard() {
     }
   }
 
+  // Validate on blur for immediate feedback
+  const handleBlur = (e) => {
+    const { name, value } = e.target
+    const err = validateField(name, value)
+    if (err) setErrors(prev => ({ ...prev, [name]: err }))
+  }
+
   const renderError = (field) => errors[field] && (
     <small className="text-danger d-block mt-1">{errors[field]}</small>
   )
 
   const validateField = (name, value) => {
+    const v = typeof value === 'string' ? value.trim() : value
+
     switch (name) {
-      case 'first_name': case 'last_name': case 'father_name': case 'nominiee': case 'relationship':
-      case 'reference_agent': case 'agent_team': case 'branch': case 'bank_name': case 'work_location':
-      case 'address': case 'address_line1': case 'city': case 'state': case 'pincode':
-        if (!value) return 'This field is required'
+      // ── Name fields: required, letters only, 2–50 chars ──
+      case 'first_name':
+        if (!v) return 'First Name is required'
+        if (v.length < 2) return 'First Name must be at least 2 characters'
+        if (v.length > 50) return 'First Name must not exceed 50 characters'
+        if (!/^[A-Za-z ]+$/.test(v)) return 'First Name must contain only letters'
         break
-      case 'mobile': case 'nominee_mobile':
-        if (!/^[0-9]{10}$/.test(value)) return 'Enter a valid 10-digit phone number'
+      case 'last_name':
+        if (!v) return 'Last Name is required'
+        if (v.length < 1) return 'Last Name must be at least 1 character'
+        if (v.length > 50) return 'Last Name must not exceed 50 characters'
+        if (!/^[A-Za-z ]+$/.test(v)) return 'Last Name must contain only letters'
+        break
+      case 'father_name':
+        if (!v) return "Father's Name is required"
+        if (v.length < 2) return "Father's Name must be at least 2 characters"
+        if (v.length > 50) return "Father's Name must not exceed 50 characters"
+        if (!/^[A-Za-z ]+$/.test(v)) return "Father's Name must contain only letters"
+        break
+
+      // ── Contact fields ──
+      case 'mobile':
+        if (!v) return 'Mobile number is required'
+        if (!/^[6-9][0-9]{9}$/.test(v)) return 'Mobile must be a valid 10-digit Indian number starting with 6-9'
+        break
+      case 'nominee_mobile':
+        if (!v) return 'Nominee Mobile is required'
+        if (!/^[6-9][0-9]{9}$/.test(v)) return 'Nominee Mobile must be a valid 10-digit number starting with 6-9'
         break
       case 'email':
-        if (!value || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Invalid email'
-        break
-      case 'work_experience':
-        if (value && !/^[0-9]{1,2}$/.test(value)) return 'Enter valid experience'
-        break
-      case 'account_number':
-        if (value && !/^[0-9]{9,18}$/.test(value)) return 'Invalid account number'
-        break
-      case 'ifsc_code':
-        if (value && !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(value)) return 'Invalid IFSC code'
-        break
-      case 'adhar':
-        if (!/^[0-9]{12}$/.test(value)) return 'Aadhaar must be 12 digits'
-        break
-      case 'pan':
-        if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(value)) return 'Invalid PAN format'
+        if (!v) return 'Email is required'
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return 'Enter a valid email address (e.g. name@example.com)'
+        if (v.length > 100) return 'Email must not exceed 100 characters'
         break
       case 'password':
-        if (!value) return 'Password required'
-        if (value.length < 6) return 'Password must be ≥ 6 chars'
+        if (!v) return 'Password is required'
+        if (v.length < 6) return 'Password must be at least 6 characters'
+        if (v.length > 30) return 'Password must not exceed 30 characters'
         break
-      case 'dob':
-        if (!value) return 'Required'
-        const birthDate = new Date(value)
+
+      // ── Date of Birth ──
+      case 'dob': {
+        if (!v) return 'Date of Birth is required'
+        const birthDate = new Date(v)
         const today = new Date()
         let age = today.getFullYear() - birthDate.getFullYear()
-        if (age < 18) return 'Age must be ≥ 18'
+        const m = today.getMonth() - birthDate.getMonth()
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--
+        if (age < 18) return 'Agent must be at least 18 years old'
+        if (age > 80) return 'Please enter a valid Date of Birth'
         break
-      case 'photo': case 'aadhaar_file': case 'pan_file':
-        if (!value) return 'File required'
+      }
+
+      // ── Select dropdowns ──
+      case 'gender':
+        if (!v) return 'Gender is required'
         break
+      case 'marital_status':
+        if (!v) return 'Marital Status is required'
+        break
+      case 'education':
+        if (!v) return 'Education is required'
+        if (v.length > 80) return 'Education must not exceed 80 characters'
+        break
+      case 'language':
+        if (!v) return 'Language is required'
+        break
+      case 'designation':
+        if (!v) return 'Designation is required'
+        break
+
+      // ── Occupation / work ──
+      case 'occupation':
+        if (!v) return 'Occupation is required'
+        if (v.length > 80) return 'Occupation must not exceed 80 characters'
+        break
+      case 'work_experience':
+        if (!v) return 'Work Experience is required'
+        if (!/^[0-9]{1,2}$/.test(v)) return 'Work Experience must be 0–99 years'
+        if (Number(v) > 60) return 'Work Experience cannot exceed 60 years'
+        break
+      case 'income':
+        if (!v) return 'Annual Income is required'
+        if (!/^[0-9]+$/.test(v)) return 'Income must be a number'
+        if (v.length > 12) return 'Income value is too large'
+        break
+
+      // ── Identity documents ──
+      case 'adhar':
+        if (!v) return 'Aadhaar Number is required'
+        if (!/^[0-9]{12}$/.test(v)) return 'Aadhaar must be exactly 12 digits'
+        break
+      case 'pan':
+        if (!v) return 'PAN Number is required'
+        if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(v)) return 'PAN must be in format: ABCDE1234F'
+        break
+
+      // ── Work & Team ──
+      case 'reference_agent':
+        if (!v) return 'Reference Agent Code is required'
+        if (v.length > 30) return 'Reference Agent Code must not exceed 30 characters'
+        break
+      case 'agent_team':
+        if (!v) return 'Agent Team is required'
+        if (v.length > 30) return 'Agent Team must not exceed 30 characters'
+        break
+      case 'work_location':
+        if (!v) return 'Work Location is required'
+        if (v.length > 80) return 'Work Location must not exceed 80 characters'
+        break
+
+      // ── Bank details ──
+      case 'bank_name':
+        if (!v) return 'Bank Name is required'
+        if (v.length < 2) return 'Bank Name must be at least 2 characters'
+        if (v.length > 80) return 'Bank Name must not exceed 80 characters'
+        break
+      case 'branch':
+        if (!v) return 'Branch is required'
+        if (v.length > 80) return 'Branch must not exceed 80 characters'
+        break
+      case 'account_number':
+        if (!v) return 'Account Number is required'
+        if (!/^[0-9]{9,18}$/.test(v)) return 'Account Number must be 9–18 digits'
+        break
+      case 'ifsc_code':
+        if (!v) return 'IFSC Code is required'
+        if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(v)) return 'IFSC must be in format: ABCD0123456'
+        break
+
+      // ── Nominee ──
+      case 'nominiee':
+        if (!v) return 'Nominee Name is required'
+        if (v.length < 2) return 'Nominee Name must be at least 2 characters'
+        if (v.length > 60) return 'Nominee Name must not exceed 60 characters'
+        if (!/^[A-Za-z ]+$/.test(v)) return 'Nominee Name must contain only letters'
+        break
+      case 'relationship':
+        if (!v) return 'Relationship with Nominee is required'
+        if (v.length > 60) return 'Relationship must not exceed 60 characters'
+        if (!/^[A-Za-z ]+$/.test(v)) return 'Relationship must contain only letters'
+        break
+
+      // ── Address ──
+      case 'address':
+        if (!v) return 'Address is required'
+        if (v.length < 5) return 'Address must be at least 5 characters'
+        if (v.length > 200) return 'Address must not exceed 200 characters'
+        break
+      case 'address_line1':
+        if (!v) return 'Address Line 1 is required'
+        if (v.length > 150) return 'Address Line 1 must not exceed 150 characters'
+        break
+      case 'city':
+        if (!v) return 'City is required'
+        if (v.length < 2) return 'City must be at least 2 characters'
+        if (v.length > 50) return 'City must not exceed 50 characters'
+        if (!/^[A-Za-z ]+$/.test(v)) return 'City must contain only letters'
+        break
+      case 'state':
+        if (!v) return 'State is required'
+        if (v.length < 2) return 'State must be at least 2 characters'
+        if (v.length > 50) return 'State must not exceed 50 characters'
+        if (!/^[A-Za-z ]+$/.test(v)) return 'State must contain only letters'
+        break
+      case 'pincode':
+        if (!v) return 'Pincode is required'
+        if (!/^[1-9][0-9]{5}$/.test(v)) return 'Pincode must be a valid 6-digit code (cannot start with 0)'
+        break
+
+      // ── File uploads ──
+      case 'photo':
+        if (!v) return 'Profile Photo is required'
+        break
+      case 'aadhaar_file':
+        if (!v) return 'Aadhaar document upload is required'
+        break
+      case 'pan_file':
+        if (!v) return 'PAN document upload is required'
+        break
+
       default:
         return ''
     }
@@ -303,19 +474,19 @@ export default function RegisterAgentWizard() {
                 {/* Personal Details */}
                 <h5 className="text-primary mb-3">Personal Details</h5>
                 <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="First Name" name="first_name" value={form.first_name} onChange={handleChange} required />{renderError('first_name')}</CCol>
-                  <CCol md={6}><CFormInput floating="true" label="Last Name" name="last_name" value={form.last_name} onChange={handleChange} required />{renderError('last_name')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="First Name" name="first_name" maxLength={50} value={form.first_name} onChange={handleChange} onBlur={handleBlur} required />{renderError('first_name')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="Last Name" name="last_name" maxLength={50} value={form.last_name} onChange={handleChange} onBlur={handleBlur} required />{renderError('last_name')}</CCol>
                 </CRow>
                 <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="Father's Name" name="father_name" value={form.father_name} onChange={handleChange} required />{renderError('father_name')}</CCol>
-                  <CCol md={6}><CFormInput floating="true" label="Email" name="email" type="email" value={form.email} onChange={handleChange} required />{renderError('email')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="Father's Name" name="father_name" maxLength={50} value={form.father_name} onChange={handleChange} onBlur={handleBlur} required />{renderError('father_name')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="Email" name="email" type="email" maxLength={100} value={form.email} onChange={handleChange} onBlur={handleBlur} required />{renderError('email')}</CCol>
                 </CRow>
                 <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="Mobile" name="mobile" maxLength={10} value={form.mobile} onChange={handleChange} required />{renderError('mobile')}</CCol>
-                  <CCol md={6}><CFormInput floating="true" label="Password" name="password" type="password" value={form.password} onChange={handleChange} required />{renderError('password')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="Mobile" name="mobile" maxLength={10} value={form.mobile} onChange={handleChange} onBlur={handleBlur} required />{renderError('mobile')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="Password" name="password" type="password" maxLength={30} value={form.password} onChange={handleChange} onBlur={handleBlur} required />{renderError('password')}</CCol>
                 </CRow>
                 <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="Date of Birth" type="date" name="dob" value={form.dob} onChange={handleChange} required />{renderError('dob')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="Date of Birth" type="date" name="dob" value={form.dob} onChange={handleChange} onBlur={handleBlur} required />{renderError('dob')}</CCol>
                   <CCol md={6}>
                     <CFormSelect floating="true" label="Gender" name="gender" value={form.gender} onChange={handleChange} required>
                       <option value="">Select</option>
@@ -340,15 +511,15 @@ export default function RegisterAgentWizard() {
                   </CFormSelect>{renderError('language')}</CCol>
                 </CRow>
                 <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="Occupation" name="occupation" value={form.occupation} onChange={handleChange} />{renderError('occupation')}</CCol>
-                  <CCol md={6}><CFormInput floating="true" label="Work Experience (Years)" name="work_experience" maxLength={2} value={form.work_experience} onChange={handleChange} />{renderError('work_experience')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="Occupation" name="occupation" maxLength={80} value={form.occupation} onChange={handleChange} onBlur={handleBlur} />{renderError('occupation')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="Work Experience (Years)" name="work_experience" maxLength={2} value={form.work_experience} onChange={handleChange} onBlur={handleBlur} />{renderError('work_experience')}</CCol>
                 </CRow>
                 <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="Annual Income" name="income" value={form.income} onChange={handleChange} />{renderError('income')}</CCol>
-                  <CCol md={6}><CFormInput floating="true" label="Aadhaar Number" name="adhar" maxLength={12} value={form.adhar} onChange={handleChange} />{renderError('adhar')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="Annual Income" name="income" maxLength={12} value={form.income} onChange={handleChange} onBlur={handleBlur} />{renderError('income')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="Aadhaar Number" name="adhar" maxLength={12} value={form.adhar} onChange={handleChange} onBlur={handleBlur} />{renderError('adhar')}</CCol>
                 </CRow>
                 <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="PAN Number" name="pan" maxLength={10} value={form.pan} onChange={handleChange} />{renderError('pan')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="PAN Number" name="pan" maxLength={10} value={form.pan} onChange={handleChange} onBlur={handleBlur} />{renderError('pan')}</CCol>
                   <CCol md={6}>
                     <CFormSelect
                       floating
@@ -371,24 +542,24 @@ export default function RegisterAgentWizard() {
                 {/* Work & Bank */}
                 <h5 className="text-primary mb-3 mt-4">Work & Bank Details</h5>
                 <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="Reference Agent Code" name="reference_agent" value={form.reference_agent} onChange={handleChange} />{renderError('reference_agent')}</CCol>
-                  <CCol md={6}><CFormInput floating="true" label="Agent Team" name="agent_team" value={form.agent_team} onChange={handleChange} />{renderError('agent_team')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="Reference Agent Code" name="reference_agent" maxLength={30} value={form.reference_agent} onChange={handleChange} onBlur={handleBlur} />{renderError('reference_agent')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="Agent Team" name="agent_team" maxLength={30} value={form.agent_team} onChange={handleChange} onBlur={handleBlur} />{renderError('agent_team')}</CCol>
                 </CRow>
                 <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="Work Location" name="work_location" value={form.work_location} onChange={handleChange} />{renderError('work_location')}</CCol>
-                  <CCol md={6}><CFormInput floating="true" label="Bank Name" name="bank_name" value={form.bank_name} onChange={handleChange} />{renderError('bank_name')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="Work Location" name="work_location" maxLength={80} value={form.work_location} onChange={handleChange} onBlur={handleBlur} />{renderError('work_location')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="Bank Name" name="bank_name" maxLength={80} value={form.bank_name} onChange={handleChange} onBlur={handleBlur} />{renderError('bank_name')}</CCol>
                 </CRow>
                 <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="Branch" name="branch" value={form.branch} onChange={handleChange} />{renderError('branch')}</CCol>
-                  <CCol md={6}><CFormInput floating="true" label="Account Number" name="account_number" value={form.account_number} onChange={handleChange} />{renderError('account_number')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="Branch" name="branch" maxLength={80} value={form.branch} onChange={handleChange} onBlur={handleBlur} />{renderError('branch')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="Account Number" name="account_number" maxLength={18} value={form.account_number} onChange={handleChange} onBlur={handleBlur} />{renderError('account_number')}</CCol>
                 </CRow>
                 <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="IFSC Code" name="ifsc_code" maxLength={11} value={form.ifsc_code} onChange={handleChange} />{renderError('ifsc_code')}</CCol>
-                  <CCol md={6}><CFormInput floating="true" label="Nominee Name" name="nominiee" value={form.nominiee} onChange={handleChange} />{renderError('nominiee')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="IFSC Code" name="ifsc_code" maxLength={11} value={form.ifsc_code} onChange={handleChange} onBlur={handleBlur} />{renderError('ifsc_code')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="Nominee Name" name="nominiee" maxLength={60} value={form.nominiee} onChange={handleChange} onBlur={handleBlur} />{renderError('nominiee')}</CCol>
                 </CRow>
                 <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="Relation with Nominee" name="relationship" value={form.relationship} onChange={handleChange} />{renderError('relationship')}</CCol>
-                  <CCol md={6}><CFormInput floating="true" label="Nominee Mobile" name="nominee_mobile" maxLength={10} value={form.nominee_mobile} onChange={handleChange} />{renderError('nominee_mobile')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="Relation with Nominee" name="relationship" maxLength={60} value={form.relationship} onChange={handleChange} onBlur={handleBlur} />{renderError('relationship')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="Nominee Mobile" name="nominee_mobile" maxLength={10} value={form.nominee_mobile} onChange={handleChange} onBlur={handleBlur} />{renderError('nominee_mobile')}</CCol>
                 </CRow>
 
                 {/* Upload Documents */}
@@ -584,11 +755,11 @@ export default function RegisterAgentWizard() {
                   <CCol md={12}><CFormTextarea floating="true" label="Address" name="address" rows={2} value={form.address} onChange={handleChange} />{renderError('address')}</CCol>
                 </CRow>
                 <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="City" name="city" value={form.city} onChange={handleChange} />{renderError('city')}</CCol>
-                  <CCol md={6}><CFormInput floating="true" label="State" name="state" value={form.state} onChange={handleChange} />{renderError('state')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="City" name="city" maxLength={50} value={form.city} onChange={handleChange} onBlur={handleBlur} />{renderError('city')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="State" name="state" maxLength={50} value={form.state} onChange={handleChange} onBlur={handleBlur} />{renderError('state')}</CCol>
                 </CRow>
                 <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="Pincode" name="pincode" maxLength={6} value={form.pincode} onChange={handleChange} />{renderError('pincode')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="Pincode" name="pincode" maxLength={6} value={form.pincode} onChange={handleChange} onBlur={handleBlur} />{renderError('pincode')}</CCol>
                 </CRow>
 
                 <div className="d-grid mt-4">
