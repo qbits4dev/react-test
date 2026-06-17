@@ -18,18 +18,80 @@ const Client_Register = () => {
     interested_plot: '',
   })
   const [error, setError] = useState(null)
+  const [errors, setErrors] = useState({})
   const [userCode, setUserCode] = useState('')
   const navigate = useNavigate()
 
+  const validateField = (name, value) => {
+    const v = typeof value === 'string' ? value.trim() : value
+    switch (name) {
+      case 'first_name':
+        if (!v) return 'First Name is required'
+        if (v.length < 2) return 'First Name must be at least 2 characters'
+        if (!/^[A-Za-z ]+$/.test(v)) return 'First Name must contain only letters'
+        break
+      case 'last_name':
+        if (!v) return 'Last Name is required'
+        if (v.length < 1) return 'Last Name must be at least 1 character'
+        if (!/^[A-Za-z ]+$/.test(v)) return 'Last Name must contain only letters'
+        break
+      case 'email':
+        if (!v) return 'Email is required'
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return 'Enter a valid email address'
+        break
+      case 'phone':
+        if (!v) return 'Phone number is required'
+        if (!/^[6-9][0-9]{9}$/.test(v)) return 'Phone must be a valid 10-digit number starting with 6-9'
+        break
+      case 'reference_agent':
+        if (!v) return 'Reference Agent Code is required'
+        break
+      case 'interested_project':
+        if (!v) return 'Interested Project is required'
+        break
+      case 'interested_plot':
+        if (!v) return 'Interested Plot is required'
+        break
+      default:
+        return ''
+    }
+    return ''
+  }
+
+  const validateAll = () => {
+    const newErrors = {}
+    Object.keys(formData).forEach(f => {
+      const err = validateField(f, formData[f])
+      if (err) newErrors[f] = err
+    })
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
   const handleChange = (e) => {
     const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
+    let sanitizedValue = value
+    if (name === 'phone') sanitizedValue = value.replace(/[^0-9]/g, '').slice(0, 10)
+    else if (['first_name', 'last_name'].includes(name)) sanitizedValue = value.replace(/[^A-Za-z ]/g, '')
+    else if (name === 'email') sanitizedValue = value.replace(/[^A-Za-z0-9.@_\-+]/g, '')
+
+    setFormData(prev => ({ ...prev, [name]: sanitizedValue }))
+    const err = validateField(name, sanitizedValue)
+    setErrors(prev => ({ ...prev, [name]: err }))
   }
+
+  const renderError = (field) => errors[field] && (
+    <small className="text-danger d-block mt-1">{errors[field]}</small>
+  )
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError(null)
     setUserCode('')
+
+    if (!validateAll()) {
+      return
+    }
 
     const params = new URLSearchParams()
     params.append('first_name', formData.first_name)
@@ -44,7 +106,7 @@ const Client_Register = () => {
     console.log('Form data sent:', params.toString())
 
     try {
-      const res = await fetch('${globalThis.apiBaseUrl}/register/client', {
+      const res = await fetch(`${globalThis.apiBaseUrl}/register/client`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: params.toString(),
@@ -79,9 +141,12 @@ const Client_Register = () => {
                       placeholder="First Name"
                       value={formData.first_name}
                       onChange={handleChange}
+                      invalid={!!errors.first_name}
                       required
                     />
                   </CInputGroup>
+                  {renderError('first_name')}
+
                   <CInputGroup className="mb-3">
                     <CInputGroupText><CIcon icon={cilUser} /></CInputGroupText>
                     <CFormInput
@@ -89,9 +154,12 @@ const Client_Register = () => {
                       placeholder="Last Name"
                       value={formData.last_name}
                       onChange={handleChange}
+                      invalid={!!errors.last_name}
                       required
                     />
                   </CInputGroup>
+                  {renderError('last_name')}
+
                   <CInputGroup className="mb-3">
                     <CInputGroupText>@</CInputGroupText>
                     <CFormInput
@@ -100,9 +168,12 @@ const Client_Register = () => {
                       type="email"
                       value={formData.email}
                       onChange={handleChange}
+                      invalid={!!errors.email}
                       required
                     />
                   </CInputGroup>
+                  {renderError('email')}
+
                   <CInputGroup className='mb-3'>
                     <CInputGroupText><CIcon icon={cilPhone} /></CInputGroupText>
                     <CFormInput
@@ -110,9 +181,12 @@ const Client_Register = () => {
                       placeholder="Phone Number"
                       value={formData.phone}
                       onChange={handleChange}
+                      invalid={!!errors.phone}
                       required
                     />
                   </CInputGroup>
+                  {renderError('phone')}
+
                   <CInputGroup className='mb-3'>
                     <CInputGroupText><CIcon icon={cilUser} /></CInputGroupText>
                     <CFormInput
@@ -120,27 +194,35 @@ const Client_Register = () => {
                       placeholder="Reference Agent"
                       value={formData.reference_agent}
                       onChange={handleChange}
+                      invalid={!!errors.reference_agent}
                       required
                     />
                   </CInputGroup>
+                  {renderError('reference_agent')}
+
                   <CInputGroup className='mb-3'>
                     <CFormInput
                       name='interested_project'
                       placeholder='Interested Project'
                       value={formData.interested_project}
                       onChange={handleChange}
+                      invalid={!!errors.interested_project}
                       required
                     />
                   </CInputGroup>
+                  {renderError('interested_project')}
+
                   <CInputGroup className='mb-3'>
                     <CFormInput
                       name='interested_plot'
                       placeholder='Interested Plot'
                       value={formData.interested_plot}
                       onChange={handleChange}
+                      invalid={!!errors.interested_plot}
                       required
                     />
                   </CInputGroup>
+                  {renderError('interested_plot')}
                   {error && <div style={{ color: "red" }}>{error}</div>}
                   {userCode && (
                     <div style={{ color: "green", fontWeight: "bold", marginTop: "1em" }}>

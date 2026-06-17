@@ -70,6 +70,10 @@ const GetAgents = () => {
   const [editErrors, setEditErrors] = useState({})
   const itemsPerPage = 5
 
+  const today = new Date()
+  const maxDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate()).toISOString().split('T')[0]
+  const minDate = new Date(today.getFullYear() - 80, today.getMonth(), today.getDate()).toISOString().split('T')[0]
+
   // Fields groups for edit modal
   const personalFields = ['firstName', 'lastName', 'fatherName', 'dob', 'gender', 'maritalStatus']
   const contactFields = ['email', 'phone', 'permanentAddress', 'presentAddress']
@@ -365,12 +369,12 @@ const GetAgents = () => {
     dob:             { label: 'Date of Birth' },
     gender:          { label: 'Gender' },
     maritalStatus:   { label: 'Marital Status' },
-    email:           { max: 100, label: 'Email' },
+    email:           { max: 100, filter: /[^A-Za-z0-9.@_\-+]/g, label: 'Email' },
     phone:           { max: 10,  filter: /[^0-9]/g,      label: 'Phone' },
     permanentAddress:{ max: 200, filter: /[^A-Za-z0-9 ,\-\/.#]/g, label: 'Permanent Address' },
     presentAddress:  { max: 200, filter: /[^A-Za-z0-9 ,\-\/.#]/g, label: 'Present Address' },
     agentId:         { label: 'Agent ID' },
-    occupation:      { max: 80,  filter: /[^A-Za-z0-9 ,\-\/]/g,  label: 'Occupation' },
+    occupation:      { max: 80,  filter: /[^A-Za-z ,\-\/]/g,  label: 'Occupation' },
     education:       { max: 80,  filter: /[^A-Za-z0-9 ,\-\/]/g,  label: 'Education' },
     designation:     { label: 'Designation' },
     agentTeam:       { max: 30,  filter: /[^A-Za-z0-9 \-_]/g,    label: 'Agent Team' },
@@ -415,8 +419,7 @@ const GetAgents = () => {
         let age = td.getFullYear() - bd.getFullYear()
         const m = td.getMonth() - bd.getMonth()
         if (m < 0 || (m === 0 && td.getDate() < bd.getDate())) age--
-        if (age < 18) return 'Agent must be at least 18 years old'
-        if (age > 80) return 'Please enter a valid Date of Birth'
+        if (age < 18 || age > 80) return 'Age must be between 18 and 80 years old'
         break
       }
       case 'gender':
@@ -488,8 +491,9 @@ const GetAgents = () => {
     }
 
     setSelectedAgent({ ...selectedAgent, [name]: value })
-    // Clear error on change
-    if (editErrors[name]) setEditErrors(prev => ({ ...prev, [name]: '' }))
+    // Run real-time validation on change
+    const err = validateEditField(name, value)
+    setEditErrors(prev => ({ ...prev, [name]: err }))
   }
 
   // Validate on blur
@@ -833,6 +837,7 @@ const GetAgents = () => {
                             value={selectedAgent[key]}
                             onChange={handleChange}
                             onBlur={handleEditBlur}
+                            invalid={!!editErrors[key]}
                           >
                             <option value="">Select</option>
                             <option>Male</option>
@@ -848,6 +853,7 @@ const GetAgents = () => {
                             value={selectedAgent[key]}
                             onChange={handleChange}
                             onBlur={handleEditBlur}
+                            invalid={!!editErrors[key]}
                           >
                             <option value="">Select</option>
                             <option>Single</option>
@@ -864,6 +870,9 @@ const GetAgents = () => {
                             value={selectedAgent[key]}
                             onChange={handleChange}
                             onBlur={handleEditBlur}
+                            invalid={!!editErrors[key]}
+                            min={minDate}
+                            max={maxDate}
                           />
                           {renderEditError(key)}
                         </>
@@ -876,6 +885,7 @@ const GetAgents = () => {
                             onChange={handleChange}
                             onBlur={handleEditBlur}
                             maxLength={FIELD_CONFIG[key]?.max}
+                            invalid={!!editErrors[key]}
                           />
                           {renderEditError(key)}
                         </>
@@ -899,6 +909,7 @@ const GetAgents = () => {
                         onBlur={handleEditBlur}
                         maxLength={FIELD_CONFIG[key]?.max}
                         type={key === 'email' ? 'email' : 'text'}
+                        invalid={!!editErrors[key]}
                       />
                       {renderEditError(key)}
                     </CCol>
@@ -921,6 +932,7 @@ const GetAgents = () => {
                             onChange={handleChange}
                             onBlur={handleEditBlur}
                             disabled={loadingDesignations}
+                            invalid={!!editErrors[key]}
                           >
                             <option value="">Select Designation</option>
                             {!loadingDesignations &&
@@ -946,6 +958,7 @@ const GetAgents = () => {
                             onBlur={handleEditBlur}
                             disabled={key === 'agentId'}
                             maxLength={FIELD_CONFIG[key]?.max}
+                            invalid={!!editErrors[key]}
                           />
                           {renderEditError(key)}
                         </>
@@ -968,6 +981,7 @@ const GetAgents = () => {
                         onChange={handleChange}
                         onBlur={handleEditBlur}
                         maxLength={FIELD_CONFIG[key]?.max}
+                        invalid={!!editErrors[key]}
                       />
                       {renderEditError(key)}
                     </CCol>
@@ -981,6 +995,7 @@ const GetAgents = () => {
                         onChange={handleChange}
                         onBlur={handleEditBlur}
                         maxLength={FIELD_CONFIG[key]?.max}
+                        invalid={!!editErrors[key]}
                       />
                       {renderEditError(key)}
                     </CCol>

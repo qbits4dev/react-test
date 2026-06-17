@@ -48,30 +48,57 @@ export default function Register() {
 
     const [errors, setErrors] = useState({});
 
+    const validateField = (name, value) => {
+        const v = typeof value === 'string' ? value.trim() : value;
+        switch (name) {
+            case 'first_name':
+                if (!v) return 'First name is required';
+                break;
+            case 'last_name':
+                if (!v) return 'Last name is required';
+                break;
+            case 'email':
+                if (!v) return 'Email is required';
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return 'Invalid email format';
+                break;
+            case 'mobile':
+                if (!v) return 'Mobile is required';
+                if (!/^[0-9]{10}$/.test(v)) return 'Invalid 10-digit mobile number';
+                break;
+            case 'password':
+                if (!v) return 'Password is required';
+                if (!/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$/.test(v))
+                    return 'Password must be 8+ chars, include uppercase, lowercase & number';
+                break;
+            default:
+                return '';
+        }
+        return '';
+    };
+
     const validate = () => {
         const errs = {};
-        if (!formData.first_name.trim()) errs.first_name = 'First name is required';
-        if (!formData.last_name.trim()) errs.last_name = 'Last name is required';
-
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!formData.email) errs.email = 'Email is required';
-        else if (!emailRegex.test(formData.email)) errs.email = 'Invalid email format';
-
-        const mobileRegex = /^[0-9]{10}$/;
-        if (!formData.mobile) errs.mobile = 'Mobile is required';
-        else if (!mobileRegex.test(formData.mobile)) errs.mobile = 'Invalid 10-digit mobile number';
-
-        const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$/;
-        if (!formData.password) errs.password = 'Password is required';
-        else if (!passwordRegex.test(formData.password))
-            errs.password = 'Password must be 8+ chars, include uppercase, lowercase & number';
-
+        const fieldsToValidate = ['first_name', 'last_name', 'email', 'mobile', 'password'];
+        fieldsToValidate.forEach((field) => {
+            const err = validateField(field, formData[field]);
+            if (err) errs[field] = err;
+        });
         return errs;
     };
 
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-        setErrors({ ...errors, [e.target.name]: '' });
+        const { name } = e.target;
+        let value = e.target.value;
+        if (name === 'email') {
+            value = value.replace(/[^A-Za-z0-9.@_\-+]/g, '');
+        } else if (name === 'mobile') {
+            value = value.replace(/[^0-9]/g, '').slice(0, 10);
+        } else if (['first_name', 'last_name'].includes(name)) {
+            value = value.replace(/[^A-Za-z ]/g, '');
+        }
+        setFormData({ ...formData, [name]: value });
+        const err = validateField(name, value);
+        setErrors({ ...errors, [name]: err });
     };
 
     const handleSubmit = (e) => {
