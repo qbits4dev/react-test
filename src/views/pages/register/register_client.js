@@ -10,10 +10,6 @@ import { cilArrowLeft } from '@coreui/icons'
 export default function RegisterClientWizard() {
   const navigate = useNavigate()
 
-  const today = new Date()
-  const maxDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate()).toISOString().split('T')[0]
-  const minDate = new Date(today.getFullYear() - 80, today.getMonth(), today.getDate()).toISOString().split('T')[0]
-
   // --- form state with all fields ---
   const [form, setForm] = useState({
     first_name: '',
@@ -78,7 +74,7 @@ export default function RegisterClientWizard() {
         parsed.pan_file = null
         parsed.photo = null
         setForm(parsed)
-      } catch {}
+      } catch { }
     }
   }, [])
 
@@ -102,6 +98,7 @@ export default function RegisterClientWizard() {
       localStorage.setItem('registerClientForm', JSON.stringify(serializable))
       return updated
     })
+    setErrors(prev => ({ ...prev, [name]: '' }))
   }
 
   // Handle file input (do not persist file/blobs)
@@ -114,8 +111,6 @@ export default function RegisterClientWizard() {
       setForm(prev => ({ ...prev, [name]: null }))
     } else {
       setFormField(name, file)
-      const err = validateField(name, file)
-      setErrors(prev => ({ ...prev, [name]: err }))
     }
   }
 
@@ -126,20 +121,22 @@ export default function RegisterClientWizard() {
 
     // Input sanitation
     if (name === 'pan') value = value.toUpperCase().replace(/[^A-Z0-9]/g, '')
-    else if (['first_name', 'last_name', 'father_name', 'nominiee', 'relationship', 'language', 'education', 'work_location', 'branch', 'bank_name', 'address_line1', 'address_line2', 'city', 'state'].includes(name))
+    else if (['first_name', 'last_name', 'father_name', 'nominiee', 'relationship', 'language', 'education', 'occupation', 'work_location', 'branch', 'bank_name', 'address_line1', 'address_line2', 'city', 'state'].includes(name))
       value = value.replace(/[^A-Za-z0-9 ,\-\/]/g, '')
-    else if (name === 'occupation')
-      value = value.replace(/[^A-Za-z ,\-\/]/g, '')
-    else if (name === 'email')
-      value = value.replace(/[^A-Za-z0-9.@_\-+]/g, '')
     else if (['mobile', 'work_experience', 'account_number', 'income', 'adhar', 'nominee_mobile', 'pincode'].includes(name))
       value = value.replace(/[^0-9]/g, '')
     else if (name === 'ifsc_code') value = value.toUpperCase().replace(/[^A-Z0-9]/g, '')
 
     setFormField(name, value)
 
-    const err = validateField(name, value)
-    setErrors(prev => ({ ...prev, [name]: err }))
+    if (name === 'dob' && value) {
+      const birthDate = new Date(value)
+      const today = new Date()
+      let age = today.getFullYear() - birthDate.getFullYear()
+      const m = today.getMonth() - birthDate.getMonth()
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--
+      if (age < 18) setErrors(prev => ({ ...prev, dob: 'Age must be at least 18' }))
+    }
   }
 
   const renderError = (field) => errors[field] && (
@@ -147,102 +144,46 @@ export default function RegisterClientWizard() {
   )
 
   const validateField = (name, value) => {
-    const v = typeof value === 'string' ? value.trim() : value
-
-    const requiredFields = [
-      'first_name', 'last_name', 'father_name', 'dob', 'gender', 'email', 'mobile', 'password'
-    ]
-    const isRequired = requiredFields.includes(name)
-
-    if (isRequired && !v) {
-      if (name === 'dob') return 'Date of Birth is required'
-      if (name === 'gender') return 'Gender is required'
-      if (name === 'email') return 'Email is required'
-      if (name === 'mobile') return 'Mobile number is required'
-      if (name === 'password') return 'Password is required'
-      return 'This field is required'
-    }
-
-    if (!isRequired && !v) {
-      return ''
-    }
-
     switch (name) {
-      case 'first_name':
-        if (v.length < 2) return 'First Name must be at least 2 characters'
-        if (v.length > 50) return 'First Name must not exceed 50 characters'
-        if (!/^[A-Za-z ]+$/.test(v)) return 'First Name must contain only letters'
+      case 'first_name': case 'last_name': case 'father_name': case 'nominiee': case 'relationship':
+      case 'reference_agent': case 'agent_team': case 'branch': case 'bank_name': case 'work_location':
+      case 'address': case 'address_line1': case 'city': case 'state': case 'pincode':
+        if (!value) return 'This field is required'
         break
-      case 'last_name':
-        if (v.length < 1) return 'Last Name must be at least 1 character'
-        if (v.length > 50) return 'Last Name must not exceed 50 characters'
-        if (!/^[A-Za-z ]+$/.test(v)) return 'Last Name must contain only letters'
-        break
-      case 'father_name':
-        if (v.length < 2) return "Father's Name must be at least 2 characters"
-        if (v.length > 50) return "Father's Name must not exceed 50 characters"
-        if (!/^[A-Za-z ]+$/.test(v)) return "Father's Name must contain only letters"
-        break
-      case 'mobile':
-        if (!/^[6-9][0-9]{9}$/.test(v)) return 'Mobile must be a valid 10-digit Indian number starting with 6-9'
-        break
-      case 'nominee_mobile':
-        if (!/^[6-9][0-9]{9}$/.test(v)) return 'Nominee Mobile must be a valid 10-digit number starting with 6-9'
+      case 'mobile': case 'nominee_mobile':
+        if (!/^[0-9]{10}$/.test(value)) return 'Enter a valid 10-digit phone number'
         break
       case 'email':
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return 'Enter a valid email address'
-        if (v.length > 100) return 'Email must not exceed 100 characters'
+        if (!value || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Invalid email'
         break
-      case 'password':
-        if (v.length < 6) return 'Password must be at least 6 characters'
-        if (v.length > 30) return 'Password must not exceed 30 characters'
-        break
-      case 'dob': {
-        const birthDate = new Date(v)
-        const today = new Date()
-        let age = today.getFullYear() - birthDate.getFullYear()
-        const m = today.getMonth() - birthDate.getMonth()
-        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--
-        if (age < 18 || age > 80) return 'Age must be between 18 and 80 years old'
-        break
-      }
-      case 'adhar':
-        if (!/^[0-9]{12}$/.test(v)) return 'Aadhaar must be exactly 12 digits'
-        break
-      case 'pan':
-        if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(v)) return 'PAN must be in format: ABCDE1234F'
+      case 'work_experience':
+        if (value && !/^[0-9]{1,2}$/.test(value)) return 'Enter valid experience'
         break
       case 'account_number':
-        if (!/^[0-9]{9,18}$/.test(v)) return 'Account Number must be 9–18 digits'
+        if (value && !/^[0-9]{9,18}$/.test(value)) return 'Invalid account number'
         break
       case 'ifsc_code':
-        if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(v)) return 'IFSC must be in format: ABCD0123456'
+        if (value && !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(value)) return 'Invalid IFSC code'
         break
-      case 'pincode':
-        if (!/^[1-9][0-9]{5}$/.test(v)) return 'Pincode must be a valid 6-digit code (cannot start with 0)'
+      case 'adhar':
+        if (!/^[0-9]{12}$/.test(value)) return 'Aadhaar must be 12 digits'
         break
-      case 'nominiee':
-        if (v.length < 2) return 'Nominee Name must be at least 2 characters'
-        if (v.length > 60) return 'Nominee Name must not exceed 60 characters'
-        if (!/^[A-Za-z ]+$/.test(v)) return 'Nominee Name must contain only letters'
+      case 'pan':
+        if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(value)) return 'Invalid PAN format'
         break
-      case 'relationship':
-        if (v.length > 60) return 'Relationship must not exceed 60 characters'
-        if (!/^[A-Za-z ]+$/.test(v)) return 'Relationship must contain only letters'
+      case 'password':
+        if (!value) return 'Password required'
+        if (value.length < 6) return 'Password must be ≥ 6 chars'
         break
-      case 'address':
-        if (v.length < 5) return 'Address must be at least 5 characters'
-        if (v.length > 200) return 'Address must not exceed 200 characters'
+      case 'dob':
+        if (!value) return 'Required'
+        const birthDate = new Date(value)
+        const today = new Date()
+        let age = today.getFullYear() - birthDate.getFullYear()
+        if (age < 18) return 'Age must be ≥ 18'
         break
-      case 'city':
-        if (v.length < 2) return 'City must be at least 2 characters'
-        if (v.length > 50) return 'City must not exceed 50 characters'
-        if (!/^[A-Za-z ]+$/.test(v)) return 'City must contain only letters'
-        break
-      case 'state':
-        if (v.length < 2) return 'State must be at least 2 characters'
-        if (v.length > 50) return 'State must not exceed 50 characters'
-        if (!/^[A-Za-z ]+$/.test(v)) return 'State must contain only letters'
+      case 'photo': case 'aadhaar_file': case 'pan_file':
+        if (!value) return 'File required'
         break
       default:
         return ''
@@ -251,9 +192,14 @@ export default function RegisterClientWizard() {
   }
 
   const validateAll = () => {
-    const allFields = Object.keys(form)
+    const requiredFields = [
+      'first_name', 'last_name', 'father_name', 'dob', 'gender', 'email', 'mobile', 'password']
+    //   , 'marital_status', 'education', 'language', 'occupation', 'work_experience', 'income', 'adhar', 'pan',
+    //   'designation', 'reference_agent', 'agent_team', 'work_location', 'bank_name', 'branch', 'account_number', 'ifsc_code', 'nominiee', 'relationship', 'nominee_mobile',
+    //   'aadhaar_file', 'pan_file', 'photo', 'address', 'city', 'state', 'pincode'
+    // ]
     const newErrors = {}
-    allFields.forEach(f => {
+    requiredFields.forEach(f => {
       const err = validateField(f, form[f])
       if (err) newErrors[f] = err
     })
@@ -288,13 +234,13 @@ export default function RegisterClientWizard() {
       for (let [key, value] of formData.entries()) {
         console.log(`${key}:`, value);
       }
-            const jsonObj = {};
+      const jsonObj = {};
       for (let [key, value] of formData.entries()) {
         // For files, print just the file name
         jsonObj[key] = value instanceof File ? value.name : value;
       }
       console.log('Submitting form data (JSON):', JSON.stringify(jsonObj, null, 2));
-//      const res = await fetch(`${globalThis.apiBaseUrl}/auth/register`, { method: 'POST', body: formData });
+      //      const res = await fetch(`${globalThis.apiBaseUrl}/auth/register`, { method: 'POST', body: formData });
       const res = await fetch(`${globalThis.apiBaseUrl}/register/client`, { method: 'POST', body: formData });
 
       const data = await res.json();
@@ -346,21 +292,21 @@ export default function RegisterClientWizard() {
                 {/* Personal Details */}
                 <h5 className="text-primary mb-3">Personal Details</h5>
                 <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="First Name" name="first_name" value={form.first_name} onChange={handleChange} invalid={!!errors.first_name} required />{renderError('first_name')}</CCol>
-                  <CCol md={6}><CFormInput floating="true" label="Last Name" name="last_name" value={form.last_name} onChange={handleChange} invalid={!!errors.last_name} required />{renderError('last_name')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="First Name" name="first_name" value={form.first_name} onChange={handleChange} required />{renderError('first_name')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="Last Name" name="last_name" value={form.last_name} onChange={handleChange} required />{renderError('last_name')}</CCol>
                 </CRow>
                 <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="Father's Name" name="father_name" value={form.father_name} onChange={handleChange} invalid={!!errors.father_name} required />{renderError('father_name')}</CCol>
-                  <CCol md={6}><CFormInput floating="true" label="Email" name="email" type="email" value={form.email} onChange={handleChange} invalid={!!errors.email} required />{renderError('email')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="Father's Name" name="father_name" value={form.father_name} onChange={handleChange} required />{renderError('father_name')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="Email" name="email" type="email" value={form.email} onChange={handleChange} required />{renderError('email')}</CCol>
                 </CRow>
                 <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="Mobile" name="mobile" maxLength={10} value={form.mobile} onChange={handleChange} invalid={!!errors.mobile} required />{renderError('mobile')}</CCol>
-                  <CCol md={6}><CFormInput floating="true" label="Password" name="password" type="password" value={form.password} onChange={handleChange} invalid={!!errors.password} required />{renderError('password')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="Mobile" name="mobile" maxLength={10} value={form.mobile} onChange={handleChange} required />{renderError('mobile')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="Password" name="password" type="password" value={form.password} onChange={handleChange} required />{renderError('password')}</CCol>
                 </CRow>
                 <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="Date of Birth" type="date" name="dob" value={form.dob} onChange={handleChange} invalid={!!errors.dob} min={minDate} max={maxDate} required />{renderError('dob')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="Date of Birth" type="date" name="dob" value={form.dob} onChange={handleChange} required />{renderError('dob')}</CCol>
                   <CCol md={6}>
-                    <CFormSelect floating="true" label="Gender" name="gender" value={form.gender} onChange={handleChange} invalid={!!errors.gender} required>
+                    <CFormSelect floating="true" label="Gender" name="gender" value={form.gender} onChange={handleChange} required>
                       <option value="">Select</option>
                       <option>Male</option>
                       <option>Female</option>
@@ -369,13 +315,13 @@ export default function RegisterClientWizard() {
                   </CCol>
                 </CRow>
                 <CRow className="g-3 mb-3">
-                  <CCol md={4}><CFormSelect floating="true" label="Marital Status" name="marital_status" value={form.marital_status} onChange={handleChange} invalid={!!errors.marital_status}>
+                  <CCol md={4}><CFormSelect floating="true" label="Marital Status" name="marital_status" value={form.marital_status} onChange={handleChange}>
                     <option value="">Select</option>
                     <option>Single</option>
                     <option>Married</option>
                   </CFormSelect>{renderError('marital_status')}</CCol>
-                  <CCol md={4}><CFormInput floating="true" label="Education" name="education" value={form.education} onChange={handleChange} invalid={!!errors.education} />{renderError('education')}</CCol>
-                  <CCol md={4}><CFormSelect floating="true" label="Language" name="language" value={form.language} onChange={handleChange} invalid={!!errors.language}>
+                  <CCol md={4}><CFormInput floating="true" label="Education" name="education" value={form.education} onChange={handleChange} />{renderError('education')}</CCol>
+                  <CCol md={4}><CFormSelect floating="true" label="Language" name="language" value={form.language} onChange={handleChange}>
                     <option value="">Select</option>
                     <option>English</option>
                     <option>Hindi</option>
@@ -383,31 +329,57 @@ export default function RegisterClientWizard() {
                   </CFormSelect>{renderError('language')}</CCol>
                 </CRow>
                 <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="Occupation" name="occupation" value={form.occupation} onChange={handleChange} invalid={!!errors.occupation} />{renderError('occupation')}</CCol>
-                  <CCol md={6}><CFormInput floating="true" label="Annual Income" name="income" value={form.income} onChange={handleChange} invalid={!!errors.income} />{renderError('income')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="Occupation" name="occupation" value={form.occupation} onChange={handleChange} />{renderError('occupation')}</CCol>
+                  {/* <CCol md={6}><CFormInput floating="true" label="Work Experience (Years)" name="work_experience" maxLength={2} value={form.work_experience} onChange={handleChange} />{renderError('work_experience')}</CCol> */}
+                  <CCol md={6}><CFormInput floating="true" label="Annual Income" name="income" value={form.income} onChange={handleChange} />{renderError('income')}</CCol>
                 </CRow>
                 <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="Aadhaar Number" name="adhar" maxLength={12} value={form.adhar} onChange={handleChange} invalid={!!errors.adhar} />{renderError('adhar')}</CCol>
-                  <CCol md={6}><CFormInput floating="true" label="PAN Number" name="pan" maxLength={10} value={form.pan} onChange={handleChange} invalid={!!errors.pan} />{renderError('pan')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="Aadhaar Number" name="adhar" maxLength={12} value={form.adhar} onChange={handleChange} />{renderError('adhar')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="PAN Number" name="pan" maxLength={10} value={form.pan} onChange={handleChange} />{renderError('pan')}</CCol>
                 </CRow>
+                {/* <CRow className="g-3 mb-3">
+                  <CCol md={6}><CFormInput floating="true" label="PAN Number" name="pan" maxLength={10} value={form.pan} onChange={handleChange} />{renderError('pan')}</CCol>
+                  <CCol md={6}>
+                    <CFormSelect
+                      floating
+                      label="Designation"
+                      name="designation"
+                      value={form.designation}
+                      onChange={handleChange}
+                      disabled={loadingDesignations}
+                    >
+                      <option value="">Select Designation</option>
+                      {!loadingDesignations && !designationError && designations.map((d, idx) => (
+                        <option key={idx} value={d.id || d.name}>{d.name}</option>
+                      ))}
+                    </CFormSelect>
+                    {designationError && <div className="text-danger small mt-1">{designationError}</div>}
+                    {renderError('designation')}
+                  </CCol>
+                </CRow> */}
 
                 {/* Work & Bank */}
                 <h5 className="text-primary mb-3 mt-4">Work & Bank Details</h5>
                 <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="Reference Agent Code" name="reference_agent" value={form.reference_agent} onChange={handleChange} invalid={!!errors.reference_agent} />{renderError('reference_agent')}</CCol>
-                  <CCol md={6}><CFormInput floating="true" label="Bank Name" name="bank_name" value={form.bank_name} onChange={handleChange} invalid={!!errors.bank_name} />{renderError('bank_name')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="Reference Agent Code" name="reference_agent" value={form.reference_agent} onChange={handleChange} />{renderError('reference_agent')}</CCol>
+                  {/* <CCol md={6}><CFormInput floating="true" label="Agent Team" name="agent_team" value={form.agent_team} onChange={handleChange} />{renderError('agent_team')}</CCol> */}
+                  <CCol md={6}><CFormInput floating="true" label="Bank Name" name="bank_name" value={form.bank_name} onChange={handleChange} />{renderError('bank_name')}</CCol>
+                </CRow>
+                {/* <CRow className="g-3 mb-3">
+                  <CCol md={6}><CFormInput floating="true" label="Work Location" name="work_location" value={form.work_location} onChange={handleChange} />{renderError('work_location')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="Bank Name" name="bank_name" value={form.bank_name} onChange={handleChange} />{renderError('bank_name')}</CCol>
+                </CRow> */}
+                <CRow className="g-3 mb-3">
+                  <CCol md={6}><CFormInput floating="true" label="Branch" name="branch" value={form.branch} onChange={handleChange} />{renderError('branch')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="Account Number" name="account_number" value={form.account_number} onChange={handleChange} />{renderError('account_number')}</CCol>
                 </CRow>
                 <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="Branch" name="branch" value={form.branch} onChange={handleChange} invalid={!!errors.branch} />{renderError('branch')}</CCol>
-                  <CCol md={6}><CFormInput floating="true" label="Account Number" name="account_number" value={form.account_number} onChange={handleChange} invalid={!!errors.account_number} />{renderError('account_number')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="IFSC Code" name="ifsc_code" maxLength={11} value={form.ifsc_code} onChange={handleChange} />{renderError('ifsc_code')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="Nominee Name" name="nominiee" value={form.nominiee} onChange={handleChange} />{renderError('nominiee')}</CCol>
                 </CRow>
                 <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="IFSC Code" name="ifsc_code" maxLength={11} value={form.ifsc_code} onChange={handleChange} invalid={!!errors.ifsc_code} />{renderError('ifsc_code')}</CCol>
-                  <CCol md={6}><CFormInput floating="true" label="Nominee Name" name="nominiee" value={form.nominiee} onChange={handleChange} invalid={!!errors.nominiee} />{renderError('nominiee')}</CCol>
-                </CRow>
-                <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="Relation with Nominee" name="relationship" value={form.relationship} onChange={handleChange} invalid={!!errors.relationship} />{renderError('relationship')}</CCol>
-                  <CCol md={6}><CFormInput floating="true" label="Nominee Mobile" name="nominee_mobile" maxLength={10} value={form.nominee_mobile} onChange={handleChange} invalid={!!errors.nominee_mobile} />{renderError('nominee_mobile')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="Relation with Nominee" name="relationship" value={form.relationship} onChange={handleChange} />{renderError('relationship')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="Nominee Mobile" name="nominee_mobile" maxLength={10} value={form.nominee_mobile} onChange={handleChange} />{renderError('nominee_mobile')}</CCol>
                 </CRow>
 
                 {/* Upload Documents */}
@@ -442,10 +414,7 @@ export default function RegisterClientWizard() {
                               color="danger"
                               variant="outline"
                               size="sm"
-                              onClick={() => {
-                                setFormField('photo', null)
-                                setErrors(prev => ({ ...prev, photo: '' }))
-                              }}
+                              onClick={() => setFormField('photo', null)}
                             >
                               Remove Photo
                             </CButton>
@@ -479,10 +448,7 @@ export default function RegisterClientWizard() {
                                 const file = e.target.files[0]
                                 if (!file) return
                                 const previewUrl = URL.createObjectURL(file)
-                                const photoData = { file, previewUrl }
-                                setFormField('photo', photoData)
-                                const err = validateField('photo', photoData)
-                                setErrors(prev => ({ ...prev, photo: err }))
+                                setFormField('photo', { file, previewUrl })
                               }}
                             />
                           </div>
@@ -512,10 +478,7 @@ export default function RegisterClientWizard() {
                                 variant="outline"
                                 size="sm"
                                 className="mt-3"
-                                onClick={() => {
-                                  setFormField('aadhaar_file', null)
-                                  setErrors(prev => ({ ...prev, aadhaar_file: '' }))
-                                }}
+                                onClick={() => setFormField('aadhaar_file', null)}
                               >
                                 Remove Aadhaar
                               </CButton>
@@ -558,10 +521,7 @@ export default function RegisterClientWizard() {
                                 variant="outline"
                                 size="sm"
                                 className="mt-3"
-                                onClick={() => {
-                                  setFormField('pan_file', null)
-                                  setErrors(prev => ({ ...prev, pan_file: '' }))
-                                }}
+                                onClick={() => setFormField('pan_file', null)}
                               >
                                 Remove PAN
                               </CButton>
@@ -600,14 +560,14 @@ export default function RegisterClientWizard() {
                 {/* Address */}
                 <h5 className="text-primary mb-3 mt-4">Address</h5>
                 <CRow className="g-3 mb-3">
-                  <CCol md={12}><CFormTextarea floating="true" label="Address Line 1" name="address" rows={2} value={form.address} onChange={handleChange} invalid={!!errors.address} />{renderError('address')}</CCol>
+                  <CCol md={12}><CFormTextarea floating="true" label="Address Line 1" name="address" rows={2} value={form.address} onChange={handleChange} />{renderError('address')}</CCol>
                 </CRow>
                 <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="City" name="city" value={form.city} onChange={handleChange} invalid={!!errors.city} />{renderError('city')}</CCol>
-                  <CCol md={6}><CFormInput floating="true" label="State" name="state" value={form.state} onChange={handleChange} invalid={!!errors.state} />{renderError('state')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="City" name="city" value={form.city} onChange={handleChange} />{renderError('city')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="State" name="state" value={form.state} onChange={handleChange} />{renderError('state')}</CCol>
                 </CRow>
                 <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="Pincode" name="pincode" maxLength={6} value={form.pincode} onChange={handleChange} invalid={!!errors.pincode} />{renderError('pincode')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="Pincode" name="pincode" maxLength={6} value={form.pincode} onChange={handleChange} />{renderError('pincode')}</CCol>
                 </CRow>
 
                 <div className="d-grid mt-4">

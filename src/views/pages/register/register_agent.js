@@ -15,6 +15,12 @@ export default function RegisterAgentWizard() {
   const maxDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate()).toISOString().split('T')[0]
   const minDate = new Date(today.getFullYear() - 80, today.getMonth(), today.getDate()).toISOString().split('T')[0]
 
+  const getRequiredLabel = (labelText) => (
+    <span>
+      {labelText} <span className="text-danger">*</span>
+    </span>
+  )
+
   // --- form state with all fields ---
   const [form, setForm] = useState({
     first_name: '',
@@ -132,14 +138,14 @@ export default function RegisterAgentWizard() {
       value = value.replace(/[^A-Za-z ]/g, '').slice(0, 60)
     else if (['city', 'state'].includes(name))
       value = value.replace(/[^A-Za-z ]/g, '').slice(0, 50)
-    else if (['language', 'education', 'work_location', 'branch', 'bank_name'].includes(name))
+    else if (name === 'bank_name')
+      value = value.replace(/[^A-Za-z ]/g, '').slice(0, 80)
+    else if (['language', 'education', 'work_location', 'branch'].includes(name))
       value = value.replace(/[^A-Za-z0-9 ,\-\/]/g, '').slice(0, 80)
     else if (name === 'occupation')
       value = value.replace(/[^A-Za-z ,\-\/]/g, '').slice(0, 80)
     else if (name === 'email')
       value = value.replace(/[^A-Za-z0-9.@_\-+]/g, '').slice(0, 100)
-    else if (['address_line1', 'address_line2'].includes(name))
-      value = value.replace(/[^A-Za-z0-9 ,\-\/.#]/g, '').slice(0, 150)
     else if (name === 'mobile' || name === 'nominee_mobile')
       value = value.replace(/[^0-9]/g, '').slice(0, 10)
     else if (name === 'adhar')
@@ -292,6 +298,7 @@ export default function RegisterAgentWizard() {
         if (!v) return 'Bank Name is required'
         if (v.length < 2) return 'Bank Name must be at least 2 characters'
         if (v.length > 80) return 'Bank Name must not exceed 80 characters'
+        if (!/^[A-Za-z ]+$/.test(v)) return 'Bank Name must contain only letters'
         break
       case 'branch':
         if (!v) return 'Branch is required'
@@ -322,12 +329,9 @@ export default function RegisterAgentWizard() {
       // ── Address ──
       case 'address':
         if (!v) return 'Address is required'
-        if (v.length < 5) return 'Address must be at least 5 characters'
-        if (v.length > 200) return 'Address must not exceed 200 characters'
         break
       case 'address_line1':
         if (!v) return 'Address Line 1 is required'
-        if (v.length > 150) return 'Address Line 1 must not exceed 150 characters'
         break
       case 'city':
         if (!v) return 'City is required'
@@ -476,21 +480,21 @@ export default function RegisterAgentWizard() {
                 {/* Personal Details */}
                 <h5 className="text-primary mb-3">Personal Details</h5>
                 <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="First Name" name="first_name" maxLength={50} value={form.first_name} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.first_name} required />{renderError('first_name')}</CCol>
-                  <CCol md={6}><CFormInput floating="true" label="Last Name" name="last_name" maxLength={50} value={form.last_name} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.last_name} required />{renderError('last_name')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label={getRequiredLabel("First Name")} name="first_name" maxLength={50} value={form.first_name} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.first_name} required />{renderError('first_name')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label={getRequiredLabel("Last Name")} name="last_name" maxLength={50} value={form.last_name} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.last_name} required />{renderError('last_name')}</CCol>
                 </CRow>
                 <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="Father's Name" name="father_name" maxLength={50} value={form.father_name} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.father_name} required />{renderError('father_name')}</CCol>
-                  <CCol md={6}><CFormInput floating="true" label="Email" name="email" type="email" maxLength={100} value={form.email} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.email} required />{renderError('email')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label={getRequiredLabel("Father's Name")} name="father_name" maxLength={50} value={form.father_name} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.father_name} required />{renderError('father_name')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label={getRequiredLabel("Email")} name="email" type="email" maxLength={100} value={form.email} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.email} required />{renderError('email')}</CCol>
                 </CRow>
                 <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="Mobile" name="mobile" maxLength={10} value={form.mobile} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.mobile} required />{renderError('mobile')}</CCol>
-                  <CCol md={6}><CFormInput floating="true" label="Password" name="password" type="password" maxLength={30} value={form.password} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.password} required />{renderError('password')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label={getRequiredLabel("Mobile")} name="mobile" maxLength={10} value={form.mobile} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.mobile} required />{renderError('mobile')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label={getRequiredLabel("Password")} name="password" type="password" maxLength={30} value={form.password} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.password} required />{renderError('password')}</CCol>
                 </CRow>
                 <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="Date of Birth" type="date" name="dob" value={form.dob} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.dob} min={minDate} max={maxDate} required />{renderError('dob')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label={getRequiredLabel("Date of Birth")} type="date" name="dob" value={form.dob} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.dob} min={minDate} max={maxDate} required />{renderError('dob')}</CCol>
                   <CCol md={6}>
-                    <CFormSelect floating="true" label="Gender" name="gender" value={form.gender} onChange={handleChange} invalid={!!errors.gender} required>
+                    <CFormSelect floating="true" label={getRequiredLabel("Gender")} name="gender" value={form.gender} onChange={handleChange} invalid={!!errors.gender} required>
                       <option value="">Select</option>
                       <option>Male</option>
                       <option>Female</option>
@@ -499,13 +503,13 @@ export default function RegisterAgentWizard() {
                   </CCol>
                 </CRow>
                 <CRow className="g-3 mb-3">
-                  <CCol md={4}><CFormSelect floating="true" label="Marital Status" name="marital_status" value={form.marital_status} onChange={handleChange} invalid={!!errors.marital_status}>
+                  <CCol md={4}><CFormSelect floating="true" label={getRequiredLabel("Marital Status")} name="marital_status" value={form.marital_status} onChange={handleChange} invalid={!!errors.marital_status}>
                     <option value="">Select</option>
                     <option>Single</option>
                     <option>Married</option>
                   </CFormSelect>{renderError('marital_status')}</CCol>
-                  <CCol md={4}><CFormInput floating="true" label="Education" name="education" value={form.education} onChange={handleChange} invalid={!!errors.education} />{renderError('education')}</CCol>
-                  <CCol md={4}><CFormSelect floating="true" label="Language" name="language" value={form.language} onChange={handleChange} invalid={!!errors.language}>
+                  <CCol md={4}><CFormInput floating="true" label={getRequiredLabel("Education")} name="education" value={form.education} onChange={handleChange} invalid={!!errors.education} />{renderError('education')}</CCol>
+                  <CCol md={4}><CFormSelect floating="true" label={getRequiredLabel("Language")} name="language" value={form.language} onChange={handleChange} invalid={!!errors.language}>
                     <option value="">Select</option>
                     <option>English</option>
                     <option>Hindi</option>
@@ -513,19 +517,19 @@ export default function RegisterAgentWizard() {
                   </CFormSelect>{renderError('language')}</CCol>
                 </CRow>
                 <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="Occupation" name="occupation" maxLength={80} value={form.occupation} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.occupation} />{renderError('occupation')}</CCol>
-                  <CCol md={6}><CFormInput floating="true" label="Work Experience (Years)" name="work_experience" maxLength={2} value={form.work_experience} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.work_experience} />{renderError('work_experience')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label={getRequiredLabel("Occupation")} name="occupation" maxLength={80} value={form.occupation} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.occupation} />{renderError('occupation')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label={getRequiredLabel("Work Experience (Years)")} name="work_experience" maxLength={2} value={form.work_experience} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.work_experience} />{renderError('work_experience')}</CCol>
                 </CRow>
                 <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="Annual Income" name="income" maxLength={12} value={form.income} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.income} />{renderError('income')}</CCol>
-                  <CCol md={6}><CFormInput floating="true" label="Aadhaar Number" name="adhar" maxLength={12} value={form.adhar} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.adhar} />{renderError('adhar')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label={getRequiredLabel("Annual Income")} name="income" maxLength={12} value={form.income} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.income} />{renderError('income')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label={getRequiredLabel("Aadhaar Number")} name="adhar" maxLength={12} value={form.adhar} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.adhar} />{renderError('adhar')}</CCol>
                 </CRow>
                 <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="PAN Number" name="pan" maxLength={10} value={form.pan} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.pan} />{renderError('pan')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label={getRequiredLabel("PAN Number")} name="pan" maxLength={10} value={form.pan} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.pan} />{renderError('pan')}</CCol>
                   <CCol md={6}>
                     <CFormSelect
                       floating
-                      label="Designation"
+                      label={getRequiredLabel("Designation")}
                       name="designation"
                       value={form.designation}
                       onChange={handleChange}
@@ -545,24 +549,24 @@ export default function RegisterAgentWizard() {
                 {/* Work & Bank */}
                 <h5 className="text-primary mb-3 mt-4">Work & Bank Details</h5>
                 <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="Reference Agent Code" name="reference_agent" maxLength={30} value={form.reference_agent} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.reference_agent} />{renderError('reference_agent')}</CCol>
-                  <CCol md={6}><CFormInput floating="true" label="Agent Team" name="agent_team" maxLength={30} value={form.agent_team} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.agent_team} />{renderError('agent_team')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label={getRequiredLabel("Reference Agent Code")} name="reference_agent" maxLength={30} value={form.reference_agent} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.reference_agent} />{renderError('reference_agent')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label={getRequiredLabel("Agent Team")} name="agent_team" maxLength={30} value={form.agent_team} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.agent_team} />{renderError('agent_team')}</CCol>
                 </CRow>
                 <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="Work Location" name="work_location" maxLength={80} value={form.work_location} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.work_location} />{renderError('work_location')}</CCol>
-                  <CCol md={6}><CFormInput floating="true" label="Bank Name" name="bank_name" maxLength={80} value={form.bank_name} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.bank_name} />{renderError('bank_name')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label={getRequiredLabel("Work Location")} name="work_location" maxLength={80} value={form.work_location} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.work_location} />{renderError('work_location')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label={getRequiredLabel("Bank Name")} name="bank_name" maxLength={80} value={form.bank_name} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.bank_name} />{renderError('bank_name')}</CCol>
                 </CRow>
                 <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="Branch" name="branch" maxLength={80} value={form.branch} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.branch} />{renderError('branch')}</CCol>
-                  <CCol md={6}><CFormInput floating="true" label="Account Number" name="account_number" maxLength={18} value={form.account_number} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.account_number} />{renderError('account_number')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label={getRequiredLabel("Branch")} name="branch" maxLength={80} value={form.branch} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.branch} />{renderError('branch')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label={getRequiredLabel("Account Number")} name="account_number" maxLength={18} value={form.account_number} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.account_number} />{renderError('account_number')}</CCol>
                 </CRow>
                 <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="IFSC Code" name="ifsc_code" maxLength={11} value={form.ifsc_code} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.ifsc_code} />{renderError('ifsc_code')}</CCol>
-                  <CCol md={6}><CFormInput floating="true" label="Nominee Name" name="nominiee" maxLength={60} value={form.nominiee} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.nominiee} />{renderError('nominiee')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label={getRequiredLabel("IFSC Code")} name="ifsc_code" maxLength={11} value={form.ifsc_code} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.ifsc_code} />{renderError('ifsc_code')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label={getRequiredLabel("Nominee Name")} name="nominiee" maxLength={60} value={form.nominiee} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.nominiee} />{renderError('nominiee')}</CCol>
                 </CRow>
                 <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="Relation with Nominee" name="relationship" maxLength={60} value={form.relationship} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.relationship} />{renderError('relationship')}</CCol>
-                  <CCol md={6}><CFormInput floating="true" label="Nominee Mobile" name="nominee_mobile" maxLength={10} value={form.nominee_mobile} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.nominee_mobile} />{renderError('nominee_mobile')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label={getRequiredLabel("Relation with Nominee")} name="relationship" maxLength={60} value={form.relationship} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.relationship} />{renderError('relationship')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label={getRequiredLabel("Nominee Mobile")} name="nominee_mobile" maxLength={10} value={form.nominee_mobile} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.nominee_mobile} />{renderError('nominee_mobile')}</CCol>
                 </CRow>
 
                 {/* Upload Documents */}
@@ -575,7 +579,7 @@ export default function RegisterAgentWizard() {
                       style={{ minHeight: 400 }}
                     >
                       <CFormLabel className="fw-semibold d-block mb-3 fs-5 text-primary">
-                        Profile Photo
+                        Profile Photo <span className="text-danger">*</span>
                       </CFormLabel>
 
                       {form.photo ? (
@@ -649,7 +653,7 @@ export default function RegisterAgentWizard() {
                       style={{ minHeight: 400 }}
                     >
                       <CFormLabel className="fw-semibold fs-5 text-primary mb-4 text-center">
-                        Aadhaar & PAN Uploads
+                        Aadhaar & PAN Uploads <span className="text-danger">*</span>
                       </CFormLabel>
 
                       <CRow className="g-4 w-100 text-center">
@@ -767,14 +771,14 @@ export default function RegisterAgentWizard() {
                 {/* Address */}
                 <h5 className="text-primary mb-3 mt-4">Address</h5>
                 <CRow className="g-3 mb-3">
-                  <CCol md={12}><CFormTextarea floating="true" label="Address" name="address" rows={2} value={form.address} onChange={handleChange} invalid={!!errors.address} />{renderError('address')}</CCol>
+                  <CCol md={12}><CFormTextarea floating="true" label={getRequiredLabel("Address")} name="address" rows={2} value={form.address} onChange={handleChange} invalid={!!errors.address} />{renderError('address')}</CCol>
                 </CRow>
                 <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="City" name="city" maxLength={50} value={form.city} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.city} />{renderError('city')}</CCol>
-                  <CCol md={6}><CFormInput floating="true" label="State" name="state" maxLength={50} value={form.state} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.state} />{renderError('state')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label={getRequiredLabel("City")} name="city" maxLength={50} value={form.city} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.city} />{renderError('city')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label={getRequiredLabel("State")} name="state" maxLength={50} value={form.state} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.state} />{renderError('state')}</CCol>
                 </CRow>
                 <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="Pincode" name="pincode" maxLength={6} value={form.pincode} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.pincode} />{renderError('pincode')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label={getRequiredLabel("Pincode")} name="pincode" maxLength={6} value={form.pincode} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.pincode} />{renderError('pincode')}</CCol>
                 </CRow>
 
                 <div className="d-grid mt-4">

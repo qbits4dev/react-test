@@ -132,23 +132,26 @@ export default function Register() {
                             {fields.map((field) => (
                                 <div className="mb-3" key={field.name}>
                                     {field.type === 'select' ? (
-                                        <CFormSelect
-                                            name={field.name}
-                                            value={formData[field.name]}
-                                            onChange={handleChange}
-                                            style={{ borderRadius: '6px', padding: '10px' }}
-                                        >
-                                            {field.options.map((opt) => (
-                                                <option key={opt} value={opt}>
-                                                    {opt.charAt(0).toUpperCase() + opt.slice(1)}
-                                                </option>
-                                            ))}
-                                        </CFormSelect>
+                                        <>
+                                            <label className="form-label small fw-semibold text-muted mb-1">{field.label} <span className="text-danger">*</span></label>
+                                            <CFormSelect
+                                                name={field.name}
+                                                value={formData[field.name]}
+                                                onChange={handleChange}
+                                                style={{ borderRadius: '6px', padding: '10px' }}
+                                            >
+                                                {field.options.map((opt) => (
+                                                    <option key={opt} value={opt}>
+                                                        {opt.charAt(0).toUpperCase() + opt.slice(1)}
+                                                    </option>
+                                                ))}
+                                            </CFormSelect>
+                                        </>
                                     ) : (
                                         <CFormInput
                                             type={field.type}
                                             name={field.name}
-                                            placeholder={field.label}
+                                            placeholder={`${field.label} *`}
                                             value={formData[field.name]}
                                             onChange={handleChange}
                                             invalid={!!errors[field.name]}

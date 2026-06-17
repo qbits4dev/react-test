@@ -138,7 +138,7 @@ const Client_Register = () => {
                     <CInputGroupText><CIcon icon={cilUser} /></CInputGroupText>
                     <CFormInput
                       name="first_name"
-                      placeholder="First Name"
+                      placeholder="First Name *"
                       value={formData.first_name}
                       onChange={handleChange}
                       invalid={!!errors.first_name}
@@ -151,7 +151,7 @@ const Client_Register = () => {
                     <CInputGroupText><CIcon icon={cilUser} /></CInputGroupText>
                     <CFormInput
                       name="last_name"
-                      placeholder="Last Name"
+                      placeholder="Last Name *"
                       value={formData.last_name}
                       onChange={handleChange}
                       invalid={!!errors.last_name}
@@ -164,7 +164,7 @@ const Client_Register = () => {
                     <CInputGroupText>@</CInputGroupText>
                     <CFormInput
                       name="email"
-                      placeholder="Email"
+                      placeholder="Email *"
                       type="email"
                       value={formData.email}
                       onChange={handleChange}
@@ -178,7 +178,7 @@ const Client_Register = () => {
                     <CInputGroupText><CIcon icon={cilPhone} /></CInputGroupText>
                     <CFormInput
                       name="phone"
-                      placeholder="Phone Number"
+                      placeholder="Phone Number *"
                       value={formData.phone}
                       onChange={handleChange}
                       invalid={!!errors.phone}
@@ -191,7 +191,7 @@ const Client_Register = () => {
                     <CInputGroupText><CIcon icon={cilUser} /></CInputGroupText>
                     <CFormInput
                       name="reference_agent"
-                      placeholder="Reference Agent"
+                      placeholder="Reference Agent *"
                       value={formData.reference_agent}
                       onChange={handleChange}
                       invalid={!!errors.reference_agent}
@@ -203,7 +203,7 @@ const Client_Register = () => {
                   <CInputGroup className='mb-3'>
                     <CFormInput
                       name='interested_project'
-                      placeholder='Interested Project'
+                      placeholder='Interested Project *'
                       value={formData.interested_project}
                       onChange={handleChange}
                       invalid={!!errors.interested_project}
@@ -215,7 +215,7 @@ const Client_Register = () => {
                   <CInputGroup className='mb-3'>
                     <CFormInput
                       name='interested_plot'
-                      placeholder='Interested Plot'
+                      placeholder='Interested Plot *'
                       value={formData.interested_plot}
                       onChange={handleChange}
                       invalid={!!errors.interested_plot}
