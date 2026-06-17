@@ -106,6 +106,9 @@ export default function ProjectsList() {
   const [selectedProjectForEdit, setSelectedProjectForEdit] = useState(null)
   const [savingProject, setSavingProject] = useState(false)
 
+  const [deleteProjectModalVisible, setDeleteProjectModalVisible] = useState(false)
+  const [selectedProjectForDelete, setSelectedProjectForDelete] = useState(null)
+
   const fetchProjects = async () => {
     setLoading(true)
     try {
@@ -258,6 +261,43 @@ export default function ProjectsList() {
     }
   }
 
+  const handleDeleteProjectOpen = (project) => {
+    setSelectedProjectForDelete(project)
+    setDeleteProjectModalVisible(true)
+  }
+
+  const handleDeleteProject = async () => {
+    if (!selectedProjectForDelete) return
+
+    try {
+      const res = await fetch(`${globalThis.apiBaseUrl}/projects/${selectedProjectForDelete.id}`, {
+        method: 'DELETE',
+      })
+
+      if (res.ok) {
+        setProjects((prev) => prev.filter((p) => p.id !== selectedProjectForDelete.id))
+        setMessage({
+          visible: true,
+          color: 'success',
+          text: 'Project deleted successfully.',
+        })
+        if (selectedProject && selectedProject.id === selectedProjectForDelete.id) {
+          setSelectedProject(null)
+          setPlots([])
+        }
+      } else {
+        const errorData = await res.json().catch(() => null)
+        const errMsg = errorData?.message || 'Failed to delete project.'
+        setMessage({ visible: true, color: 'danger', text: errMsg })
+      }
+    } catch (err) {
+      setMessage({ visible: true, color: 'danger', text: 'Failed to delete project: ' + err.message })
+    } finally {
+      setDeleteProjectModalVisible(false)
+      setSelectedProjectForDelete(null)
+    }
+  }
+
   return (
     <CContainer className="my-4">
       {message.visible && (
@@ -306,6 +346,9 @@ export default function ProjectsList() {
                             </CButton>
                             <CButton color="info" size="sm" variant="outline" shape="rounded-pill" onClick={() => handleEditProjectOpen(project)}>
                               Edit Project
+                            </CButton>
+                            <CButton color="danger" size="sm" variant="outline" shape="rounded-pill" onClick={() => handleDeleteProjectOpen(project)}>
+                              Delete Project
                             </CButton>
                           </div>
                         </CTableDataCell>
@@ -461,6 +504,15 @@ export default function ProjectsList() {
         <CModalFooter>
           <CButton color="secondary" variant="ghost" onClick={() => setDeletePlotModalVisible(false)}>Cancel</CButton>
           <CButton color="danger" onClick={handleDeletePlot}>Delete</CButton>
+        </CModalFooter>
+      </CModal>
+
+      <CModal visible={deleteProjectModalVisible} onClose={() => setDeleteProjectModalVisible(false)}>
+        <CModalHeader><CModalTitle>Delete Project</CModalTitle></CModalHeader>
+        <CModalBody>Are you sure you want to delete project <strong>{selectedProjectForDelete?.name}</strong>?</CModalBody>
+        <CModalFooter>
+          <CButton color="secondary" variant="ghost" onClick={() => setDeleteProjectModalVisible(false)}>Cancel</CButton>
+          <CButton color="danger" onClick={handleDeleteProject}>Delete</CButton>
         </CModalFooter>
       </CModal>
     </CContainer>

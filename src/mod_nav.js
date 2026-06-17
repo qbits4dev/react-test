@@ -12,6 +12,7 @@ import {
   cilSettings,
   cilLockLocked,
   cilStar,
+  cilBell,
 } from '@coreui/icons'
 import { CNavGroup, CNavItem, CNavTitle } from '@coreui/react'
 
@@ -30,6 +31,13 @@ const navigationConfig = [
     to: '/announcements',
     icon: <CIcon icon={cilBullhorn} customClassName="nav-icon" />,
     allowedRoles: [ROLES.ADMIN, ROLES.AGENT, ROLES.CLIENT],
+  },
+  {
+    component: CNavItem,
+    name: 'Send Notification',
+    to: '/notifications/send',
+    icon: <CIcon icon={cilBell} customClassName="nav-icon" />,
+    allowedRoles: [ROLES.ADMIN],
   },
 
   // CATEGORY 2: USER MANAGEMENT (ADMIN ONLY)

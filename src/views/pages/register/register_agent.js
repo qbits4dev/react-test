@@ -352,7 +352,6 @@ export default function RegisterAgentWizard() {
 
       // ── File uploads ──
       case 'photo':
-        if (!v) return 'Profile Photo is required'
         break
       case 'aadhaar_file':
         if (!v) return 'Aadhaar document upload is required'
@@ -371,7 +370,7 @@ export default function RegisterAgentWizard() {
     const requiredFields = [
       'first_name', 'last_name', 'father_name', 'dob', 'gender', 'email', 'mobile', 'password', 'marital_status', 'education', 'language', 'occupation', 'work_experience', 'income', 'adhar', 'pan',
       'designation', 'reference_agent', 'agent_team', 'work_location', 'bank_name', 'branch', 'account_number', 'ifsc_code', 'nominiee', 'relationship', 'nominee_mobile',
-      'aadhaar_file', 'pan_file', 'photo', 'address', 'city', 'state', 'pincode'
+      'aadhaar_file', 'pan_file', 'address', 'city', 'state', 'pincode'
     ]
     const newErrors = {}
     requiredFields.forEach(f => {
@@ -579,7 +578,7 @@ export default function RegisterAgentWizard() {
                       style={{ minHeight: 400 }}
                     >
                       <CFormLabel className="fw-semibold d-block mb-3 fs-5 text-primary">
-                        Profile Photo <span className="text-danger">*</span>
+                        Profile Photo
                       </CFormLabel>
 
                       {form.photo ? (
@@ -604,7 +603,7 @@ export default function RegisterAgentWizard() {
                               size="sm"
                               onClick={() => {
                                 setForm(prev => ({ ...prev, photo: null }))
-                                setErrors(prev => ({ ...prev, photo: 'Profile Photo is required' }))
+                                setErrors(prev => ({ ...prev, photo: '' }))
                               }}
                             >
                               Remove Photo

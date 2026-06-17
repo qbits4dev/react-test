@@ -98,6 +98,7 @@ const PostTargets = React.lazy(() => import('./views/pages/API/PostTargets'))
 const GetAgents = React.lazy(() => import('./views/pages/API/GetAgents'))
 const GetClients = React.lazy(() => import('./views/pages/API/GetClients'))
 const GetBookVisit = React.lazy(() => import('./views/pages/register/GetBookVisit'))
+const SendNotification = React.lazy(() => import('./views/pages/API/SendNotification'))
 
 const Widgets = React.lazy(() => import('./views/widgets/Widgets'))
 
@@ -166,6 +167,7 @@ const routes = [
   { path: '/GetTargets', name: 'Get Targets', element: GetTargets,meta:{allowedRoles:["admin","agent"]} },
   { path: '/GetAgents', name: 'Get Agents', element: GetAgents,meta:{allowedRoles:["admin","agent"]} },
   { path: '/GetClients', name: 'Get Clients', element: GetClients,meta:{allowedRoles:["admin","agent"]} },
+  { path: '/notifications/send', name: 'Send Notification', element: SendNotification, meta: { allowedRoles: ["admin"] } },
   { path: '/Profile', name: 'User Profile', element: Profile ,meta:{allowedRoles:["admin","agent"]}},
   { path: '/ClientProfile', name: 'Client Profile', element: ClientProfile ,meta:{allowedRoles:["admin","agent"]}},
   { path: '/Reports', name: 'Reports', element: Reports,meta:{allowedRoles:["admin","agent"]} },

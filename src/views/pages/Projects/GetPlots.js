@@ -90,6 +90,7 @@ export default function PlotsList() {
   const [projectFilter, setProjectFilter] = useState('')
 
   const [editModalVisible, setEditModalVisible] = useState(false)
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false)
   const [selectedPlot, setSelectedPlot] = useState(null)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState({ visible: false, color: 'success', text: '' })
@@ -163,21 +164,31 @@ export default function PlotsList() {
     }
   }
 
-  const handleDelete = async (plot) => {
+  const handleDeleteOpen = (plot) => {
+    setSelectedPlot(normalizePlot(plot))
+    setDeleteModalVisible(true)
+  }
+
+  const handleDelete = async () => {
+    if (!selectedPlot) return
+
     try {
-      const res = await fetch(`${globalThis.apiBaseUrl}/projects/plots/${encodeURIComponent(plot.plot_number)}`, {
+      const res = await fetch(`${globalThis.apiBaseUrl}/projects/plots/${encodeURIComponent(selectedPlot.plot_number)}`, {
         method: 'DELETE',
       })
 
-      setPlots((prev) => prev.filter((p) => p.plot_number !== plot.plot_number))
-      setFilteredPlots((prev) => prev.filter((p) => p.plot_number !== plot.plot_number))
+      setPlots((prev) => prev.filter((p) => p.plot_number !== selectedPlot.plot_number))
+      setFilteredPlots((prev) => prev.filter((p) => p.plot_number !== selectedPlot.plot_number))
       setMessage({
         visible: true,
         color: res.ok ? 'success' : 'warning',
         text: res.ok ? 'Plot deleted successfully.' : 'Plot deleted locally. Server delete endpoint is unavailable.',
       })
+      setDeleteModalVisible(false)
     } catch {
       setMessage({ visible: true, color: 'danger', text: 'Failed to delete plot.' })
+    } finally {
+      setSelectedPlot(null)
     }
   }
 
@@ -243,14 +254,14 @@ export default function PlotsList() {
                             </CBadge>
                           </CTableDataCell>
                           <CTableDataCell className="text-center">
-                            <CButtonGroup>
-                              <CButton color="info" size="sm" variant="outline" onClick={() => handleEdit(plot)}>
-                                Edit
-                              </CButton>
-                              <CButton color="danger" size="sm" variant="outline" onClick={() => handleDelete(plot)}>
-                                Delete
-                              </CButton>
-                            </CButtonGroup>
+                              <CButtonGroup>
+                                <CButton color="info" size="sm" variant="outline" onClick={() => handleEdit(plot)}>
+                                  Edit
+                                </CButton>
+                                <CButton color="danger" size="sm" variant="outline" onClick={() => handleDeleteOpen(plot)}>
+                                  Delete
+                                </CButton>
+                              </CButtonGroup>
                           </CTableDataCell>
                         </CTableRow>
                       ))
@@ -300,6 +311,15 @@ export default function PlotsList() {
         <CModalFooter>
           <CButton color="secondary" variant="ghost" onClick={() => setEditModalVisible(false)}>Cancel</CButton>
           <CButton color="primary" onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Save'}</CButton>
+        </CModalFooter>
+      </CModal>
+
+      <CModal visible={deleteModalVisible} onClose={() => setDeleteModalVisible(false)}>
+        <CModalHeader><CModalTitle>Delete Plot</CModalTitle></CModalHeader>
+        <CModalBody>Are you sure you want to delete plot <strong>{selectedPlot?.plot_number}</strong>?</CModalBody>
+        <CModalFooter>
+          <CButton color="secondary" variant="ghost" onClick={() => setDeleteModalVisible(false)}>Cancel</CButton>
+          <CButton color="danger" onClick={handleDelete}>Delete</CButton>
         </CModalFooter>
       </CModal>
     </div>
