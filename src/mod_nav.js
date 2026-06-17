@@ -13,6 +13,7 @@ import {
   cilLockLocked,
   cilStar,
   cilBell,
+  cilCalendar,
 } from '@coreui/icons'
 import { CNavGroup, CNavItem, CNavTitle } from '@coreui/react'
 
@@ -95,6 +96,13 @@ const navigationConfig = [
       { component: CNavItem, name: 'Get Plots', to: '/GetPlots', allowedRoles: [ROLES.ADMIN, ROLES.AGENT] },
       { component: CNavItem, name: 'Add Plot', to: '/PostPlots', allowedRoles: [ROLES.ADMIN] },
     ],
+  },
+  {
+    component: CNavItem,
+    name: 'Site Visits',
+    to: '/GetBookVisit',
+    icon: <CIcon icon={cilCalendar} customClassName="nav-icon" />,
+    allowedRoles: [ROLES.ADMIN, ROLES.AGENT],
   },
 
   // CATEGORY 4: TARGETS & GOALS (ADMIN & AGENT)
