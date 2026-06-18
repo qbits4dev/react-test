@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   CCard,
   CCardBody,
@@ -38,30 +38,53 @@ export default function LeadForm() {
   const [touched, setTouched] = useState({})
   const [loading, setLoading] = useState(false)
 
-  // Example static project and plot data
-  const projectsList = [
-    {
-      name: 'Aditya Heights',
-      id: 1,
-      plots: [
-        { label: 'Plot 101 - East - 200sqyd', id: 1 },
-        { label: 'Plot 102 - West - 300sqyd', id: 2 },
-      ],
-    },
-    {
-      name: 'Aditya Medows',
-      id: 2,
-      plots: [
-        { label: 'Plot 201 - North - 250sqyd', id: 1 },
-        { label: 'Plot 202 - South - 400sqyd', id: 2 },
-      ],
-    },
-  ]
+  const [projects, setProjects] = useState([])
+  const [plots, setPlots] = useState([])
+  const [projectsLoading, setProjectsLoading] = useState(false)
+  const [plotsLoading, setPlotsLoading] = useState(false)
 
-  const chosenProject = projectsList.find((p) => p.name === formData.interestedIn)
-  const chosenPlot = chosenProject?.plots.find((pl) => pl.label === formData.plot)
-  const projectId = chosenProject?.id || 0
-  const plotId = chosenPlot?.id || 0
+  useEffect(() => {
+    const fetchProjects = async () => {
+      setProjectsLoading(true)
+      try {
+        const res = await fetch(`${globalThis.apiBaseUrl}/projects/`)
+        if (res.ok) {
+          const data = await res.json()
+          setProjects(Array.isArray(data.data) ? data.data : [])
+        }
+      } catch (err) {
+        console.error('Failed to fetch projects:', err)
+      } finally {
+        setProjectsLoading(false)
+      }
+    }
+    fetchProjects()
+  }, [])
+
+  const handleProjectChange = async (e) => {
+    const projectName = e.target.value
+    setFormData((prev) => ({ ...prev, interestedIn: projectName, plot: '' }))
+    setPlots([])
+
+    if (!projectName) return
+
+    setPlotsLoading(true)
+    try {
+      const res = await fetch(`${globalThis.apiBaseUrl}/projects/plots?project_name=${encodeURIComponent(projectName)}`)
+      if (res.ok) {
+        const data = await res.json()
+        setPlots(Array.isArray(data) ? data : [])
+      }
+    } catch (err) {
+      console.error('Failed to fetch plots:', err)
+    } finally {
+      setPlotsLoading(false)
+    }
+  }
+
+  const chosenProject = projects.find((p) => p.name === formData.interestedIn)
+  const projectId = chosenProject ? chosenProject.id : null
+  const plotId = formData.plot !== undefined && formData.plot !== '' ? formData.plot : null
 
   // -------------------- VALIDATION --------------------
   const validate = () => {
@@ -278,15 +301,16 @@ export default function LeadForm() {
 
               {/* Interested In */}
               <CFormLabel>Interested In</CFormLabel>
-              <CFormSelect
+               <CFormSelect
                 name="interestedIn"
                 value={formData.interestedIn}
-                onChange={handleChange}
+                onChange={handleProjectChange}
                 onBlur={handleBlur}
                 invalid={touched.interestedIn && !!errors.interestedIn}
+                disabled={projectsLoading}
               >
-                <option value="">Select Project</option>
-                {projectsList.map((proj) => (
+                <option value="">{projectsLoading ? 'Loading projects...' : 'Select Project'}</option>
+                {projects.map((proj) => (
                   <option key={proj.id} value={proj.name}>
                     {proj.name}
                   </option>
@@ -295,8 +319,8 @@ export default function LeadForm() {
               <CFormFeedback invalid>{errors.interestedIn}</CFormFeedback>
               <br />
 
-              {/* Plot */}
-              {chosenProject && (
+               {/* Plot */}
+              {formData.interestedIn && (
                 <>
                   <CFormLabel>Plot Number & Facing</CFormLabel>
                   <CFormSelect
@@ -305,11 +329,12 @@ export default function LeadForm() {
                     onChange={handleChange}
                     onBlur={handleBlur}
                     invalid={touched.plot && !!errors.plot}
+                    disabled={plotsLoading}
                   >
-                    <option value="">Select Plot</option>
-                    {chosenProject.plots.map((p) => (
-                      <option key={p.id} value={p.label}>
-                        {p.label}
+                    <option value="">{plotsLoading ? 'Loading plots...' : 'Select Plot'}</option>
+                    {plots.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.plot_number} {p.status ? `(${p.status})` : ''}
                       </option>
                     ))}
                   </CFormSelect>

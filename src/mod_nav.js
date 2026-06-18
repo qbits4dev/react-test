@@ -92,7 +92,6 @@ const navigationConfig = [
     icon: <CIcon icon={cilLocationPin} customClassName="nav-icon" />,
     allowedRoles: [ROLES.ADMIN, ROLES.AGENT],
     items: [
-      { component: CNavItem, name: 'View All Plots', to: '/Plots', allowedRoles: [ROLES.ADMIN, ROLES.AGENT, ROLES.CLIENT] },
       { component: CNavItem, name: 'Get Plots', to: '/GetPlots', allowedRoles: [ROLES.ADMIN, ROLES.AGENT] },
       { component: CNavItem, name: 'Add Plot', to: '/PostPlots', allowedRoles: [ROLES.ADMIN] },
     ],

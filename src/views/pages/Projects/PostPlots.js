@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   CCard,
   CCardBody,
@@ -25,6 +25,26 @@ export default function PlotForm() {
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [projects, setProjects] = useState([]);
+  const [projectsLoading, setProjectsLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      setProjectsLoading(true);
+      try {
+        const res = await fetch(`${globalThis.apiBaseUrl}/projects/`);
+        if (res.ok) {
+          const data = await res.json();
+          setProjects(Array.isArray(data.data) ? data.data : []);
+        }
+      } catch (err) {
+        console.error('Failed to fetch projects:', err);
+      } finally {
+        setProjectsLoading(false);
+      }
+    };
+    fetchProjects();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -137,16 +157,23 @@ export default function PlotForm() {
           <CForm onSubmit={handleSubmit}>
             <CRow className="g-4 mb-4">
               <CCol md={6}>
-                <CFormInput
+                <CFormSelect
                   floating
                   label="Project Name"
                   name="project_name"
                   value={form.project_name}
                   onChange={handleChange}
-                  placeholder="Project Name"
                   required
+                  disabled={projectsLoading}
                   style={{ borderRadius: '12px', border: '1px solid #ced4da' }}
-                />
+                >
+                  <option value="">{projectsLoading ? 'Loading projects...' : 'Select Project'}</option>
+                  {projects.map((proj) => (
+                    <option key={proj.id} value={proj.name}>
+                      {proj.name}
+                    </option>
+                  ))}
+                </CFormSelect>
               </CCol>
               <CCol md={6}>
                 <CFormInput

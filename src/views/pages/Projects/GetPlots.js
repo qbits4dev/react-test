@@ -89,12 +89,31 @@ export default function PlotsList() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [projectFilter, setProjectFilter] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
 
   const [editModalVisible, setEditModalVisible] = useState(false)
   const [deleteModalVisible, setDeleteModalVisible] = useState(false)
   const [selectedPlot, setSelectedPlot] = useState(null)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState({ visible: false, color: 'success', text: '' })
+
+  const applyFilters = (projFilter, query, allPlots = plots) => {
+    let filtered = allPlots
+    if (projFilter) {
+      filtered = filtered.filter((p) => p.project_name === projFilter)
+    }
+    if (query) {
+      const lowerQuery = query.toLowerCase().trim()
+      filtered = filtered.filter((p) => 
+        String(p.plot_number || '').toLowerCase().includes(lowerQuery) ||
+        String(p.project_name || '').toLowerCase().includes(lowerQuery) ||
+        String(p.size || '').toLowerCase().includes(lowerQuery) ||
+        String(p.price || '').toLowerCase().includes(lowerQuery) ||
+        String(p.status || '').toLowerCase().includes(lowerQuery)
+      )
+    }
+    setFilteredPlots(filtered)
+  }
 
   const fetchPlots = async () => {
     setLoading(true)
@@ -105,7 +124,7 @@ export default function PlotsList() {
       const data = await res.json()
       const list = Array.isArray(data) ? data : data.plots || []
       setPlots(list)
-      setFilteredPlots(list)
+      applyFilters(projectFilter, searchQuery, list)
       setError('')
     } catch (err) {
       setError('Error fetching plots: ' + err.message)
@@ -120,11 +139,12 @@ export default function PlotsList() {
 
   const handleProjectFilterChange = (value) => {
     setProjectFilter(value)
-    if (!value) {
-      setFilteredPlots(plots)
-    } else {
-      setFilteredPlots(plots.filter((p) => p.project_name === value))
-    }
+    applyFilters(value, searchQuery)
+  }
+
+  const handleSearchChange = (value) => {
+    setSearchQuery(value)
+    applyFilters(projectFilter, value)
   }
 
   const handleEdit = (plot) => {
@@ -217,8 +237,16 @@ export default function PlotsList() {
                 Plots Overview
               </h2>
 
-              <CRow className="mb-4 d-flex justify-content-end">
+              <CRow className="mb-4 g-3 align-items-center">
                 <CCol md={4}>
+                  <CFormInput
+                    type="text"
+                    placeholder="Search plots..."
+                    value={searchQuery}
+                    onChange={(e) => handleSearchChange(e.target.value)}
+                  />
+                </CCol>
+                <CCol md={4} className="ms-auto">
                   <CFormSelect value={projectFilter} onChange={(e) => handleProjectFilterChange(e.target.value)}>
                     <option value="">Filter by Project Name</option>
                     {projectNames.map((name) => (
