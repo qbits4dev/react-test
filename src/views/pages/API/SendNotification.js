@@ -38,9 +38,82 @@ const SendNotification = () => {
     color: 'white',
   }
 
+  // Helper to extract all unique string tokens from response data
+  const extractAllTokens = (data) => {
+    if (!data) return []
+    const tokens = new Set()
+
+    const addToken = (token) => {
+      if (typeof token === 'string' && token.trim()) {
+        tokens.add(token.trim())
+      }
+    }
+
+    const processItem = (item) => {
+      if (!item) return
+      addToken(item.fcm_token)
+      addToken(item.token)
+      if (typeof item === 'string') {
+        addToken(item)
+      }
+    }
+
+    if (Array.isArray(data)) {
+      data.forEach(processItem)
+    } else {
+      // Check direct properties
+      processItem(data)
+      // Check standard keys that might hold arrays
+      const arrayKeys = ['data', 'tokens', 'results', 'fcm_tokens']
+      for (const key of arrayKeys) {
+        if (Array.isArray(data[key])) {
+          data[key].forEach(processItem)
+        }
+      }
+      // Check data property if it's an object
+      if (data.data) {
+        processItem(data.data)
+      }
+    }
+
+    return Array.from(tokens)
+  }
+
+  // Helper to find the specific token object matching the fcm_token
+  const findTokenObject = (data, targetToken) => {
+    if (!data) return null
+
+    const checkItem = (item) => {
+      if (!item) return false
+      return item.fcm_token === targetToken || item.token === targetToken
+    }
+
+    if (Array.isArray(data)) {
+      return data.find(checkItem) || null
+    }
+
+    const arrayKeys = ['data', 'tokens', 'results', 'fcm_tokens']
+    for (const key of arrayKeys) {
+      if (Array.isArray(data[key])) {
+        const found = data[key].find(checkItem)
+        if (found) return found
+      }
+    }
+
+    if (checkItem(data)) return data
+    if (data.data && checkItem(data.data)) return data.data
+
+    return null
+  }
+
+  // Helper to safely get a trimmed string
+  const getSafeString = (value) => {
+    return typeof value === 'string' ? value.trim() : ''
+  }
+
   // Real-time validator
   const validateField = (name, value) => {
-    const v = value.trim()
+    const v = getSafeString(value)
     switch (name) {
       case 'title':
         if (!v) return 'Title is required.'
@@ -88,64 +161,6 @@ const SendNotification = () => {
     return Object.keys(newErrors).length === 0
   }
 
-  // Fetch Firebase token for the user
-  const fetchFirebaseToken = async () => {
-    if (!formData.u_id.trim()) {
-      setMessage({
-        visible: true,
-        color: 'warning',
-        text: 'Please enter a User ID (u_id) first.',
-      })
-      return
-    }
-
-    setFetchingToken(true)
-    setFirebaseApiOutput(null)
-    setMessage({ visible: false, color: 'success', text: '' })
-
-    try {
-      const uId = formData.u_id.trim()
-      const url = `${globalThis.apiBaseUrl}/firebase?u_id=${encodeURIComponent(uId)}`
-      console.log('Fetching Firebase token from:', url)
-      const res = await fetch(url)
-      
-      if (!res.ok) {
-        throw new Error(`Server returned status ${res.status}`)
-      }
-
-      const data = await res.json()
-      console.log('Firebase token GET response:', data)
-      setFirebaseApiOutput(data)
-
-      // Try to extract fcm_token from data object
-      const token = data.fcm_token || data.token || (Array.isArray(data.tokens) ? data.tokens[0] : data.tokens) || data.data || ''
-
-      if (token) {
-        setFormData((prev) => ({ ...prev, fcm_token: token }))
-        setMessage({
-          visible: true,
-          color: 'success',
-          text: `Device token retrieved successfully for user ID ${uId}.`,
-        })
-      } else {
-        setMessage({
-          visible: true,
-          color: 'info',
-          text: `Request succeeded, but no device token was found for user ID ${uId}.`,
-        })
-      }
-    } catch (error) {
-      console.error('Error fetching Firebase token:', error)
-      setMessage({
-        visible: true,
-        color: 'danger',
-        text: `Failed to fetch Firebase token: ${error.message}`,
-      })
-    } finally {
-      setFetchingToken(false)
-    }
-  }
-
   // Submit notifications
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -162,38 +177,105 @@ const SendNotification = () => {
 
     setSending(true)
 
-    // Assemble the complete payload containing both form fields and the retrieved firebase API response
-    const payload = {
-      title: formData.title.trim(),
-      body: formData.body.trim(),
-      image_url: formData.image_url.trim() || null,
-      u_id: formData.u_id.trim() || null,
-      topic: formData.topic.trim() || null,
-      fcm_token: formData.fcm_token.trim() || null,
-      firebase_output: firebaseApiOutput,
-      ...firebaseApiOutput, // merge properties at the root level as requested
+    const fcmTokenInput = getSafeString(formData.fcm_token)
+    const uId = getSafeString(formData.u_id)
+    const topic = getSafeString(formData.topic)
+
+    let tokensToUse = fcmTokenInput
+      ? fcmTokenInput
+        .split(',')
+        .map((t) => t.trim())
+        .filter(Boolean)
+      : []
+    let apiOutputToUse = firebaseApiOutput
+
+    // Automatically fetch Firebase token(s) if u_id is entered
+    if (uId) {
+      setFetchingToken(true)
+      try {
+        const getUrl = `${globalThis.apiBaseUrl}/firebase?u_id=${encodeURIComponent(uId)}`
+        console.log('Automatically fetching Firebase tokens for submission:', getUrl)
+        const getRes = await fetch(getUrl)
+
+        if (!getRes.ok) {
+          throw new Error(`Failed to fetch Firebase token: status ${getRes.status}`)
+        }
+
+        const data = await getRes.json()
+        console.log('Firebase token GET response during submit:', data)
+        apiOutputToUse = data
+        setFirebaseApiOutput(data)
+
+        const extractedTokens = extractAllTokens(data)
+
+        if (extractedTokens && extractedTokens.length > 0) {
+          tokensToUse = extractedTokens
+          setFormData((prev) => ({ ...prev, fcm_token: extractedTokens.join(', ') }))
+        } else {
+          throw new Error(`No device token was found for user ID ${uId}.`)
+        }
+      } catch (error) {
+        console.error('Error fetching token during submission:', error)
+        setMessage({
+          visible: true,
+          color: 'danger',
+          text: `Failed to retrieve device token for user ID ${uId}: ${error.message}`,
+        })
+        setSending(false)
+        setFetchingToken(false)
+        return
+      } finally {
+        setFetchingToken(false)
+      }
+    } else if (tokensToUse.length === 0 && !topic) {
+      setMessage({
+        visible: true,
+        color: 'danger',
+        text: 'Please provide either a User ID, specific Device Token (FCM Token), or Broadcast Topic.',
+      })
+      setSending(false)
+      return
     }
 
+    // Determine target list to loop through
+    const targets = tokensToUse.length > 0 ? tokensToUse : [null]
+    let successCount = 0
+
     try {
-      const url = `${globalThis.apiBaseUrl}/firebase/send`
-      console.log('Sending notification POST payload:', payload)
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
+      for (const token of targets) {
+        const tokenObj = findTokenObject(apiOutputToUse, token)
+        const payload = {
+          title: getSafeString(formData.title),
+          body: getSafeString(formData.body),
+          image_url: getSafeString(formData.image_url) || null,
+          u_id: uId || null,
+          topic: topic || null,
+          fcm_token: token || null,
+          firebase_output: tokenObj || apiOutputToUse,
+          ...(tokenObj || {}), // merge properties at the root level for this token
+        }
 
-      if (!res.ok) {
-        throw new Error(`Notification sending failed with status ${res.status}`)
+        const url = `${globalThis.apiBaseUrl}/firebase/send`
+        console.log('Latest payload being sent to POST:', payload)
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+
+        if (!res.ok) {
+          throw new Error(`Notification sending failed with status ${res.status}`)
+        }
+
+        const resData = await res.json()
+        console.log('Notification sending response for token', token, ':', resData)
+        successCount++
       }
-
-      const resData = await res.json()
-      console.log('Notification sending response:', resData)
 
       setMessage({
         visible: true,
         color: 'success',
-        text: 'Notification dispatched successfully to mobile app users!',
+        text: `Notification dispatched successfully to ${successCount} device(s)!`,
       })
 
       // Reset form on success
@@ -211,7 +293,7 @@ const SendNotification = () => {
       setMessage({
         visible: true,
         color: 'danger',
-        text: `Failed to send notification: ${error.message}`,
+        text: `Failed to send notification: ${error.message} (Dispatched successfully to ${successCount} device(s) prior to error)`,
       })
     } finally {
       setSending(false)
@@ -244,7 +326,9 @@ const SendNotification = () => {
                 </div>
                 <div>
                   <h4 className="fw-bold mb-0">Push Notifications Control</h4>
-                  <small style={{ opacity: 0.8 }}>Send system tray notifications to mobile app users</small>
+                  <small style={{ opacity: 0.8 }}>
+                    Send system tray notifications to mobile app users
+                  </small>
                 </div>
               </div>
             </CCardHeader>
@@ -269,7 +353,9 @@ const SendNotification = () => {
                     onBlur={handleBlur}
                     invalid={!!errors.title}
                   />
-                  {errors.title && <small className="text-danger d-block mt-1">{errors.title}</small>}
+                  {errors.title && (
+                    <small className="text-danger d-block mt-1">{errors.title}</small>
+                  )}
                 </div>
 
                 <div className="mb-3">
@@ -302,7 +388,9 @@ const SendNotification = () => {
                     onBlur={handleBlur}
                     invalid={!!errors.image_url}
                   />
-                  {errors.image_url && <small className="text-danger d-block mt-1">{errors.image_url}</small>}
+                  {errors.image_url && (
+                    <small className="text-danger d-block mt-1">{errors.image_url}</small>
+                  )}
                   {formData.image_url && !errors.image_url && (
                     <div className="mt-3 p-2 border rounded-3 bg-light text-center">
                       <div className="small text-muted mb-2">Image Preview</div>
@@ -327,48 +415,26 @@ const SendNotification = () => {
                   <CFormLabel htmlFor="u_id" className="fw-semibold text-muted">
                     Target User ID (u_id)
                   </CFormLabel>
-                  <CRow className="g-2">
-                    <CCol>
-                      <CFormInput
-                        id="u_id"
-                        name="u_id"
-                        placeholder="e.g. AGT001 or CLT002"
-                        value={formData.u_id}
-                        onChange={handleChange}
-                      />
-                    </CCol>
-                    <CCol xs="auto">
-                      <CButton
-                        color="dark"
-                        onClick={fetchFirebaseToken}
-                        disabled={fetchingToken}
-                        className="d-flex align-items-center gap-2"
-                      >
-                        {fetchingToken ? (
-                          <>
-                            <CSpinner size="sm" /> Fetching...
-                          </>
-                        ) : (
-                          <>
-                            <CIcon icon={cilCloudDownload} /> Fetch Tokens
-                          </>
-                        )}
-                      </CButton>
-                    </CCol>
-                  </CRow>
+                  <CFormInput
+                    id="u_id"
+                    name="u_id"
+                    placeholder="e.g. AGT001 or CLT002"
+                    value={formData.u_id}
+                    onChange={handleChange}
+                  />
                   <small className="text-muted d-block mt-1">
-                    Enter the User ID to retrieve device tokens from the Firebase token store.
+                    Enter the User ID. The system will automatically retrieve the latest device token during submission.
                   </small>
                 </div>
 
-                <div className="mb-3">
+                {/* <div className="mb-3">
                   <CFormLabel htmlFor="fcm_token" className="fw-semibold text-muted">
                     Specific Device Token (FCM Token)
                   </CFormLabel>
                   <CFormInput
                     id="fcm_token"
                     name="fcm_token"
-                    placeholder="Auto-filled from Fetch, or enter manually"
+                    placeholder="Auto-filled on Send, or enter manually"
                     value={formData.fcm_token}
                     onChange={handleChange}
                   />
@@ -391,7 +457,7 @@ const SendNotification = () => {
                   <small className="text-muted">
                     Send to all app instances subscribed to a specific FCM channel.
                   </small>
-                </div>
+                </div> */}
 
                 {/* Submit Action */}
                 <div className="d-grid mt-4">
@@ -419,7 +485,7 @@ const SendNotification = () => {
           </CCard>
 
           {/* Firebase API Response Log Drawer */}
-          {firebaseApiOutput && (
+          {/* {firebaseApiOutput && (
             <CCard className="shadow border-0 rounded-4 overflow-hidden mb-4 bg-dark text-light">
               <CCardHeader className="p-3 border-0 bg-secondary text-white d-flex justify-content-between align-items-center">
                 <span className="fw-bold small font-monospace">Firebase Store Output</span>
@@ -431,7 +497,7 @@ const SendNotification = () => {
                 </pre>
               </CCardBody>
             </CCard>
-          )}
+          )} */}
         </CCol>
       </CRow>
     </CContainer>
