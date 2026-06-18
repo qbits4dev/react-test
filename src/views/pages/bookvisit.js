@@ -153,8 +153,10 @@ export default function LeadForm() {
     }
 
     try {
-      
-      const res = await fetch(`${globalThis.apiBaseUrl}/visits`, {
+      const postUrl = `${globalThis.apiBaseUrl}/visits`
+      console.log('Add Visit — payload being sent to POST:', postUrl, apiBody)
+
+      const res = await fetch(postUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

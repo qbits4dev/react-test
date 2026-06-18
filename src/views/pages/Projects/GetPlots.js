@@ -70,6 +70,7 @@ const updatePlotOnServer = async (plot) => {
 
   for (const url of urls) {
     for (const method of ['PUT', 'PATCH']) {
+      console.log('Edit Plot — payload being sent to PUT/PATCH:', url, method, payload)
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },

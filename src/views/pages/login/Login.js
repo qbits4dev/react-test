@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   CButton,
@@ -27,9 +27,6 @@ const Login = () => {
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
 
-  useEffect(() => {
-    localStorage.clear()
-  }, [])
 
 
   const validateForm = () => {

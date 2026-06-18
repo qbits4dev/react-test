@@ -28,38 +28,68 @@ import {
 import { useNavigate } from 'react-router-dom'
 
 const updateVisitOnServer = async (visit) => {
-  const payload = {
-    customer_id: visit.customer_id || '',
-    plot_id: visit.plot_id ? Number(visit.plot_id) : null,
-    agent_id: visit.agent_id || '',
-    visit_date: visit.visit_date || '',
-    purpose: visit.purpose || '',
-    feedback: visit.feedback || '',
-    status: visit.status || 'scheduled',
-    project_id: visit.project_id ? Number(visit.project_id) : null,
-  }
-
-  const urls = [
-    `${globalThis.apiBaseUrl}/visits/${visit.id}`,
-    `${globalThis.apiBaseUrl}/visits`,
-  ]
-
-  for (const url of urls) {
-    for (const method of ['PUT', 'PATCH']) {
-      try {
-        const res = await fetch(url, {
-          method,
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        })
-        if (res.ok) return true
-      } catch (e) {
-        console.error(e)
-      }
+    const payload = {
+        id: visit.id,
+        customer_id: visit.customer_id || '',
+        plot_id: visit.plot_id !== undefined && visit.plot_id !== '' ? visit.plot_id : null,
+        agent_id: visit.agent_id || '',
+        visit_date: visit.visit_date || '',
+        purpose: visit.purpose || '',
+        feedback: visit.feedback || '',
+        status: visit.status || 'scheduled',
+        project_id: visit.project_id !== undefined && visit.project_id !== '' ? visit.project_id : null,
     }
-  }
-  return false
+
+    const url = `${globalThis.apiBaseUrl}/visits/${visit.id}`
+
+    console.log('Edit Visit — payload being sent to PUT:', url, payload)
+
+    const res = await fetch(url, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+    })
+
+    if (!res.ok) {
+        let errMsg = `Server returned ${res.status} (${res.statusText})`
+        try {
+            const errBody = await res.text()
+            if (errBody && !errBody.includes('<html>')) {
+                errMsg = errBody
+            }
+        } catch (_) {
+            // ignore parse error
+        }
+        throw new Error(errMsg)
+    }
+
+    return true
 }
+
+const deleteVisitOnServer = async (id) => {
+    const url = `${globalThis.apiBaseUrl}/visits/${id}`
+    console.log('Delete Visit — request being sent:', url)
+    const res = await fetch(url, {
+        method: 'DELETE',
+    })
+
+    if (!res.ok) {
+        let errMsg = `Server returned ${res.status} (${res.statusText})`
+        try {
+            const errBody = await res.text()
+            if (errBody && !errBody.includes('<html>')) {
+                errMsg = errBody
+            }
+        } catch (_) {
+            // ignore parse error
+        }
+        throw new Error(errMsg)
+    }
+
+    return true
+}
+
+
 
 export default function SiteVisitsTable() {
     const navigate = useNavigate()
@@ -80,6 +110,11 @@ export default function SiteVisitsTable() {
     const [selectedVisit, setSelectedVisit] = useState(null)
     const [saving, setSaving] = useState(false)
     const [message, setMessage] = useState({ visible: false, color: 'success', text: '' })
+
+    // Delete modal state
+    const [deleteModalVisible, setDeleteModalVisible] = useState(false)
+    const [visitToDelete, setVisitToDelete] = useState(null)
+    const [deleting, setDeleting] = useState(false)
 
     useEffect(() => {
         const fetchVisits = async () => {
@@ -139,6 +174,31 @@ export default function SiteVisitsTable() {
         } finally {
             setSaving(false)
             setSelectedVisit(null)
+        }
+    }
+
+    const handleDeleteOpen = (visit) => {
+        setVisitToDelete(visit)
+        setDeleteModalVisible(true)
+    }
+
+    const handleDelete = async () => {
+        if (!visitToDelete) return
+        setDeleting(true)
+        try {
+            const success = await deleteVisitOnServer(visitToDelete.id)
+            if (success) {
+                setSiteVisits(prev => prev.filter(v => v.id !== visitToDelete.id))
+                setMessage({ visible: true, color: 'success', text: 'Site visit deleted successfully.' })
+                setDeleteModalVisible(false)
+            } else {
+                setMessage({ visible: true, color: 'danger', text: 'Failed to delete site visit.' })
+            }
+        } catch (err) {
+            setMessage({ visible: true, color: 'danger', text: 'Error: ' + err.message })
+        } finally {
+            setDeleting(false)
+            setVisitToDelete(null)
         }
     }
 
@@ -207,18 +267,23 @@ export default function SiteVisitsTable() {
                                                 <CTableDataCell>
                                                     {visit.customer_id && visit.customer_id.startsWith('cu') ? 'Existing' : 'New'}
                                                 </CTableDataCell>
-                                                <CTableDataCell>{visit.customer_id || '—'}</CTableDataCell> 
+                                                <CTableDataCell>{visit.customer_id || '—'}</CTableDataCell>
                                                 <CTableDataCell>{visit.agent_id || '—'}</CTableDataCell>
                                                 <CTableDataCell>{visit.phone || '—'}</CTableDataCell>
                                                 <CTableDataCell>{visit.project_id ? `${visit.project_id}` : '—'}</CTableDataCell>
                                                 <CTableDataCell>{visit.plot_id ? `${visit.plot_id}` : '—'}</CTableDataCell>
                                                 <CTableDataCell>{visit.visit_date || '—'}</CTableDataCell>
                                                 <CTableDataCell>{visit.status || 'scheduled'}</CTableDataCell>
-                                                <CTableDataCell>
-                                                    <CButton color="info" size="sm" variant="outline" onClick={() => handleEditOpen(visit)}>
-                                                        Edit
-                                                    </CButton>
-                                                </CTableDataCell>
+                                                 <CTableDataCell>
+                                                     <div className="d-flex gap-2 justify-content-center">
+                                                         <CButton color="info" size="sm" variant="outline" onClick={() => handleEditOpen(visit)}>
+                                                             Edit
+                                                         </CButton>
+                                                         <CButton color="danger" size="sm" variant="outline" onClick={() => handleDeleteOpen(visit)}>
+                                                             Delete
+                                                         </CButton>
+                                                     </div>
+                                                 </CTableDataCell>
                                             </CTableRow>
                                         ))}
                                     </CTableBody>
@@ -263,11 +328,11 @@ export default function SiteVisitsTable() {
                             </CCol>
                             <CCol md={6}>
                                 <CFormLabel>Project ID</CFormLabel>
-                                <CFormInput type="number" name="project_id" value={selectedVisit.project_id || ''} onChange={handleEditChange} />
+                                <CFormInput type="text" name="project_id" value={selectedVisit.project_id || ''} onChange={handleEditChange} placeholder="e.g. 1 or PRJ-001" />
                             </CCol>
                             <CCol md={6}>
                                 <CFormLabel>Plot ID</CFormLabel>
-                                <CFormInput type="number" name="plot_id" value={selectedVisit.plot_id || ''} onChange={handleEditChange} />
+                                <CFormInput type="text" name="plot_id" value={selectedVisit.plot_id || ''} onChange={handleEditChange} placeholder="e.g. 2 or PLT-101" />
                             </CCol>
                             <CCol md={6}>
                                 <CFormLabel>Status</CFormLabel>
@@ -291,6 +356,22 @@ export default function SiteVisitsTable() {
                 <CModalFooter>
                     <CButton color="secondary" variant="ghost" onClick={() => setEditModalVisible(false)}>Cancel</CButton>
                     <CButton color="primary" onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Save'}</CButton>
+                </CModalFooter>
+            </CModal>
+
+            {/* Delete Confirmation Modal */}
+            <CModal visible={deleteModalVisible} onClose={() => setDeleteModalVisible(false)} backdrop="static">
+                <CModalHeader>
+                    <CModalTitle>Delete Site Visit</CModalTitle>
+                </CModalHeader>
+                <CModalBody>
+                    Are you sure you want to delete the site visit for customer <strong>{visitToDelete?.customer_id || visitToDelete?.phone || 'Unknown'}</strong>?
+                </CModalBody>
+                <CModalFooter>
+                    <CButton color="secondary" variant="ghost" onClick={() => setDeleteModalVisible(false)}>Cancel</CButton>
+                    <CButton color="danger" onClick={handleDelete} disabled={deleting}>
+                        {deleting ? 'Deleting...' : 'Delete'}
+                    </CButton>
                 </CModalFooter>
             </CModal>
         </CContainer>

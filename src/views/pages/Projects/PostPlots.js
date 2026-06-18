@@ -46,7 +46,10 @@ export default function PlotForm() {
     };
 
     try {
-      const response = await fetch(`${globalThis.apiBaseUrl}/projects/plots`, {
+      const postUrl = `${globalThis.apiBaseUrl}/projects/plots`;
+      console.log('Add Plot — payload being sent to POST:', postUrl, payload);
+
+      const response = await fetch(postUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
