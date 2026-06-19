@@ -179,122 +179,48 @@ const SendNotification = () => {
 
     const fcmTokenInput = getSafeString(formData.fcm_token)
     const uId = getSafeString(formData.u_id)
-    const topic = getSafeString(formData.topic)
+    const imageUrl = getSafeString(formData.image_url)
 
-    let tokensToUse = fcmTokenInput
-      ? fcmTokenInput
-        .split(',')
-        .map((t) => t.trim())
-        .filter(Boolean)
-      : []
-    let apiOutputToUse = firebaseApiOutput
-
-    // Automatically fetch Firebase token(s) if u_id is entered
-    if (uId) {
-      setFetchingToken(true)
-      try {
-        const getUrl = `${globalThis.apiBaseUrl}/firebase?u_id=${encodeURIComponent(uId)}`
-        console.log('Automatically fetching Firebase tokens for submission:', getUrl)
-        const getRes = await fetch(getUrl)
-
-        if (!getRes.ok) {
-          throw new Error(`Failed to fetch Firebase token: status ${getRes.status}`)
-        }
-
-        const data = await getRes.json()
-        console.log('Firebase token GET response during submit:', data)
-        apiOutputToUse = data
-        setFirebaseApiOutput(data)
-
-        const extractedTokens = extractAllTokens(data)
-
-        if (extractedTokens && extractedTokens.length > 0) {
-          tokensToUse = extractedTokens
-          setFormData((prev) => ({ ...prev, fcm_token: extractedTokens.join(', ') }))
-        } else {
-          throw new Error(`No device token was found for user ID ${uId}.`)
-        }
-      } catch (error) {
-        console.error('Error fetching token during submission:', error)
-        setMessage({
-          visible: true,
-          color: 'danger',
-          text: `Failed to retrieve device token for user ID ${uId}: ${error.message}`,
-        })
-        setSending(false)
-        setFetchingToken(false)
-        return
-      } finally {
-        setFetchingToken(false)
-      }
-    } else if (tokensToUse.length === 0 && !topic) {
-      setMessage({
-        visible: true,
-        color: 'danger',
-        text: 'Please provide either a User ID, specific Device Token (FCM Token), or Broadcast Topic.',
-      })
+    // Require at least a target: either a device token or a user id
+    if (!fcmTokenInput && !uId) {
+      setMessage({ visible: true, color: 'danger', text: 'Please provide a User ID or a Device Token.' })
       setSending(false)
       return
     }
 
-    // Determine target list to loop through
-    const targets = tokensToUse.length > 0 ? tokensToUse : [null]
-    let successCount = 0
-
     try {
-      for (const token of targets) {
-        const tokenObj = findTokenObject(apiOutputToUse, token)
-        const payload = {
-          title: getSafeString(formData.title),
-          body: getSafeString(formData.body),
-          image_url: getSafeString(formData.image_url) || null,
-          u_id: uId || null,
-          topic: topic || null,
-          fcm_token: token || null,
-          firebase_output: tokenObj || apiOutputToUse,
-          ...(tokenObj || {}), // merge properties at the root level for this token
-        }
-
-        const url = `${globalThis.apiBaseUrl}/firebase/send`
-        console.log('Latest payload being sent to POST:', payload)
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        })
-
-        if (!res.ok) {
-          throw new Error(`Notification sending failed with status ${res.status}`)
-        }
-
-        const resData = await res.json()
-        console.log('Notification sending response for token', token, ':', resData)
-        successCount++
+      const payload = {
+        title: getSafeString(formData.title),
+        body: getSafeString(formData.body),
+        image_url: imageUrl || null,
+        u_id: uId || null,
+        fcm_token: fcmTokenInput || null,
+        sent_at: new Date().toISOString(),
       }
 
-      setMessage({
-        visible: true,
-        color: 'success',
-        text: `Notification dispatched successfully to ${successCount} device(s)!`,
+      const url = `${globalThis.apiBaseUrl}/firebase/send`
+      console.log('Sending notification payload:', payload)
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
       })
 
+      if (!res.ok) {
+        throw new Error(`Notification sending failed with status ${res.status}`)
+      }
+
+      const resData = await res.json()
+      console.log('Notification send response:', resData)
+
+      setMessage({ visible: true, color: 'success', text: 'Notification dispatched successfully.' })
+
       // Reset form on success
-      setFormData({
-        title: '',
-        body: '',
-        image_url: '',
-        u_id: '',
-        topic: '',
-        fcm_token: '',
-      })
-      setFirebaseApiOutput(null)
+      setFormData({ title: '', body: '', image_url: '', u_id: '', topic: '', fcm_token: '' })
+      setFirebaseApiOutput(resData)
     } catch (error) {
       console.error('Error sending notification:', error)
-      setMessage({
-        visible: true,
-        color: 'danger',
-        text: `Failed to send notification: ${error.message} (Dispatched successfully to ${successCount} device(s) prior to error)`,
-      })
+      setMessage({ visible: true, color: 'danger', text: `Failed to send notification: ${error.message}` })
     } finally {
       setSending(false)
     }
@@ -418,9 +344,11 @@ const SendNotification = () => {
                   <CFormInput
                     id="u_id"
                     name="u_id"
+                    type="text"
                     placeholder="e.g. AGT001 or CLT002"
                     value={formData.u_id}
                     onChange={handleChange}
+                    className="text-dark"
                   />
                   <small className="text-muted d-block mt-1">
                     Enter the User ID. The system will automatically retrieve the latest device token during submission.

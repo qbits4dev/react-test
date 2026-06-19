@@ -253,15 +253,45 @@ const AnnouncementEditor = ({ visible, onClose, onSave, form, setForm, saving, i
           <CCol md={6}><CFormInput type="date" label="Expiry Date" name="expiry_date" value={form.expiry_date} onChange={onChange} /></CCol>
 
           {showVisibilityDetail && form.visibility === AnnouncementVisibility.SPECIFIC_CLIENT && (
-            <CCol md={12}><CFormInput label="Specific Client UID" name="selected_client" value={form.selected_client} onChange={onChange} /></CCol>
+            <CCol md={12}>
+              <CFormInput
+                type="text"
+                label="Specific Client UID"
+                name="selected_client"
+                placeholder="Enter client/agent UID (e.g. AG123456)"
+                value={form.selected_client}
+                onChange={onChange}
+                className="text-dark"
+              />
+            </CCol>
           )}
 
           {showVisibilityDetail && form.visibility === AnnouncementVisibility.SPECIFIC_TEAM && (
-            <CCol md={12}><CFormInput label="Selected Teams (comma separated)" name="selected_teams_text" value={form.selected_teams_text} onChange={onChange} /></CCol>
+            <CCol md={12}>
+              <CFormInput
+                type="text"
+                label="Selected Teams (comma separated)"
+                name="selected_teams_text"
+                placeholder="E.g. Sales Team A, Marketing Team"
+                value={form.selected_teams_text}
+                onChange={onChange}
+                className="text-dark"
+              />
+            </CCol>
           )}
 
           {showVisibilityDetail && form.visibility === AnnouncementVisibility.SELECTED_DESIGNATIONS && (
-            <CCol md={12}><CFormInput label="Selected Designations (comma separated)" name="selected_designations_text" value={form.selected_designations_text} onChange={onChange} /></CCol>
+            <CCol md={12}>
+              <CFormInput
+                type="text"
+                label="Selected Designations (comma separated)"
+                name="selected_designations_text"
+                placeholder="E.g. Senior Agent, Team Lead"
+                value={form.selected_designations_text}
+                onChange={onChange}
+                className="text-dark"
+              />
+            </CCol>
           )}
 
           {isAdmin && (
