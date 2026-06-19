@@ -10,10 +10,12 @@ import {
     CRow,
     CCol,
     CSpinner,
+    CFormFeedback,
 } from '@coreui/react';
+import { sanitizeName, validateEmail } from '../../../utils/validation';
 
 // API endpoint for posting new contacts
-const API_URL = '${apiBaseUrl}/contacts/';
+const API_URL = `${globalThis.apiBaseUrl}/contacts/`;
 
 export default function ContactEntryForm() {
     const [form, setForm] = useState({
@@ -21,19 +23,45 @@ export default function ContactEntryForm() {
         email: '',
     });
     const [submitting, setSubmitting] = useState(false);
+    const [errors, setErrors] = useState({});
+
+    const validateField = (name, value) => {
+        const v = String(value || '').trim();
+        if (name === 'name') {
+            if (!v) return 'Full Name is required';
+            if (v.length < 2) return 'Full Name must be at least 2 characters';
+            return '';
+        }
+        if (name === 'email') {
+            if (!v) return 'Email is required';
+            if (!validateEmail(v)) return 'Enter a valid email address';
+            return '';
+        }
+        return '';
+    };
 
     // Handles changes to any form input
     const handleChange = (e) => {
         const { name, value } = e.target;
+        const nextValue = name === 'name'
+            ? sanitizeName(value, 80)
+            : value.replace(/[^A-Za-z0-9.@_\-+]/g, '').slice(0, 100);
         setForm((prevForm) => ({
             ...prevForm,
-            [name]: value,
+            [name]: nextValue,
         }));
+        setErrors((prev) => ({ ...prev, [name]: validateField(name, nextValue) }));
     };
 
     // Handles the form submission process
     const handleSubmit = async (e) => {
         e.preventDefault();
+        const nextErrors = {
+            name: validateField('name', form.name),
+            email: validateField('email', form.email),
+        };
+        setErrors(nextErrors);
+        if (Object.values(nextErrors).some(Boolean)) return;
         setSubmitting(true);
 
         const payload = {
@@ -100,7 +128,9 @@ export default function ContactEntryForm() {
                                         onChange={handleChange}
                                         required
                                         size="lg"
+                                        invalid={!!errors.name}
                                     />
+                                    {errors.name && <CFormFeedback className="d-block">{errors.name}</CFormFeedback>}
                                 </div>
                                 <div className="mb-4">
                                     <CFormInput
@@ -112,7 +142,9 @@ export default function ContactEntryForm() {
                                         onChange={handleChange}
                                         required
                                         size="lg"
+                                        invalid={!!errors.email}
                                     />
+                                    {errors.email && <CFormFeedback className="d-block">{errors.email}</CFormFeedback>}
                                 </div>
                                 <div className="d-grid mt-4">
                                     <CButton

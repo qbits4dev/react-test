@@ -481,14 +481,14 @@ const AnnouncementsHub = () => {
 
       <CCard className="border-0 shadow-sm mb-3">
         <CCardHeader className="d-flex gap-2 flex-wrap align-items-center justify-content-between">
-          <div className="d-flex gap-2 flex-wrap" style={{ minWidth: 320 }}>
-            <CFormInput placeholder="Search title or description" value={search} onChange={(e) => setSearch(e.target.value)} />
-            <CFormSelect value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
+          <div className="d-flex gap-2 flex-wrap" style={{ minWidth: 0, width: '100%' }}>
+            <CFormInput placeholder="Search title or description" value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: '1 1 220px' }} />
+            <CFormSelect value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} style={{ flex: '1 1 180px' }}>
               {CATEGORIES.map((c) => (
                 <option key={c.value} value={c.value}>{c.label}</option>
               ))}
             </CFormSelect>
-            <CFormSelect value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+            <CFormSelect value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} style={{ flex: '1 1 180px' }}>
               <option value="all">All States</option>
               <option value="active">Active Updates</option>
               <option value="scheduled">Scheduled Updates</option>
@@ -531,10 +531,10 @@ const AnnouncementsHub = () => {
                 <CCol key={item.id} md={6} xl={4}>
                   <AnnouncementCard item={item} />
                   {isAdmin && (
-                    <div className="d-flex gap-2 mt-2">
-                      <CButton size="sm" color="info" variant="outline" onClick={() => onEdit(item)}>Edit</CButton>
-                      <CButton size="sm" color="danger" variant="outline" onClick={() => onDelete(item.id)}>Delete</CButton>
-                      <CButton size="sm" color={item.published ? 'warning' : 'success'} variant="outline" onClick={() => onTogglePublish(item)}>
+                    <div className="d-flex gap-2 mt-2 flex-wrap">
+                      <CButton className="flex-grow-1" size="sm" color="info" variant="outline" onClick={() => onEdit(item)}>Edit</CButton>
+                      <CButton className="flex-grow-1" size="sm" color="danger" variant="outline" onClick={() => onDelete(item.id)}>Delete</CButton>
+                      <CButton className="flex-grow-1" size="sm" color={item.published ? 'warning' : 'success'} variant="outline" onClick={() => onTogglePublish(item)}>
                         {item.published ? 'Unpublish' : 'Publish'}
                       </CButton>
                     </div>

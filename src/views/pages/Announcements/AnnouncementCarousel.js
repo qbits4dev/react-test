@@ -167,7 +167,7 @@ const AnnouncementCarousel = ({
       </CCardHeader>
 
       {/* ── Main slide content ── */}
-      <CCardBody className="p-0">
+      <CCardBody className="p-0" style={{ overflow: 'hidden' }}>
         <div
           style={{
             transition: 'opacity 0.35s ease-in-out',
@@ -176,11 +176,11 @@ const AnnouncementCarousel = ({
           <CRow className="g-0 align-items-stretch">
             {/* ── Left: banner image (if available) ── */}
             {current.banner_image && (
-              <CCol md={4} className="d-none d-md-block">
+              <CCol xs={12} md={4}>
                 <div
                   style={{
                     height: '100%',
-                    minHeight: 220,
+                    minHeight: 180,
                     backgroundImage: `url(${current.banner_image})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
@@ -192,7 +192,7 @@ const AnnouncementCarousel = ({
 
             {/* ── Right: announcement details ── */}
             <CCol md={current.banner_image ? 8 : 12}>
-              <div className="p-4">
+              <div className="p-3 p-md-4">
                 {/* Badges row */}
                 <div className="d-flex align-items-center gap-2 mb-3 flex-wrap">
                   <CBadge color={categoryBadgeColor(current.category)}>
@@ -211,10 +211,10 @@ const AnnouncementCarousel = ({
                 </div>
 
                 {/* Title */}
-                <h4 className="fw-semibold mb-2">{current.title}</h4>
+                <h4 className="fw-semibold mb-2" style={{ wordBreak: 'break-word' }}>{current.title}</h4>
 
                 {/* Description */}
-                <p className="text-body-secondary mb-3" style={{ maxWidth: 680 }}>
+                <p className="text-body-secondary mb-3" style={{ maxWidth: 680, wordBreak: 'break-word' }}>
                   {current.description || current.offer_description}
                 </p>
 
@@ -230,7 +230,7 @@ const AnnouncementCarousel = ({
                     ]
                       .filter((d) => d.value)
                       .map((d) => (
-                        <CCol xs={6} md={4} key={d.label}>
+                        <CCol xs={12} sm={6} md={4} key={d.label}>
                           <div className={`border-start border-start-4 ${categoryBorderClass(current.category)} py-1 px-3`}>
                             <div className="text-body-secondary text-truncate small">{d.label}</div>
                             <div className="fw-semibold">{d.value}</div>
@@ -242,8 +242,8 @@ const AnnouncementCarousel = ({
 
                 {/* CTA button */}
                 {(current.cta_text || current.cta_url) && (
-                  <a href={current.cta_url || '#'} target="_blank" rel="noreferrer">
-                    <CButton color="primary" size="sm">
+                  <a href={current.cta_url || '#'} target="_blank" rel="noreferrer" style={{ display: 'inline-block', maxWidth: '100%' }}>
+                    <CButton color="primary" size="sm" style={{ whiteSpace: 'normal' }}>
                       {current.cta_text || 'Learn More'}
                     </CButton>
                   </a>

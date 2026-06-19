@@ -16,6 +16,7 @@ import {
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilLockLocked, cilUser } from '@coreui/icons'
+import { sanitizeUsername } from '../../../utils/validation'
 
 import { AppFooter } from '../../../components'
 import Logo from '../../../assets/images/siradithya.jpg'
@@ -32,6 +33,9 @@ const Login = () => {
   const validateForm = () => {
     const newErrors = {}
     if (!username.trim()) newErrors.username = 'Username is required.'
+    if (username && !/^[A-Za-z0-9._]{3,30}$/.test(username.trim())) {
+      newErrors.username = 'Username must be 3-30 characters and use letters, numbers, dot, or underscore.'
+    }
     if (!password.trim()) newErrors.password = 'Password is required.'
     return newErrors
   }
@@ -169,7 +173,7 @@ const Login = () => {
                           placeholder="Username"
                           autoComplete="username"
                           value={username}
-                          onChange={(e) => setUsername(e.target.value)}
+                          onChange={(e) => setUsername(sanitizeUsername(e.target.value, 30))}
                           invalid={!!errors.username}
                           required
                           style={{ fontSize: '0.95rem' }}

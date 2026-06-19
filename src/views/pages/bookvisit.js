@@ -13,6 +13,7 @@ import {
   CCol,
 } from '@coreui/react'
 import { useNavigate } from 'react-router-dom'
+import { sanitizeName, sanitizeNumeric, sanitizeText, validateIndianMobile } from '../../utils/validation'
 
 export default function LeadForm() {
   const navigate = useNavigate()
@@ -42,6 +43,7 @@ export default function LeadForm() {
   const [plots, setPlots] = useState([])
   const [projectsLoading, setProjectsLoading] = useState(false)
   const [plotsLoading, setPlotsLoading] = useState(false)
+  const minVisitDate = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -100,15 +102,15 @@ export default function LeadForm() {
       errs.agentId = 'Agent ID missing from session'
     }
 
-    if (!/^[0-9]{10}$/.test(formData.phone)) {
-      errs.phone = 'Phone must be 10 digits'
+    if (!validateIndianMobile(formData.phone)) {
+      errs.phone = 'Phone must be a valid 10-digit mobile number starting with 6-9'
     }
 
     if (leadType === 'New') {
-      if (!/^[A-Za-z]+$/.test(formData.firstName)) {
+      if (!/^[A-Za-z ]+$/.test(formData.firstName.trim())) {
         errs.firstName = 'First name must contain only alphabets'
       }
-      if (!/^[A-Za-z]+$/.test(formData.lastName)) {
+      if (!/^[A-Za-z ]+$/.test(formData.lastName.trim())) {
         errs.lastName = 'Last name must contain only alphabets'
       }
     }
@@ -138,7 +140,14 @@ export default function LeadForm() {
   // -------------------- HANDLERS --------------------
   const handleChange = (e) => {
     const { name, value } = e.target
-    setFormData({ ...formData, [name]: value })
+    let nextValue = value
+    if (name === 'customerId') nextValue = value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8)
+    else if (name === 'phone') nextValue = sanitizeNumeric(value, 10)
+    else if (name === 'firstName' || name === 'lastName') nextValue = sanitizeName(value, 50)
+    else if (name === 'purpose') nextValue = sanitizeText(value, 100)
+    else if (name === 'feedback') nextValue = sanitizeText(value, 300)
+
+    setFormData({ ...formData, [name]: nextValue })
   }
 
   const handleBlur = (e) => {
@@ -352,6 +361,7 @@ export default function LeadForm() {
                 onChange={handleChange}
                 onBlur={handleBlur}
                 invalid={touched.dateOfVisit && !!errors.dateOfVisit}
+                min={minVisitDate}
               />
               <CFormFeedback invalid>{errors.dateOfVisit}</CFormFeedback>
               <br />

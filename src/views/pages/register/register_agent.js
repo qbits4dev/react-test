@@ -1,28 +1,25 @@
 import React, { useState, useEffect } from 'react'
 import {
   CCard, CCardBody, CCol, CContainer, CRow, CForm, CFormInput, CFormSelect,
-  CSpinner, CFormLabel, CButton, CAlert, CFormTextarea, CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter
+  CSpinner, CFormLabel, CButton, CAlert, CFormTextarea, CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter,
+  CProgress
 } from '@coreui/react'
 import { useNavigate } from 'react-router-dom'
 import CIcon from '@coreui/icons-react'
 import { cilArrowLeft } from '@coreui/icons'
 import CoreUIProfileCropper from './CoreUIProfileCropper'
+import {
+  getPasswordStrength,
+  sanitizeAlphaNumericBasic,
+  sanitizeName,
+  sanitizeText,
+  validateAgeRangeFromDob,
+  validateStrongPassword,
+} from '../../../utils/validation'
 
 export default function RegisterAgentWizard() {
   const navigate = useNavigate()
-
-  const today = new Date()
-  const maxDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate()).toISOString().split('T')[0]
-  const minDate = new Date(today.getFullYear() - 80, today.getMonth(), today.getDate()).toISOString().split('T')[0]
-
-  const getRequiredLabel = (labelText) => (
-    <span>
-      {labelText} <span className="text-danger">*</span>
-    </span>
-  )
-
-  // --- form state with all fields ---
-  const [form, setForm] = useState({
+  const emptyForm = {
     first_name: '',
     last_name: '',
     father_name: '',
@@ -60,7 +57,20 @@ export default function RegisterAgentWizard() {
     city: '',
     state: '',
     pincode: ''
-  })
+  }
+
+  const today = new Date()
+  const maxDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate()).toISOString().split('T')[0]
+  const minDate = new Date(today.getFullYear() - 80, today.getMonth(), today.getDate()).toISOString().split('T')[0]
+
+  const getRequiredLabel = (labelText) => (
+    <span>
+      {labelText} <span className="text-danger">*</span>
+    </span>
+  )
+
+  // --- form state with all fields ---
+  const [form, setForm] = useState(emptyForm)
 
   const [designations, setDesignations] = useState([])
   const [designationError, setDesignationError] = useState('')
@@ -71,9 +81,16 @@ export default function RegisterAgentWizard() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [registeredUID, setRegisteredUID] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
 
   // Restore form state from localStorage when page loads
   useEffect(() => {
+    const hasSession = Boolean(localStorage.getItem('access_token') || localStorage.getItem('user'))
+    if (!hasSession) {
+      localStorage.removeItem('registerAgentForm')
+      setForm(emptyForm)
+      return
+    }
     const saved = localStorage.getItem('registerAgentForm')
     if (saved) {
       try {
@@ -132,18 +149,14 @@ export default function RegisterAgentWizard() {
     // Input sanitation per field type
     if (name === 'pan') value = value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10)
     else if (name === 'ifsc_code') value = value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 11)
-    else if (['first_name', 'last_name', 'father_name'].includes(name))
-      value = value.replace(/[^A-Za-z ]/g, '').slice(0, 50)
-    else if (['nominiee', 'relationship'].includes(name))
-      value = value.replace(/[^A-Za-z ]/g, '').slice(0, 60)
-    else if (['city', 'state'].includes(name))
-      value = value.replace(/[^A-Za-z ]/g, '').slice(0, 50)
-    else if (name === 'bank_name')
-      value = value.replace(/[^A-Za-z ]/g, '').slice(0, 80)
+    else if (['first_name', 'last_name', 'father_name'].includes(name)) value = sanitizeName(value, 50)
+    else if (['nominiee', 'relationship'].includes(name)) value = sanitizeName(value, 60)
+    else if (['city', 'state'].includes(name)) value = sanitizeName(value, 50)
+    else if (name === 'bank_name') value = sanitizeName(value, 80)
     else if (['language', 'education', 'work_location', 'branch'].includes(name))
-      value = value.replace(/[^A-Za-z0-9 ,\-\/]/g, '').slice(0, 80)
+      value = sanitizeText(value, 80)
     else if (name === 'occupation')
-      value = value.replace(/[^A-Za-z ,\-\/]/g, '').slice(0, 80)
+      value = sanitizeText(value, 80)
     else if (name === 'email')
       value = value.replace(/[^A-Za-z0-9.@_\-+]/g, '').slice(0, 100)
     else if (name === 'mobile' || name === 'nominee_mobile')
@@ -159,7 +172,9 @@ export default function RegisterAgentWizard() {
     else if (name === 'income')
       value = value.replace(/[^0-9]/g, '').slice(0, 12)
     else if (name === 'reference_agent' || name === 'agent_team')
-      value = value.replace(/[^A-Za-z0-9 \-_]/g, '').slice(0, 30)
+      value = sanitizeAlphaNumericBasic(value, 30)
+    else if (name === 'password') value = value.replace(/\s/g, '').slice(0, 32)
+    else if (['address', 'address_line1', 'address_line2'].includes(name)) value = sanitizeText(value, 150)
 
     setFormField(name, value)
 
@@ -219,19 +234,13 @@ export default function RegisterAgentWizard() {
         break
       case 'password':
         if (!v) return 'Password is required'
-        if (v.length < 6) return 'Password must be at least 6 characters'
-        if (v.length > 30) return 'Password must not exceed 30 characters'
+        return validateStrongPassword(v)
         break
 
       // ── Date of Birth ──
       case 'dob': {
         if (!v) return 'Date of Birth is required'
-        const birthDate = new Date(v)
-        const today = new Date()
-        let age = today.getFullYear() - birthDate.getFullYear()
-        const m = today.getMonth() - birthDate.getMonth()
-        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--
-        if (age < 18 || age > 80) return 'Age must be between 18 and 80 years old'
+        if (!validateAgeRangeFromDob(v, 18, 80)) return 'Age must be between 18 and 80 years old'
         break
       }
 
@@ -352,12 +361,18 @@ export default function RegisterAgentWizard() {
 
       // ── File uploads ──
       case 'photo':
+        if (v && !/^image\/(jpeg|jpg|png|webp)$/i.test(v.type)) return 'Photo must be JPG, PNG, or WEBP'
+        if (v && v.size > 2 * 1024 * 1024) return 'Photo must be under 2MB'
         break
       case 'aadhaar_file':
         if (!v) return 'Aadhaar document upload is required'
+        if (!/^image\/(jpeg|jpg|png|webp)$|^application\/pdf$/i.test(v.type)) return 'Aadhaar file must be JPG, PNG, WEBP, or PDF'
+        if (v.size > 2 * 1024 * 1024) return 'Aadhaar file must be under 2MB'
         break
       case 'pan_file':
         if (!v) return 'PAN document upload is required'
+        if (!/^image\/(jpeg|jpg|png|webp)$|^application\/pdf$/i.test(v.type)) return 'PAN file must be JPG, PNG, WEBP, or PDF'
+        if (v.size > 2 * 1024 * 1024) return 'PAN file must be under 2MB'
         break
 
       default:
@@ -411,10 +426,14 @@ export default function RegisterAgentWizard() {
         localStorage.removeItem('registerAgentForm')
       } else {
         setAlert({ visible: true, message: data.message || 'Registration failed.', color: 'danger' })
+        setForm(emptyForm)
+        localStorage.removeItem('registerAgentForm')
       }
     } catch (err) {
       console.error(err)
       setAlert({ visible: true, message: 'Network error.', color: 'danger' })
+      setForm(emptyForm)
+      localStorage.removeItem('registerAgentForm')
     } finally {
       setIsSubmitting(false)
     }
@@ -488,7 +507,26 @@ export default function RegisterAgentWizard() {
                 </CRow>
                 <CRow className="g-3 mb-3">
                   <CCol md={6}><CFormInput floating="true" label={getRequiredLabel("Mobile")} name="mobile" maxLength={10} value={form.mobile} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.mobile} required />{renderError('mobile')}</CCol>
-                  <CCol md={6}><CFormInput floating="true" label={getRequiredLabel("Password")} name="password" type="password" maxLength={30} value={form.password} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.password} required />{renderError('password')}</CCol>
+                  <CCol md={6}>
+                    <div style={{ position: 'relative' }}>
+                      <CFormInput floating="true" label={getRequiredLabel('Password')} name="password" type={showPassword ? 'text' : 'password'} maxLength={32} value={form.password} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.password} required style={{ paddingRight: 68 }} />
+                      <CButton
+                        type="button"
+                        color="link"
+                        onClick={() => setShowPassword((s) => !s)}
+                        style={{ position: 'absolute', right: 10, top: 20, textDecoration: 'none', padding: 0, fontSize: '0.8rem', zIndex: 3, lineHeight: 1 }}
+                      >
+                        {showPassword ? 'Hide' : 'Show'}
+                      </CButton>
+                    </div>
+                    {form.password && !errors.password && (
+                      <div className="mt-2">
+                        <small className="text-body-secondary">Password strength: {getPasswordStrength(form.password).label}</small>
+                        <CProgress thin color={getPasswordStrength(form.password).color} value={getPasswordStrength(form.password).value} />
+                      </div>
+                    )}
+                    {renderError('password')}
+                  </CCol>
                 </CRow>
                 <CRow className="g-3 mb-3">
                   <CCol md={6}><CFormInput floating="true" label={getRequiredLabel("Date of Birth")} type="date" name="dob" value={form.dob} onChange={handleChange} onBlur={handleBlur} invalid={!!errors.dob} min={minDate} max={maxDate} required />{renderError('dob')}</CCol>

@@ -8,25 +8,41 @@ import {
   CContainer,
   CForm,
   CFormInput,
+  CInputGroup,
+  CInputGroupText,
+  CProgress,
   CRow,
   CFormFeedback,
   CAlert,
   CSpinner,
 } from '@coreui/react'
 import { useNavigate } from 'react-router-dom'
+import { getPasswordStrength, sanitizeUsername, validateStrongPassword } from '../../../utils/validation'
 
 export default function ForgotPassword() {
   const [formData, setFormData] = useState({ uid: '', new_password: '' })
   const [errors, setErrors] = useState({ uid: '', new_password: '' })
   const [alert, setAlert] = useState({ visible: false, message: '', color: 'success' })
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
   const navigate = useNavigate()
 
   const handleChange = (e) => {
     const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
+    const nextValue = name === 'uid'
+      ? sanitizeUsername(value.toUpperCase(), 8)
+      : value.replace(/\s/g, '').slice(0, 32)
+    setFormData((prev) => ({ ...prev, [name]: nextValue }))
     setErrors((prev) => ({ ...prev, [name]: '' }))
     setAlert({ visible: false, message: '', color: 'success' })
+
+    if (name === 'uid' && nextValue && !/^[A-Za-z0-9]{8}$/.test(nextValue)) {
+      setErrors((prev) => ({ ...prev, uid: 'UID must be exactly 8 alphanumeric characters.' }))
+    }
+    if (name === 'new_password' && nextValue) {
+      const pwdError = validateStrongPassword(nextValue)
+      setErrors((prev) => ({ ...prev, new_password: pwdError }))
+    }
   }
 
   const validate = () => {
@@ -38,8 +54,9 @@ export default function ForgotPassword() {
       newErrors.uid = 'UID must be exactly 8 alphanumeric characters.'
       valid = false
     }
-    if (formData.new_password.length < 8 || formData.new_password.length > 32) {
-      newErrors.new_password = 'Password must be 8–32 characters long.'
+    const pwdError = validateStrongPassword(formData.new_password)
+    if (pwdError) {
+      newErrors.new_password = pwdError
       valid = false
     }
     setErrors(newErrors)
@@ -130,19 +147,30 @@ export default function ForgotPassword() {
                 />
                 {errors.uid && <CFormFeedback className="d-block">{errors.uid}</CFormFeedback>}
 
-                <CFormInput
-                  type="password"
-                  name="new_password"
-                  label="New Password"
-                  placeholder="Enter new password (8–32 characters)"
-                  value={formData.new_password}
-                  onChange={handleChange}
-                  invalid={!!errors.new_password}
-                  disabled={isSubmitting}
-                  required
-                  minLength={8}
-                  maxLength={32}
-                />
+                <CInputGroup>
+                  <CFormInput
+                    type={showPassword ? 'text' : 'password'}
+                    name="new_password"
+                    label="New Password"
+                    placeholder="Enter new password (8-32 characters)"
+                    value={formData.new_password}
+                    onChange={handleChange}
+                    invalid={!!errors.new_password}
+                    disabled={isSubmitting}
+                    required
+                    minLength={8}
+                    maxLength={32}
+                  />
+                  <CInputGroupText onClick={() => setShowPassword((s) => !s)} style={{ cursor: 'pointer' }}>
+                    {showPassword ? 'Hide' : 'Show'}
+                  </CInputGroupText>
+                </CInputGroup>
+                {formData.new_password && !errors.new_password && (
+                  <div className="mt-2">
+                    <small className="text-body-secondary">Password strength: {getPasswordStrength(formData.new_password).label}</small>
+                    <CProgress thin color={getPasswordStrength(formData.new_password).color} value={getPasswordStrength(formData.new_password).value} />
+                  </div>
+                )}
                 {errors.new_password && <CFormFeedback className="d-block">{errors.new_password}</CFormFeedback>}
 
                 <div className="d-grid gap-2 mt-4">

@@ -11,7 +11,9 @@ import {
   CButton,
   CFormLabel,
   CSpinner,
+  CFormFeedback,
 } from '@coreui/react'
+import { sanitizeNumeric, sanitizeText } from '../../../utils/validation'
 
 const statusOptions = ['Ongoing', 'Completed', 'Planned', 'On Hold']
 
@@ -29,17 +31,43 @@ export default function ProjectForm() {
   const [loading, setLoading] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [modalMessage, setModalMessage] = useState('')
+  const [errors, setErrors] = useState({})
+
+  const validateField = (name, value) => {
+    const v = String(value || '').trim()
+    if (name === 'name' && !v) return 'Project Name is required'
+    if (name === 'location' && !v) return 'Location is required'
+    if (name === 'description' && !v) return 'Description is required'
+    if (name === 'total_area') {
+      if (!v) return 'Total Area is required'
+      if (Number(v) <= 0) return 'Total Area must be greater than 0'
+    }
+    if (name === 'start_date' && !v) return 'Start Date is required'
+    if (name === 'end_date' && !v) return 'End Date is required'
+    if (name === 'status' && !v) return 'Status is required'
+    if (form.start_date && form.end_date && new Date(form.end_date) < new Date(form.start_date)) {
+      return name === 'end_date' ? 'End Date must be after Start Date' : ''
+    }
+    return ''
+  }
 
   // Handle text & select input
   const handleChange = (e) => {
     const { name, value } = e.target
-    setForm((prev) => ({ ...prev, [name]: value }))
+    const nextValue = name === 'total_area' ? sanitizeNumeric(value, 10) : sanitizeText(value, name === 'description' ? 500 : 120)
+    setForm((prev) => ({ ...prev, [name]: nextValue }))
+    setErrors((prev) => ({ ...prev, [name]: validateField(name, nextValue) }))
   }
 
   // Handle multiple photo uploads
   const handlePhotoChange = (e) => {
     const files = Array.from(e.target.files)
-    setPhotos((prev) => [...prev, ...files])
+    const validFiles = files.filter((f) => /^image\/(jpeg|jpg|png|webp)$/i.test(f.type) && f.size <= 5 * 1024 * 1024)
+    if (validFiles.length !== files.length) {
+      setModalMessage('Error: Some files were ignored. Only JPG/PNG/WEBP up to 5MB are allowed.')
+      setShowModal(true)
+    }
+    setPhotos((prev) => [...prev, ...validFiles])
   }
 
   const removePhoto = (index) => {
@@ -48,6 +76,17 @@ export default function ProjectForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    const nextErrors = {
+      name: validateField('name', form.name),
+      description: validateField('description', form.description),
+      location: validateField('location', form.location),
+      start_date: validateField('start_date', form.start_date),
+      end_date: validateField('end_date', form.end_date),
+      status: validateField('status', form.status),
+      total_area: validateField('total_area', form.total_area),
+    }
+    setErrors(nextErrors)
+    if (Object.values(nextErrors).some(Boolean)) return
     setLoading(true)
 
     // Prepare data as per API requirements
@@ -155,8 +194,10 @@ export default function ProjectForm() {
                   value={form.name}
                   onChange={handleChange}
                   placeholder="Project Name"
+                  invalid={!!errors.name}
                   required
                 />
+                {errors.name && <CFormFeedback className="d-block">{errors.name}</CFormFeedback>}
               </CCol>
               <CCol md={6}>
                 <CFormInput
@@ -166,8 +207,10 @@ export default function ProjectForm() {
                   value={form.location}
                   onChange={handleChange}
                   placeholder="Location"
+                  invalid={!!errors.location}
                   required
                 />
+                {errors.location && <CFormFeedback className="d-block">{errors.location}</CFormFeedback>}
               </CCol>
             </CRow>
 
@@ -182,8 +225,10 @@ export default function ProjectForm() {
                   value={form.total_area}
                   onChange={handleChange}
                   placeholder="Total Area (sq. ft)"
+                  invalid={!!errors.total_area}
                   required
                 />
+                {errors.total_area && <CFormFeedback className="d-block">{errors.total_area}</CFormFeedback>}
               </CCol>
               <CCol md={6}>
                 <CFormSelect
@@ -192,6 +237,7 @@ export default function ProjectForm() {
                   name="status"
                   value={form.status}
                   onChange={handleChange}
+                  invalid={!!errors.status}
                   required
                 >
                   <option value="">Select a status</option>
@@ -201,6 +247,7 @@ export default function ProjectForm() {
                     </option>
                   ))}
                 </CFormSelect>
+                {errors.status && <CFormFeedback className="d-block">{errors.status}</CFormFeedback>}
               </CCol>
             </CRow>
 
@@ -214,8 +261,10 @@ export default function ProjectForm() {
                   name="start_date"
                   value={form.start_date}
                   onChange={handleChange}
+                  invalid={!!errors.start_date}
                   required
                 />
+                {errors.start_date && <CFormFeedback className="d-block">{errors.start_date}</CFormFeedback>}
               </CCol>
               <CCol md={6}>
                 <CFormInput
@@ -225,8 +274,10 @@ export default function ProjectForm() {
                   name="end_date"
                   value={form.end_date}
                   onChange={handleChange}
+                  invalid={!!errors.end_date}
                   required
                 />
+                {errors.end_date && <CFormFeedback className="d-block">{errors.end_date}</CFormFeedback>}
               </CCol>
             </CRow>
 
@@ -241,8 +292,10 @@ export default function ProjectForm() {
                   onChange={handleChange}
                   placeholder="Project Description"
                   rows={3}
+                  invalid={!!errors.description}
                   required
                 />
+                {errors.description && <CFormFeedback className="d-block">{errors.description}</CFormFeedback>}
               </CCol>
             </CRow>
 

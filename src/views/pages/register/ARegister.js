@@ -9,8 +9,11 @@ import {
     CFormSelect,
     CButton,
     CFormFeedback,
+    CInputGroup,
+    CInputGroupText,
     CContainer,
 } from '@coreui/react';
+import { sanitizeName, sanitizeNumeric, validateEmail, validateIndianMobile, validateStrongPassword } from '../../../utils/validation';
 
 export default function Register() {
     const navigate = useNavigate();
@@ -47,28 +50,30 @@ export default function Register() {
     });
 
     const [errors, setErrors] = useState({});
+    const [showPassword, setShowPassword] = useState(false);
 
     const validateField = (name, value) => {
         const v = typeof value === 'string' ? value.trim() : value;
         switch (name) {
             case 'first_name':
                 if (!v) return 'First name is required';
+                if (v.length < 2) return 'First name must be at least 2 characters';
                 break;
             case 'last_name':
                 if (!v) return 'Last name is required';
+                if (v.length < 1) return 'Last name must be at least 1 character';
                 break;
             case 'email':
                 if (!v) return 'Email is required';
-                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return 'Invalid email format';
+                if (!validateEmail(v)) return 'Invalid email format';
                 break;
             case 'mobile':
                 if (!v) return 'Mobile is required';
-                if (!/^[0-9]{10}$/.test(v)) return 'Invalid 10-digit mobile number';
+                if (!validateIndianMobile(v)) return 'Invalid 10-digit mobile number';
                 break;
             case 'password':
                 if (!v) return 'Password is required';
-                if (!/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$/.test(v))
-                    return 'Password must be 8+ chars, include uppercase, lowercase & number';
+                return validateStrongPassword(v);
                 break;
             default:
                 return '';
@@ -92,9 +97,11 @@ export default function Register() {
         if (name === 'email') {
             value = value.replace(/[^A-Za-z0-9.@_\-+]/g, '');
         } else if (name === 'mobile') {
-            value = value.replace(/[^0-9]/g, '').slice(0, 10);
+            value = sanitizeNumeric(value, 10);
         } else if (['first_name', 'last_name'].includes(name)) {
-            value = value.replace(/[^A-Za-z ]/g, '');
+            value = sanitizeName(value, 50);
+        } else if (name === 'password') {
+            value = value.replace(/\s/g, '').slice(0, 32);
         }
         setFormData({ ...formData, [name]: value });
         const err = validateField(name, value);
@@ -147,6 +154,21 @@ export default function Register() {
                                                 ))}
                                             </CFormSelect>
                                         </>
+                                    ) : field.name === 'password' ? (
+                                        <CInputGroup>
+                                            <CFormInput
+                                                type={showPassword ? 'text' : 'password'}
+                                                name={field.name}
+                                                placeholder={`${field.label} *`}
+                                                value={formData[field.name]}
+                                                onChange={handleChange}
+                                                invalid={!!errors[field.name]}
+                                                style={{ borderRadius: '6px', padding: '10px' }}
+                                            />
+                                            <CInputGroupText onClick={() => setShowPassword((s) => !s)} style={{ cursor: 'pointer' }}>
+                                                {showPassword ? 'Hide' : 'Show'}
+                                            </CInputGroupText>
+                                        </CInputGroup>
                                     ) : (
                                         <CFormInput
                                             type={field.type}

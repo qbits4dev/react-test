@@ -8,7 +8,9 @@ import {
   CRow,
   CCol,
   CButton,
+  CFormFeedback,
 } from '@coreui/react';
+import { sanitizeNumeric, sanitizeText } from '../../../utils/validation';
 
 // Options for plot status dropdown
 const plotStatusOptions = ['available', 'sold', 'reserved', 'on hold'];
@@ -27,6 +29,23 @@ export default function PlotForm() {
   const [loading, setLoading] = useState(false);
   const [projects, setProjects] = useState([]);
   const [projectsLoading, setProjectsLoading] = useState(false);
+  const [errors, setErrors] = useState({});
+
+  const validateField = (name, value) => {
+    const v = String(value || '').trim();
+    if (name === 'project_name' && !v) return 'Project Name is required';
+    if (name === 'plot_number' && !v) return 'Plot Number is required';
+    if (name === 'size') {
+      if (!v) return 'Size is required';
+      if (Number(v) <= 0) return 'Size must be greater than 0';
+    }
+    if (name === 'price') {
+      if (!v) return 'Price is required';
+      if (Number(v) < 0) return 'Price cannot be negative';
+    }
+    if (name === 'status' && !v) return 'Status is required';
+    return '';
+  };
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -48,11 +67,24 @@ export default function PlotForm() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    let nextValue = value;
+    if (['size', 'price'].includes(name)) nextValue = sanitizeNumeric(value, 10);
+    if (name === 'plot_number') nextValue = sanitizeText(value.toUpperCase(), 30);
+    setForm((prev) => ({ ...prev, [name]: nextValue }));
+    setErrors((prev) => ({ ...prev, [name]: validateField(name, nextValue) }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const nextErrors = {
+      project_name: validateField('project_name', form.project_name),
+      plot_number: validateField('plot_number', form.plot_number),
+      size: validateField('size', form.size),
+      price: validateField('price', form.price),
+      status: validateField('status', form.status),
+    };
+    setErrors(nextErrors);
+    if (Object.values(nextErrors).some(Boolean)) return;
     setLoading(true);
     setModalMessage('Submitting...');
     setShowModal(true);
@@ -163,6 +195,7 @@ export default function PlotForm() {
                   name="project_name"
                   value={form.project_name}
                   onChange={handleChange}
+                  invalid={!!errors.project_name}
                   required
                   disabled={projectsLoading}
                   style={{ borderRadius: '12px', border: '1px solid #ced4da' }}
@@ -174,6 +207,7 @@ export default function PlotForm() {
                     </option>
                   ))}
                 </CFormSelect>
+                {errors.project_name && <CFormFeedback className="d-block">{errors.project_name}</CFormFeedback>}
               </CCol>
               <CCol md={6}>
                 <CFormInput
@@ -183,9 +217,11 @@ export default function PlotForm() {
                   value={form.plot_number}
                   onChange={handleChange}
                   placeholder="Plot Number"
+                  invalid={!!errors.plot_number}
                   required
                   style={{ borderRadius: '12px', border: '1px solid #ced4da' }}
                 />
+                {errors.plot_number && <CFormFeedback className="d-block">{errors.plot_number}</CFormFeedback>}
               </CCol>
             </CRow>
 
@@ -199,9 +235,11 @@ export default function PlotForm() {
                   value={form.size}
                   onChange={handleChange}
                   placeholder="Size"
+                  invalid={!!errors.size}
                   required
                   style={{ borderRadius: '12px', border: '1px solid #ced4da' }}
                 />
+                {errors.size && <CFormFeedback className="d-block">{errors.size}</CFormFeedback>}
               </CCol>
               <CCol md={6}>
                 <CFormInput
@@ -212,9 +250,11 @@ export default function PlotForm() {
                   value={form.price}
                   onChange={handleChange}
                   placeholder="Price"
+                  invalid={!!errors.price}
                   required
                   style={{ borderRadius: '12px', border: '1px solid #ced4da' }}
                 />
+                {errors.price && <CFormFeedback className="d-block">{errors.price}</CFormFeedback>}
               </CCol>
             </CRow>
 
@@ -226,6 +266,7 @@ export default function PlotForm() {
                   name="status"
                   value={form.status}
                   onChange={handleChange}
+                  invalid={!!errors.status}
                   required
                   style={{ borderRadius: '12px', border: '1px solid #ced4da' }}
                 >
@@ -236,6 +277,7 @@ export default function PlotForm() {
                     </option>
                   ))}
                 </CFormSelect>
+                {errors.status && <CFormFeedback className="d-block">{errors.status}</CFormFeedback>}
               </CCol>
             </CRow>
 

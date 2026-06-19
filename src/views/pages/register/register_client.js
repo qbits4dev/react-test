@@ -1,17 +1,24 @@
 import React, { useState, useEffect } from 'react'
 import {
   CCard, CCardBody, CCol, CContainer, CRow, CForm, CFormInput, CFormSelect,
-  CSpinner, CFormLabel, CButton, CAlert, CFormTextarea, CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter
+  CSpinner, CFormLabel, CButton, CAlert, CFormTextarea, CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter,
+  CProgress
 } from '@coreui/react'
 import { useNavigate } from 'react-router-dom'
 import CIcon from '@coreui/icons-react'
 import { cilArrowLeft } from '@coreui/icons'
+import {
+  getPasswordStrength,
+  sanitizeAlphaNumericBasic,
+  sanitizeName,
+  sanitizeText,
+  validateAgeRangeFromDob,
+  validateStrongPassword,
+} from '../../../utils/validation'
 
 export default function RegisterClientWizard() {
   const navigate = useNavigate()
-
-  // --- form state with all fields ---
-  const [form, setForm] = useState({
+  const emptyForm = {
     first_name: '',
     last_name: '',
     father_name: '',
@@ -49,7 +56,13 @@ export default function RegisterClientWizard() {
     city: '',
     state: '',
     pincode: ''
-  })
+  }
+  const today = new Date()
+  const maxDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate()).toISOString().split('T')[0]
+  const minDate = new Date(today.getFullYear() - 80, today.getMonth(), today.getDate()).toISOString().split('T')[0]
+
+  // --- form state with all fields ---
+  const [form, setForm] = useState(emptyForm)
 
   const [designations, setDesignations] = useState([])
   const [designationError, setDesignationError] = useState('')
@@ -62,9 +75,16 @@ export default function RegisterClientWizard() {
   const [registeredUID, setRegisteredUID] = useState('')
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
+  const [showPassword, setShowPassword] = useState(false)
 
   // Restore form state from localStorage when page loads
   useEffect(() => {
+    const hasSession = Boolean(localStorage.getItem('access_token') || localStorage.getItem('user'))
+    if (!hasSession) {
+      localStorage.removeItem('registerClientForm')
+      setForm(emptyForm)
+      return
+    }
     const saved = localStorage.getItem('registerClientForm')
     if (saved) {
       try {
@@ -120,12 +140,20 @@ export default function RegisterClientWizard() {
     let value = e.target.value
 
     // Input sanitation
-    if (name === 'pan') value = value.toUpperCase().replace(/[^A-Z0-9]/g, '')
-    else if (['first_name', 'last_name', 'father_name', 'nominiee', 'relationship', 'language', 'education', 'occupation', 'work_location', 'branch', 'bank_name', 'address_line1', 'address_line2', 'city', 'state'].includes(name))
-      value = value.replace(/[^A-Za-z0-9 ,\-\/]/g, '')
+    if (name === 'pan') value = value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10)
+    else if (name === 'ifsc_code') value = value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 11)
+    else if (['first_name', 'last_name', 'father_name'].includes(name)) value = sanitizeName(value, 50)
+    else if (['nominiee', 'relationship'].includes(name)) value = sanitizeName(value, 60)
+    else if (['city', 'state'].includes(name)) value = sanitizeName(value, 50)
+    else if (name === 'bank_name') value = sanitizeName(value, 80)
+    else if (['language', 'education', 'work_location', 'branch'].includes(name)) value = sanitizeText(value, 80)
+    else if (name === 'occupation') value = sanitizeText(value, 80)
+    else if (name === 'email') value = value.replace(/[^A-Za-z0-9.@_\-+]/g, '').slice(0, 100)
     else if (['mobile', 'work_experience', 'account_number', 'income', 'adhar', 'nominee_mobile', 'pincode'].includes(name))
       value = value.replace(/[^0-9]/g, '')
-    else if (name === 'ifsc_code') value = value.toUpperCase().replace(/[^A-Z0-9]/g, '')
+    else if (name === 'reference_agent' || name === 'agent_team') value = sanitizeAlphaNumericBasic(value, 30)
+    else if (name === 'password') value = value.replace(/\s/g, '').slice(0, 32)
+    else if (['address', 'address_line1', 'address_line2'].includes(name)) value = sanitizeText(value, 150)
 
     setFormField(name, value)
 
@@ -135,7 +163,7 @@ export default function RegisterClientWizard() {
       let age = today.getFullYear() - birthDate.getFullYear()
       const m = today.getMonth() - birthDate.getMonth()
       if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--
-      if (age < 18) setErrors(prev => ({ ...prev, dob: 'Age must be at least 18' }))
+      if (age < 18 || age > 80) setErrors(prev => ({ ...prev, dob: 'Age must be between 18 and 80 years old' }))
     }
   }
 
@@ -151,10 +179,10 @@ export default function RegisterClientWizard() {
         if (!value) return 'This field is required'
         break
       case 'mobile': case 'nominee_mobile':
-        if (!/^[0-9]{10}$/.test(value)) return 'Enter a valid 10-digit phone number'
+        if (!/^[6-9][0-9]{9}$/.test(value)) return 'Enter a valid 10-digit mobile number starting with 6-9'
         break
       case 'email':
-        if (!value || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Invalid email'
+        if (!value || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Enter a valid email address'
         break
       case 'work_experience':
         if (value && !/^[0-9]{1,2}$/.test(value)) return 'Enter valid experience'
@@ -172,18 +200,24 @@ export default function RegisterClientWizard() {
         if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(value)) return 'Invalid PAN format'
         break
       case 'password':
-        if (!value) return 'Password required'
-        if (value.length < 6) return 'Password must be ≥ 6 chars'
+        if (!value) return 'Password is required'
+        return validateStrongPassword(value)
+      case 'gender':
+        if (!value) return 'Gender is required'
         break
       case 'dob':
-        if (!value) return 'Required'
-        const birthDate = new Date(value)
-        const today = new Date()
-        let age = today.getFullYear() - birthDate.getFullYear()
-        if (age < 18) return 'Age must be ≥ 18'
+        if (!value) return 'Date of Birth is required'
+        if (!validateAgeRangeFromDob(value, 18, 80)) return 'Age must be between 18 and 80 years old'
         break
-      case 'photo': case 'aadhaar_file': case 'pan_file':
+      case 'photo':
         if (!value) return 'File required'
+        if (!/^image\/(jpeg|jpg|png|webp)$/i.test(value.type)) return 'Photo must be JPG, PNG, or WEBP'
+        if (value.size > 2 * 1024 * 1024) return 'Photo must be under 2MB'
+        break
+      case 'aadhaar_file': case 'pan_file':
+        if (!value) return 'File required'
+        if (!/^image\/(jpeg|jpg|png|webp)$|^application\/pdf$/i.test(value.type)) return 'File must be JPG, PNG, WEBP, or PDF'
+        if (value.size > 2 * 1024 * 1024) return 'File must be under 2MB'
         break
       default:
         return ''
@@ -254,10 +288,14 @@ export default function RegisterClientWizard() {
         errorMsg = errorMsg.replace(/[{}"]/g, '');
         setModalMessage(`Error: ${errorMsg}`);
         setShowModal(true);
+        setForm(emptyForm)
+        localStorage.removeItem('registerClientForm')
       }
     } catch (err) {
       setModalMessage('Error: Network error.');
       setShowModal(true);
+      setForm(emptyForm)
+      localStorage.removeItem('registerClientForm')
     } finally {
       setIsSubmitting(false);
     }
@@ -301,10 +339,29 @@ export default function RegisterClientWizard() {
                 </CRow>
                 <CRow className="g-3 mb-3">
                   <CCol md={6}><CFormInput floating="true" label="Mobile" name="mobile" maxLength={10} value={form.mobile} onChange={handleChange} required />{renderError('mobile')}</CCol>
-                  <CCol md={6}><CFormInput floating="true" label="Password" name="password" type="password" value={form.password} onChange={handleChange} required />{renderError('password')}</CCol>
+                  <CCol md={6}>
+                    <div style={{ position: 'relative' }}>
+                      <CFormInput floating="true" label="Password" name="password" type={showPassword ? 'text' : 'password'} maxLength={32} value={form.password} onChange={handleChange} required style={{ paddingRight: 68 }} />
+                      <CButton
+                        type="button"
+                        color="link"
+                        onClick={() => setShowPassword((s) => !s)}
+                        style={{ position: 'absolute', right: 10, top: 20, textDecoration: 'none', padding: 0, fontSize: '0.8rem', zIndex: 3, lineHeight: 1 }}
+                      >
+                        {showPassword ? 'Hide' : 'Show'}
+                      </CButton>
+                    </div>
+                    {form.password && !errors.password && (
+                      <div className="mt-2">
+                        <small className="text-body-secondary">Password strength: {getPasswordStrength(form.password).label}</small>
+                        <CProgress thin color={getPasswordStrength(form.password).color} value={getPasswordStrength(form.password).value} />
+                      </div>
+                    )}
+                    {renderError('password')}
+                  </CCol>
                 </CRow>
                 <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="Date of Birth" type="date" name="dob" value={form.dob} onChange={handleChange} required />{renderError('dob')}</CCol>
+                  <CCol md={6}><CFormInput floating="true" label="Date of Birth" type="date" name="dob" value={form.dob} onChange={handleChange} min={minDate} max={maxDate} required />{renderError('dob')}</CCol>
                   <CCol md={6}>
                     <CFormSelect floating="true" label="Gender" name="gender" value={form.gender} onChange={handleChange} required>
                       <option value="">Select</option>

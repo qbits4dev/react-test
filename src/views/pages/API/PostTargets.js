@@ -14,7 +14,9 @@ import {
   CFormTextarea,
   CRow,
   CSpinner,
+  CFormFeedback,
 } from '@coreui/react'
+import { sanitizeNumeric, sanitizeText } from '../../../utils/validation'
 
 const TARGET_TYPES = {
   TEAM: 'Team Target',
@@ -55,6 +57,16 @@ const PostTargets = () => {
 
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const [errors, setErrors] = useState({})
+
+  const validateField = (name, value) => {
+    const v = String(value || '').trim()
+    if (['stage', 'designation', 'targetType'].includes(name) && !v) return 'This field is required'
+    if (name === 'timeframe' && (!v || Number(v) <= 0 || Number(v) > 120)) return 'Timeframe must be between 1 and 120'
+    if (name === 'target_units' && (!v || Number(v) <= 0)) return 'Target Units must be greater than 0'
+    if (name === 'salary_monthly' && v && Number(v) < 0) return 'Salary cannot be negative'
+    return ''
+  }
 
   useEffect(() => {
     fetch(`${globalThis.apiBaseUrl}/register/?key=designation`, { headers: { accept: 'application/json' } })
@@ -152,7 +164,13 @@ const PostTargets = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
+    let nextValue = value
+    if (['timeframe', 'target_units', 'salary_monthly'].includes(name)) nextValue = sanitizeNumeric(value, 8)
+    if (['rewards', 'commission_notes', 'salary_eligibility_notes', 'other_notes', 'tour', 'insurance_cover', 'medical_cover', 'stage'].includes(name)) {
+      nextValue = sanitizeText(value, 250)
+    }
+    setFormData((prev) => ({ ...prev, [name]: nextValue }))
+    setErrors((prev) => ({ ...prev, [name]: validateField(name, nextValue) }))
   }
 
   const handleTargetTypeChange = (e) => {
@@ -169,6 +187,20 @@ const PostTargets = () => {
     e.preventDefault()
     setMessage('')
     setError('')
+
+    const nextErrors = {
+      targetType: validateField('targetType', formData.targetType),
+      designation: validateField('designation', formData.designation),
+      stage: validateField('stage', formData.stage),
+      timeframe: validateField('timeframe', formData.timeframe),
+      target_units: validateField('target_units', formData.target_units),
+      salary_monthly: validateField('salary_monthly', formData.salary_monthly),
+    }
+    setErrors(nextErrors)
+    if (Object.values(nextErrors).some(Boolean)) {
+      setError('Please fix validation errors before submitting.')
+      return
+    }
 
     if (!formData.targetType || !formData.designation) {
       setError('Please select Target Type and Designation before submitting.')
@@ -235,11 +267,12 @@ const PostTargets = () => {
               <CForm onSubmit={handleSubmit}>
                 <div className="mb-4">
                   <CFormLabel className="fw-semibold text-muted">Target Type</CFormLabel>
-                  <CFormSelect name="targetType" value={formData.targetType} onChange={handleTargetTypeChange} required>
+                  <CFormSelect name="targetType" value={formData.targetType} onChange={handleTargetTypeChange} invalid={!!errors.targetType} required>
                     <option value="">Select Target Type</option>
                     <option value={TARGET_TYPES.TEAM}>{TARGET_TYPES.TEAM}</option>
                     <option value={TARGET_TYPES.INDIVIDUAL}>{TARGET_TYPES.INDIVIDUAL}</option>
                   </CFormSelect>
+                  {errors.targetType && <CFormFeedback className="d-block">{errors.targetType}</CFormFeedback>}
                 </div>
 
                 {formData.targetType === TARGET_TYPES.TEAM && (
@@ -272,7 +305,7 @@ const PostTargets = () => {
 
                 <div className="mb-4">
                   <CFormLabel className="fw-semibold text-muted">Designation</CFormLabel>
-                  <CFormSelect name="designation" value={formData.designation} onChange={handleChange} disabled={loadingDesignations} required>
+                  <CFormSelect name="designation" value={formData.designation} onChange={handleChange} disabled={loadingDesignations} invalid={!!errors.designation} required>
                     <option value="">{loadingDesignations ? 'Loading...' : 'Select Designation'}</option>
                     {!loadingDesignations &&
                       !designationError &&
@@ -282,24 +315,28 @@ const PostTargets = () => {
                         </option>
                       ))}
                   </CFormSelect>
+                  {errors.designation && <CFormFeedback className="d-block">{errors.designation}</CFormFeedback>}
                   {designationError && <small className="text-danger">{designationError}</small>}
                 </div>
 
                 <CRow>
                   <CCol sm={6} className="mb-3">
                     <CFormLabel className="fw-semibold text-muted">Stage</CFormLabel>
-                    <CFormInput name="stage" value={formData.stage} onChange={handleChange} required />
+                    <CFormInput name="stage" value={formData.stage} onChange={handleChange} invalid={!!errors.stage} required />
+                    {errors.stage && <CFormFeedback className="d-block">{errors.stage}</CFormFeedback>}
                   </CCol>
                   <CCol sm={6} className="mb-3">
                     <CFormLabel className="fw-semibold text-muted">Timeframe (Month)</CFormLabel>
-                    <CFormInput name="timeframe" type="number" value={formData.timeframe} onChange={handleChange} required />
+                    <CFormInput name="timeframe" type="number" value={formData.timeframe} onChange={handleChange} invalid={!!errors.timeframe} required />
+                    {errors.timeframe && <CFormFeedback className="d-block">{errors.timeframe}</CFormFeedback>}
                   </CCol>
                 </CRow>
 
                 <CRow>
                   <CCol sm={6} className="mb-3">
                     <CFormLabel className="fw-semibold text-muted">Target Units</CFormLabel>
-                    <CFormInput name="target_units" type="number" value={formData.target_units} onChange={handleChange} required />
+                    <CFormInput name="target_units" type="number" value={formData.target_units} onChange={handleChange} invalid={!!errors.target_units} required />
+                    {errors.target_units && <CFormFeedback className="d-block">{errors.target_units}</CFormFeedback>}
                   </CCol>
                   <CCol sm={6} className="mb-3">
                     <CFormLabel className="fw-semibold text-muted">Insurance Cover</CFormLabel>
