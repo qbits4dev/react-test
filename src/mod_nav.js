@@ -63,8 +63,18 @@ const navigationConfig = [
     icon: <CIcon icon={cilPeople} customClassName="nav-icon" />,
     allowedRoles: [ROLES.ADMIN, ROLES.AGENT],
     items: [
-      { component: CNavItem, name: 'View Leads', to: '/GetClients', allowedRoles: [ROLES.ADMIN, ROLES.AGENT] },
+      { component: CNavItem, name: 'View Leads', to: '/GetClients?type=leads', allowedRoles: [ROLES.ADMIN, ROLES.AGENT] },
       { component: CNavItem, name: 'Add Leads', to: '/register_cilent', allowedRoles: [ROLES.ADMIN, ROLES.AGENT] },
+    ],
+  },
+  {
+    component: CNavGroup,
+    name: 'Clients',
+    icon: <CIcon icon={cilUser} customClassName="nav-icon" />,
+    allowedRoles: [ROLES.ADMIN, ROLES.AGENT],
+    items: [
+      { component: CNavItem, name: 'View Clients', to: '/GetClients?type=clients', allowedRoles: [ROLES.ADMIN, ROLES.AGENT] },
+      { component: CNavItem, name: 'Add Client', to: '/register_client', allowedRoles: [ROLES.ADMIN, ROLES.AGENT] },
     ],
   },
 

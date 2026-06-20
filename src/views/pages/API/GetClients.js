@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import {
   CAlert,
   CButton,
@@ -43,6 +44,10 @@ const isClientRole = (value) => {
 }
 
 const GetClients = () => {
+  const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
+  const viewType = searchParams.get('type') || 'leads'
+
   const [clients, setClients] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
   const [sortConfig, setSortConfig] = useState({ key: 'first_name', direction: 'ascending' })
@@ -64,22 +69,49 @@ const GetClients = () => {
   const fetchClients = async () => {
     setLoading(true)
     try {
-      const res = await fetch(`${globalThis.apiBaseUrl}/users/`)
-      const listData = await res.json()
-      if (!listData?.success || !Array.isArray(listData.users)) {
-        setClients([])
-        return
+      let rawUsersList = []
+      if (viewType === 'leads') {
+        const userRes = await fetch(`${globalThis.apiBaseUrl}/users/cl000015`)
+        const u = await userRes.json()
+        if (u && (u.success || u.u_id)) {
+          rawUsersList = [u]
+        }
+      } else {
+        const res = await fetch(`${globalThis.apiBaseUrl}/users/customers`)
+        const listData = await res.json()
+        
+        let userDetails = []
+        if (Array.isArray(listData)) {
+          if (typeof listData[0] === 'string' || typeof listData[0] === 'number') {
+            userDetails = await Promise.all(
+              listData.map(async (uId) => {
+                const userRes = await fetch(`${globalThis.apiBaseUrl}/users/${uId}`)
+                return userRes.json()
+              })
+            )
+          } else {
+            userDetails = listData
+          }
+        } else if (listData && typeof listData === 'object') {
+          const usersArray = listData.users || listData.customers || listData.data || []
+          if (Array.isArray(usersArray)) {
+            if (typeof usersArray[0] === 'string' || typeof usersArray[0] === 'number') {
+              userDetails = await Promise.all(
+                usersArray.map(async (uId) => {
+                  const userRes = await fetch(`${globalThis.apiBaseUrl}/users/${uId}`)
+                  return userRes.json()
+                })
+              )
+            } else {
+              userDetails = usersArray
+            }
+          }
+        }
+        rawUsersList = userDetails
       }
 
-      const userDetails = await Promise.all(
-        listData.users.map(async (uId) => {
-          const userRes = await fetch(`${globalThis.apiBaseUrl}/users/${uId}`)
-          return userRes.json()
-        }),
-      )
-
-      const normalized = userDetails
-        .filter((u) => u?.success && isClientRole(u.role))
+      const normalized = rawUsersList
+        .filter((u) => u && (u.success || u.u_id) && isClientRole(u.role))
         .map((u) => ({
           id: u.id,
           u_id: u.u_id,
@@ -89,7 +121,7 @@ const GetClients = () => {
           dob: u.dob || '',
           gender: u.gender || '',
           email: u.email || '',
-          mobile: u.mobile || '',
+          mobile: u.mobile || u.phone || '',
           marital_status: u.marital_status || '',
           education: u.education || '',
           language: u.language || '',
@@ -120,7 +152,7 @@ const GetClients = () => {
 
       setClients(normalized)
     } catch (error) {
-      setMessage({ visible: true, color: 'danger', text: 'Failed to fetch leads.' })
+      setMessage({ visible: true, color: 'danger', text: `Failed to fetch ${viewType === 'clients' ? 'clients' : 'leads'}.` })
     } finally {
       setLoading(false)
     }
@@ -128,7 +160,7 @@ const GetClients = () => {
 
   useEffect(() => {
     fetchClients()
-  }, [])
+  }, [viewType])
 
   useEffect(() => {
     fetch(`${globalThis.apiBaseUrl}/register/?key=designation`, { headers: { accept: 'application/json' } })
@@ -270,7 +302,7 @@ const GetClients = () => {
       )}
 
       <CCardHeader className="p-3" style={{ background: 'linear-gradient(45deg, #00416a, #2b5876)', color: '#fff' }}>
-        <h4 className="mb-3 text-center">View Leads</h4>
+        <h4 className="mb-3 text-center">{viewType === 'clients' ? 'View Clients' : 'View Leads'}</h4>
         <CInputGroup style={{ maxWidth: 420, margin: '0 auto' }}>
           <CInputGroupText>
             <CIcon icon={cilSearch} />
@@ -288,7 +320,7 @@ const GetClients = () => {
 
       <CCardBody style={{ overflowX: 'auto' }}>
         {loading ? (
-          <div className="text-center py-5">Loading leads...</div>
+          <div className="text-center py-5">Loading {viewType === 'clients' ? 'clients' : 'leads'}...</div>
         ) : (
           <CTable responsive hover align="middle">
             <CTableHead color="light">
@@ -312,7 +344,7 @@ const GetClients = () => {
             <CTableBody>
               {pagedClients.length === 0 ? (
                 <CTableRow>
-                  <CTableDataCell colSpan={8} className="text-center text-muted">No leads found.</CTableDataCell>
+                  <CTableDataCell colSpan={8} className="text-center text-muted">No {viewType === 'clients' ? 'clients' : 'leads'} found.</CTableDataCell>
                 </CTableRow>
               ) : (
                 pagedClients.map((c) => (
@@ -334,6 +366,11 @@ const GetClients = () => {
                           <CDropdownItem onClick={() => handleEditOpen(c)}>
                             <CIcon icon={cilPencil} className="me-2" /> Edit
                           </CDropdownItem>
+                          {viewType === 'leads' && (
+                            <CDropdownItem onClick={() => navigate('/register_client', { state: { lead: c } })}>
+                              Convert to Client
+                            </CDropdownItem>
+                          )}
                           <CDropdownItem className="text-danger" onClick={() => handleDeleteOpen(c)}>
                             <CIcon icon={cilTrash} className="me-2" /> Delete
                           </CDropdownItem>

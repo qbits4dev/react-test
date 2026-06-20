@@ -344,7 +344,7 @@ export default function RegisterClientWizard() {
                 <CButton color="primary" variant="ghost" onClick={() => navigate(-1)}>
                   <CIcon icon={cilArrowLeft} className="me-2" />
                 </CButton>
-                <h2 className="m-0">Client Registration</h2>
+                <h2 className="m-0">{form.u_id ? 'Convert Lead to Client' : 'Client Registration'}</h2>
                 <div style={{ width: 80 }} />
               </div>
 
@@ -655,7 +655,7 @@ export default function RegisterClientWizard() {
 
                 <div className="d-grid mt-4">
                   <CButton color="primary" size="lg" type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? <><CSpinner size="sm" className="me-2" />Submitting...</> : 'Register Client'}
+                    {isSubmitting ? <><CSpinner size="sm" className="me-2" />Submitting...</> : (form.u_id ? 'Convert to Client' : 'Register Client')}
                   </CButton>
                 </div>
               </CForm>
@@ -687,7 +687,12 @@ export default function RegisterClientWizard() {
             justifyContent: 'center',
             zIndex: 9999,
           }}
-          onClick={() => setShowModal(false)}
+          onClick={() => {
+            setShowModal(false);
+            if (modalMessage.startsWith('Success:') || !modalMessage.startsWith('Error:')) {
+              navigate(form.u_id ? '/GetClients?type=clients' : '/AdminDashboard');
+            }
+          }}
         >
           <div
             style={{
@@ -698,6 +703,7 @@ export default function RegisterClientWizard() {
               textAlign: 'center',
               boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
             }}
+            onClick={(e) => e.stopPropagation()}
           >
             <div
               style={{
@@ -719,7 +725,12 @@ export default function RegisterClientWizard() {
                 fontWeight: 600,
                 cursor: 'pointer',
               }}
-              onClick={() => setShowModal(false)}
+              onClick={() => {
+                setShowModal(false);
+                if (modalMessage.startsWith('Success:') || !modalMessage.startsWith('Error:')) {
+                  navigate(form.u_id ? '/GetClients?type=clients' : '/AdminDashboard');
+                }
+              }}
             >
               Close
             </button>
