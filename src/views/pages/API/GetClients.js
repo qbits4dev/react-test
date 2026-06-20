@@ -236,7 +236,17 @@ const GetClients = () => {
 
   const handleEditChange = (e) => {
     const { name, value } = e.target
-    setSelectedClient((prev) => ({ ...prev, [name]: value }))
+    let nextValue = value
+    if (['address', 'address_line1', 'address_line2'].includes(name)) {
+      nextValue = value.replace(/[^A-Za-z0-9 .,\-()/#]/g, '').slice(0, 150)
+    } else if (['first_name', 'last_name', 'father_name', 'nominiee', 'relationship'].includes(name)) {
+      nextValue = value.replace(/[^A-Za-z ]/g, '').slice(0, 60)
+    } else if (name === 'email') {
+      nextValue = value.replace(/[^A-Za-z0-9.@_\-+]/g, '').slice(0, 100)
+    } else if (['mobile', 'nominee_mobile', 'adhar', 'pincode', 'account_number', 'income'].includes(name)) {
+      nextValue = value.replace(/[^0-9]/g, '')
+    }
+    setSelectedClient((prev) => ({ ...prev, [name]: nextValue }))
   }
 
   const handleSave = async () => {

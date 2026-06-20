@@ -12,6 +12,7 @@ import {
   sanitizeAlphaNumericBasic,
   sanitizeName,
   sanitizeText,
+  sanitizeAddress,
   validateAgeRangeFromDob,
   validateStrongPassword,
 } from '../../../utils/validation'
@@ -174,7 +175,7 @@ export default function RegisterClientWizard() {
       value = value.replace(/[^0-9]/g, '')
     else if (name === 'reference_agent' || name === 'agent_team') value = sanitizeAlphaNumericBasic(value, 30)
     else if (name === 'password') value = value.replace(/\s/g, '').slice(0, 32)
-    else if (['address', 'address_line1', 'address_line2'].includes(name)) value = sanitizeText(value, 150)
+    else if (['address', 'address_line1', 'address_line2'].includes(name)) value = sanitizeAddress(value, 150)
 
     setFormField(name, value)
 
@@ -196,8 +197,19 @@ export default function RegisterClientWizard() {
     switch (name) {
       case 'first_name': case 'last_name': case 'father_name': case 'nominiee': case 'relationship':
       case 'reference_agent': case 'agent_team': case 'branch': case 'bank_name': case 'work_location':
-      case 'address': case 'address_line1': case 'city': case 'state': case 'pincode':
+      case 'city': case 'state': case 'pincode':
         if (!value) return 'This field is required'
+        break
+      case 'address': case 'address_line1':
+        if (!value) return 'This field is required'
+        if (/[^A-Za-z0-9 .,\-()/#]/.test(value)) {
+          return 'Address contains invalid characters. Only letters, numbers, spaces, and . , - ( ) / # are allowed.'
+        }
+        break
+      case 'address_line2':
+        if (value && /[^A-Za-z0-9 .,\-()/#]/.test(value)) {
+          return 'Address contains invalid characters. Only letters, numbers, spaces, and . , - ( ) / # are allowed.'
+        }
         break
       case 'mobile': case 'nominee_mobile':
         if (!/^[6-9][0-9]{9}$/.test(value)) return 'Enter a valid 10-digit mobile number starting with 6-9'

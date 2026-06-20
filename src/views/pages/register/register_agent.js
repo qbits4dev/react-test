@@ -13,6 +13,7 @@ import {
   sanitizeAlphaNumericBasic,
   sanitizeName,
   sanitizeText,
+  sanitizeAddress,
   validateAgeRangeFromDob,
   validateStrongPassword,
 } from '../../../utils/validation'
@@ -174,7 +175,7 @@ export default function RegisterAgentWizard() {
     else if (name === 'reference_agent' || name === 'agent_team')
       value = sanitizeAlphaNumericBasic(value, 30)
     else if (name === 'password') value = value.replace(/\s/g, '').slice(0, 32)
-    else if (['address', 'address_line1', 'address_line2'].includes(name)) value = sanitizeText(value, 150)
+    else if (['address', 'address_line1', 'address_line2'].includes(name)) value = sanitizeAddress(value, 150)
 
     setFormField(name, value)
 
@@ -338,9 +339,20 @@ export default function RegisterAgentWizard() {
       // ── Address ──
       case 'address':
         if (!v) return 'Address is required'
+        if (/[^A-Za-z0-9 .,\-()/#]/.test(v)) {
+          return 'Address contains invalid characters. Only letters, numbers, spaces, and . , - ( ) / # are allowed.'
+        }
         break
       case 'address_line1':
         if (!v) return 'Address Line 1 is required'
+        if (/[^A-Za-z0-9 .,\-()/#]/.test(v)) {
+          return 'Address contains invalid characters. Only letters, numbers, spaces, and . , - ( ) / # are allowed.'
+        }
+        break
+      case 'address_line2':
+        if (v && /[^A-Za-z0-9 .,\-()/#]/.test(v)) {
+          return 'Address contains invalid characters. Only letters, numbers, spaces, and . , - ( ) / # are allowed.'
+        }
         break
       case 'city':
         if (!v) return 'City is required'

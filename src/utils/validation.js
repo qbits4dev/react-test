@@ -76,3 +76,8 @@ export const sanitizeRestrictedText = (value = '', maxLength = 120) =>
   String(value)
     .replace(/[^A-Za-z0-9 .\-]/g, '')
     .slice(0, maxLength)
+
+export const sanitizeAddress = (value = '', maxLength = 150) =>
+  String(value)
+    .replace(/[^A-Za-z0-9 .,\-()/#]/g, '')
+    .slice(0, maxLength)
