@@ -157,39 +157,87 @@ const writeLocal = (items) => {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
 }
 
-const normalize = (item) => ({
-  id: item.id || uid(),
-  category: item.category || CATEGORY.GENERAL,
-  title: item.title || '',
-  description: item.description || '',
-  banner_image: item.banner_image || '',
-  venture_name: item.venture_name || '',
-  launch_date: item.launch_date || '',
-  location: item.location || '',
-  cta_text: item.cta_text || '',
-  cta_url: item.cta_url || '',
-  offer_description: item.offer_description || '',
-  target_required: item.target_required || '',
-  reward_details: item.reward_details || '',
-  client_id: item.client_id || '',
-  client_name: item.client_name || '',
-  project: item.project || '',
-  plot_number: item.plot_number || '',
-  payment_amount: item.payment_amount || '',
-  payment_due_date: item.payment_due_date || '',
-  deducting_bank: item.deducting_bank || '',
-  reminder_priority: String(item.reminder_priority || 'medium').toLowerCase(),
-  visibility: item.visibility || VISIBILITY.BOTH,
-  selected_teams: Array.isArray(item.selected_teams) ? item.selected_teams : [],
-  selected_designations: Array.isArray(item.selected_designations) ? item.selected_designations : [],
-  selected_client: item.selected_client || '',
-  start_date: item.start_date || '',
-  expiry_date: item.expiry_date || '',
-  status: item.status || 'draft',
-  published: Boolean(item.published),
-  created_at: item.created_at || nowIso(),
-  updated_at: item.updated_at || nowIso(),
-})
+const normalize = (item) => {
+  const details = item.category_details || {}
+  return {
+    id: item.id || uid(),
+    category: item.category || CATEGORY.GENERAL,
+    title: item.title || '',
+    description: item.description || '',
+    banner_image: item.banner_image || '',
+    venture_name: item.venture_name || details.venture_name || '',
+    launch_date: item.launch_date || details.launch_date || '',
+    location: item.location || details.location || '',
+    cta_text: item.cta_text || details.cta_text || '',
+    cta_url: item.cta_url || details.cta_url || '',
+    offer_description: item.offer_description || details.offer_description || '',
+    target_required: item.target_required || details.target_required || '',
+    reward_details: item.reward_details || details.reward_details || '',
+    client_id: item.client_id || details.client_id || '',
+    client_name: item.client_name || details.client_name || '',
+    project: item.project || details.project || '',
+    plot_number: item.plot_number || details.plot_number || '',
+    payment_amount: item.payment_amount || details.payment_amount || '',
+    payment_due_date: item.payment_due_date || details.payment_due_date || '',
+    deducting_bank: item.deducting_bank || details.deducting_bank || '',
+    reminder_priority: String(item.reminder_priority || 'medium').toLowerCase(),
+    visibility: item.visibility || VISIBILITY.BOTH,
+    selected_teams: Array.isArray(item.selected_teams) ? item.selected_teams : [],
+    selected_designations: Array.isArray(item.selected_designations) ? item.selected_designations : [],
+    selected_client: item.selected_client || '',
+    start_date: item.start_date || '',
+    expiry_date: item.expiry_date || '',
+    status: item.status || 'draft',
+    published: Boolean(item.published),
+    created_at: item.created_at || nowIso(),
+    updated_at: item.updated_at || nowIso(),
+  }
+}
+
+const serialize = (item) => {
+  const serialized = {
+    category: item.category,
+    title: item.title,
+    description: item.description,
+    banner_image: item.banner_image || null,
+    reminder_priority: item.reminder_priority,
+    visibility: item.visibility,
+    selected_client: item.selected_client || null,
+    selected_teams: item.selected_teams || [],
+    selected_designations: item.selected_designations || [],
+    start_date: item.start_date,
+    expiry_date: item.expiry_date,
+    status: item.status,
+    category_details: {},
+  }
+
+  if (item.category === CATEGORY.VENTURE) {
+    serialized.category_details = {
+      venture_name: item.venture_name || '',
+      launch_date: item.launch_date || '',
+      location: item.location || '',
+      cta_text: item.cta_text || '',
+      cta_url: item.cta_url || '',
+    }
+  } else if (item.category === CATEGORY.OFFER) {
+    serialized.category_details = {
+      offer_description: item.offer_description || '',
+      target_required: item.target_required || '',
+      reward_details: item.reward_details || '',
+    }
+  } else if (item.category === CATEGORY.PAYMENT) {
+    serialized.category_details = {
+      client_name: item.client_name || '',
+      project: item.project || '',
+      plot_number: item.plot_number || '',
+      payment_amount: item.payment_amount || '',
+      payment_due_date: item.payment_due_date || '',
+      deducting_bank: item.deducting_bank || '',
+    }
+  }
+
+  return serialized
+}
 
 const sortByPriorityAndDate = (items) =>
   [...items].sort((a, b) => {
@@ -307,7 +355,7 @@ export const createAnnouncement = async (payload) => {
     const res = await fetch(endpoint(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(record),
+      body: JSON.stringify(serialize(record)),
     })
     if (res.ok) {
       const data = await safeJson(res)
@@ -328,7 +376,7 @@ export const updateAnnouncement = async (id, payload) => {
     const res = await fetch(`${endpoint()}/${encodeURIComponent(id)}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(record),
+      body: JSON.stringify(serialize(record)),
     })
     if (res.ok) {
       const data = await safeJson(res)
