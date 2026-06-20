@@ -10,7 +10,7 @@ import {
   CButton,
   CFormFeedback,
 } from '@coreui/react';
-import { sanitizeNumeric, sanitizeText } from '../../../utils/validation';
+import { sanitizeNumeric, sanitizeText, sanitizeRestrictedText } from '../../../utils/validation';
 
 // Options for plot status dropdown
 const plotStatusOptions = ['available', 'sold', 'reserved', 'on hold'];
@@ -68,8 +68,11 @@ export default function PlotForm() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     let nextValue = value;
-    if (['size', 'price'].includes(name)) nextValue = sanitizeNumeric(value, 10);
-    if (name === 'plot_number') nextValue = sanitizeText(value.toUpperCase(), 30);
+    if (['size', 'price'].includes(name)) {
+      nextValue = sanitizeNumeric(value, 10);
+    } else if (name === 'plot_number') {
+      nextValue = sanitizeRestrictedText(value.toUpperCase(), 30);
+    }
     setForm((prev) => ({ ...prev, [name]: nextValue }));
     setErrors((prev) => ({ ...prev, [name]: validateField(name, nextValue) }));
   };

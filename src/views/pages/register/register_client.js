@@ -4,7 +4,7 @@ import {
   CSpinner, CFormLabel, CButton, CAlert, CFormTextarea, CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter,
   CProgress
 } from '@coreui/react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import CIcon from '@coreui/icons-react'
 import { cilArrowLeft } from '@coreui/icons'
 import {
@@ -18,6 +18,7 @@ import {
 
 export default function RegisterClientWizard() {
   const navigate = useNavigate()
+  const location = useLocation()
   const emptyForm = {
     first_name: '',
     last_name: '',
@@ -77,8 +78,28 @@ export default function RegisterClientWizard() {
   const [modalMessage, setModalMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false)
 
-  // Restore form state from localStorage when page loads
+  // Restore form state from localStorage when page loads or populate from navigation state (lead conversion)
   useEffect(() => {
+    if (location.state?.lead) {
+      const lead = location.state.lead
+      setForm({
+        ...emptyForm,
+        first_name: lead.first_name || '',
+        last_name: lead.last_name || '',
+        email: lead.email || '',
+        mobile: lead.mobile || lead.phone || '',
+        reference_agent: lead.reference_agent || '',
+        interested_project: lead.interested_project || '',
+        interested_plot: lead.interested_plot || '',
+        u_id: lead.u_id || '',
+        address: lead.address || '',
+        city: lead.city || '',
+        state: lead.state || '',
+        pincode: lead.pincode || '',
+      })
+      return
+    }
+
     const hasSession = Boolean(localStorage.getItem('access_token') || localStorage.getItem('user'))
     if (!hasSession) {
       localStorage.removeItem('registerClientForm')
@@ -96,7 +117,7 @@ export default function RegisterClientWizard() {
         setForm(parsed)
       } catch { }
     }
-  }, [])
+  }, [location.state])
 
   useEffect(() => {
     fetch(`${globalThis.apiBaseUrl}/register/?key=designation`, { headers: { accept: 'application/json' } })
@@ -274,13 +295,18 @@ export default function RegisterClientWizard() {
         jsonObj[key] = value instanceof File ? value.name : value;
       }
       console.log('Submitting form data (JSON):', JSON.stringify(jsonObj, null, 2));
-      //      const res = await fetch(`${globalThis.apiBaseUrl}/auth/register`, { method: 'POST', body: formData });
-      const res = await fetch(`${globalThis.apiBaseUrl}/register/client`, { method: 'POST', body: formData });
+      const isConverting = !!form.u_id;
+      const method = isConverting ? 'PATCH' : 'POST';
+      const url = isConverting
+        ? `${globalThis.apiBaseUrl}/users/${form.u_id}`
+        : `${globalThis.apiBaseUrl}/register/client`;
+
+      const res = await fetch(url, { method, body: formData });
 
       const data = await res.json();
       if (res.ok) {
-        setRegisteredUID(data.u_id || data.user_id || 'N/A');
-        setModalMessage('Success: Client registered successfully');
+        setRegisteredUID(data.u_id || data.user_id || form.u_id || 'N/A');
+        setModalMessage(isConverting ? 'Success: Lead converted to client successfully' : 'Success: Client registered successfully');
         setShowModal(true);
         localStorage.removeItem('registerClientForm');
       } else {

@@ -230,10 +230,10 @@ const AdminDashboard = () => {
       buttonLink: '/register_agent',
     },
     {
-      id: 'client_register',
-      title:'Client Registration',
-      color:'info',
-      buttonLink:'/cilent_register',
+      id: 'leads',
+      title: 'Lead Registration',
+      color: 'info',
+      buttonLink: '/register_cilent',
     },
   ]
 

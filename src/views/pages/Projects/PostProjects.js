@@ -13,7 +13,7 @@ import {
   CSpinner,
   CFormFeedback,
 } from '@coreui/react'
-import { sanitizeNumeric, sanitizeText } from '../../../utils/validation'
+import { sanitizeNumeric, sanitizeText, sanitizeRestrictedText } from '../../../utils/validation'
 
 const statusOptions = ['Ongoing', 'Completed', 'Planned', 'On Hold']
 
@@ -54,7 +54,14 @@ export default function ProjectForm() {
   // Handle text & select input
   const handleChange = (e) => {
     const { name, value } = e.target
-    const nextValue = name === 'total_area' ? sanitizeNumeric(value, 10) : sanitizeText(value, name === 'description' ? 500 : 120)
+    let nextValue = value
+    if (name === 'total_area') {
+      nextValue = sanitizeNumeric(value, 10)
+    } else if (['name', 'location'].includes(name)) {
+      nextValue = sanitizeRestrictedText(value, 120)
+    } else {
+      nextValue = sanitizeText(value, name === 'description' ? 500 : 120)
+    }
     setForm((prev) => ({ ...prev, [name]: nextValue }))
     setErrors((prev) => ({ ...prev, [name]: validateField(name, nextValue) }))
   }

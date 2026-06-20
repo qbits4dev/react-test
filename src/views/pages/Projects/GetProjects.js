@@ -168,8 +168,8 @@ export default function ProjectsList() {
   const handleSaveProject = async () => {
     if (!selectedProjectForEdit) return
     const { id, name, location, developer, status, total_area, start_date, end_date, description } = selectedProjectForEdit
-    if (!name || !location || !developer || !status) {
-      setMessage({ visible: true, color: 'danger', text: 'Please fill name, location, developer, and status before saving.' })
+    if (!name || !location || !developer || !status || !description) {
+      setMessage({ visible: true, color: 'danger', text: 'Please fill name, location, developer, status, and description before saving.' })
       return
     }
 

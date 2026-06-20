@@ -63,10 +63,10 @@ const AgentDashboard = () => {
       buttonLink: '/GetTargets',
     },
     {
-      id: 'client_register',
-      title: 'Client Registration',
+      id: 'leads',
+      title: 'Lead Registration',
       color: 'info',
-      buttonLink: '/cilent_register',
+      buttonLink: '/register_cilent',
     }, 
   ]
 

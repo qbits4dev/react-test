@@ -71,3 +71,8 @@ export const validateAgeRangeFromDob = (dob, minAge = 18, maxAge = 80) => {
   if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--
   return age >= minAge && age <= maxAge
 }
+
+export const sanitizeRestrictedText = (value = '', maxLength = 120) =>
+  String(value)
+    .replace(/[^A-Za-z0-9 .\-]/g, '')
+    .slice(0, maxLength)

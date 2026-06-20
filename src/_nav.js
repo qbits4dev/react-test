@@ -476,8 +476,8 @@ const _nav = [
       },
       {
         component: CNavItem,
-        name: 'Client Register',
-        to: '/client_register',
+        name: 'Add Leads',
+        to: '/register_cilent',
       },
       {
         component: CNavItem,

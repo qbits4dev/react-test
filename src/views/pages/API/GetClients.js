@@ -113,12 +113,14 @@ const GetClients = () => {
           city: u.city || '',
           state: u.state || '',
           pincode: u.pincode || '',
+          interested_project: u.interested_project || '',
+          interested_plot: u.interested_plot || '',
           role: u.role || 'customer',
         }))
 
       setClients(normalized)
     } catch (error) {
-      setMessage({ visible: true, color: 'danger', text: 'Failed to fetch clients.' })
+      setMessage({ visible: true, color: 'danger', text: 'Failed to fetch leads.' })
     } finally {
       setLoading(false)
     }
@@ -221,7 +223,7 @@ const GetClients = () => {
       console.log('API Response status:', res.status)
       if (!res.ok) throw new Error('update failed')
 
-      setMessage({ visible: true, color: 'success', text: 'Client updated successfully.' })
+      setMessage({ visible: true, color: 'success', text: 'Lead updated successfully.' })
       setEditModalVisible(false)
       await fetchClients()
     } catch {
@@ -239,7 +241,7 @@ const GetClients = () => {
     try {
       const res = await fetch(`${globalThis.apiBaseUrl}/users/${selectedClient.u_id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error('delete failed')
-      setMessage({ visible: true, color: 'success', text: 'Client deleted successfully.' })
+      setMessage({ visible: true, color: 'success', text: 'Lead deleted successfully.' })
       await fetchClients()
     } catch {
       setClients((prev) => prev.filter((c) => c.id !== selectedClient.id))
@@ -268,7 +270,7 @@ const GetClients = () => {
       )}
 
       <CCardHeader className="p-3" style={{ background: 'linear-gradient(45deg, #00416a, #2b5876)', color: '#fff' }}>
-        <h4 className="mb-3 text-center">View Clients</h4>
+        <h4 className="mb-3 text-center">View Leads</h4>
         <CInputGroup style={{ maxWidth: 420, margin: '0 auto' }}>
           <CInputGroupText>
             <CIcon icon={cilSearch} />
@@ -286,7 +288,7 @@ const GetClients = () => {
 
       <CCardBody style={{ overflowX: 'auto' }}>
         {loading ? (
-          <div className="text-center py-5">Loading clients...</div>
+          <div className="text-center py-5">Loading leads...</div>
         ) : (
           <CTable responsive hover align="middle">
             <CTableHead color="light">
@@ -310,7 +312,7 @@ const GetClients = () => {
             <CTableBody>
               {pagedClients.length === 0 ? (
                 <CTableRow>
-                  <CTableDataCell colSpan={8} className="text-center text-muted">No clients found.</CTableDataCell>
+                  <CTableDataCell colSpan={8} className="text-center text-muted">No leads found.</CTableDataCell>
                 </CTableRow>
               ) : (
                 pagedClients.map((c) => (
@@ -366,7 +368,7 @@ const GetClients = () => {
 
       <CModal visible={viewModalVisible} onClose={() => setViewModalVisible(false)} size="lg">
         <CModalHeader>
-          <CModalTitle>Client Details</CModalTitle>
+          <CModalTitle>Lead Details</CModalTitle>
         </CModalHeader>
         <CModalBody>
           {selectedClient && (
@@ -383,7 +385,7 @@ const GetClients = () => {
 
       <CModal visible={editModalVisible} onClose={() => setEditModalVisible(false)} size="lg" backdrop="static">
         <CModalHeader>
-          <CModalTitle>Edit Client</CModalTitle>
+          <CModalTitle>Edit Lead</CModalTitle>
         </CModalHeader>
         <CModalBody>
           {selectedClient && (
@@ -422,10 +424,10 @@ const GetClients = () => {
 
       <CModal visible={deleteModalVisible} onClose={() => setDeleteModalVisible(false)}>
         <CModalHeader>
-          <CModalTitle>Delete Client</CModalTitle>
+          <CModalTitle>Delete Lead</CModalTitle>
         </CModalHeader>
         <CModalBody>
-          Are you sure you want to delete this client?
+          Are you sure you want to delete this lead?
         </CModalBody>
         <CModalFooter>
           <CButton color="secondary" variant="ghost" onClick={() => setDeleteModalVisible(false)}>

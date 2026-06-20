@@ -1,8 +1,8 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   CButton, CCard, CCardBody, CCol, CContainer, CForm, CFormInput,
-  CInputGroup, CInputGroupText, CRow
+  CFormSelect, CInputGroup, CInputGroupText, CRow
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilUser, cilPhone } from '@coreui/icons'
@@ -22,6 +22,125 @@ const Client_Register = () => {
   const [userCode, setUserCode] = useState('')
   const navigate = useNavigate()
 
+  const [projects, setProjects] = useState([])
+  const [plots, setPlots] = useState([])
+  const [agentsAndAdmins, setAgentsAndAdmins] = useState([])
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const res = await fetch(`${globalThis.apiBaseUrl}/projects/`)
+        if (res.ok) {
+          const data = await res.json()
+          const list = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : [])
+          setProjects(list)
+        }
+      } catch (err) {
+        console.error('Error fetching projects:', err)
+      }
+    }
+    fetchProjects()
+  }, [])
+
+  useEffect(() => {
+    const fetchPlots = async () => {
+      if (!formData.interested_project) {
+        setPlots([])
+        return
+      }
+      try {
+        const res = await fetch(`${globalThis.apiBaseUrl}/projects/plots?project_name=${encodeURIComponent(formData.interested_project)}`)
+        if (res.ok) {
+          const data = await res.json()
+          const list = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : [])
+          setPlots(list)
+        }
+      } catch (err) {
+        console.error('Error fetching plots:', err)
+      }
+    }
+    fetchPlots()
+  }, [formData.interested_project])
+
+  useEffect(() => {
+    const fetchAgentsAndAdmins = async () => {
+      try {
+        // Fetch agents list
+        const resAgents = await fetch(`${globalThis.apiBaseUrl}/users/`)
+        let agentUserIds = []
+        if (resAgents.ok) {
+          const agentData = await resAgents.json()
+          if (agentData?.success && Array.isArray(agentData.users)) {
+            agentUserIds = agentData.users
+          } else if (Array.isArray(agentData)) {
+            agentUserIds = agentData
+          }
+        }
+
+        // Fetch admins list
+        const resAdmins = await fetch(`${globalThis.apiBaseUrl}/users/admin`)
+        let adminUserIds = []
+        let directAdminDetails = []
+        if (resAdmins.ok) {
+          const adminData = await resAdmins.json()
+          const rawAdmins = adminData?.users || adminData?.admins || adminData || []
+          if (Array.isArray(rawAdmins)) {
+            rawAdmins.forEach(item => {
+              if (typeof item === 'string' || typeof item === 'number') {
+                adminUserIds.push(String(item))
+              } else if (item && typeof item === 'object') {
+                directAdminDetails.push(item)
+              }
+            })
+          }
+        }
+
+        // Combine IDs to fetch details for
+        const idsToFetch = Array.from(new Set([...agentUserIds, ...adminUserIds]))
+        
+        const fetchedDetails = await Promise.all(
+          idsToFetch.map(async (uId) => {
+            try {
+              const userRes = await fetch(`${globalThis.apiBaseUrl}/users/${uId}`)
+              if (userRes.ok) {
+                return await userRes.json()
+              }
+            } catch (e) {
+              console.error(e)
+            }
+            return null
+          })
+        )
+
+        // Combine both fetched details and direct details
+        const allDetails = [...fetchedDetails, ...directAdminDetails]
+
+        const filtered = allDetails.filter(
+          (u) => u && (u.success || u.u_id || u.id) && (String(u.role || '').toLowerCase() === 'agent' || String(u.role || '').toLowerCase() === 'admin')
+        ).map((u) => ({
+          u_id: u.u_id || u.id,
+          name: `${u.first_name || ''} ${u.last_name || ''}`.trim() || u.u_id
+        }))
+
+        // Deduplicate final mapped list by u_id
+        const uniqueFiltered = []
+        const seen = new Set()
+        for (const item of filtered) {
+          if (item.u_id && !seen.has(item.u_id)) {
+            seen.add(item.u_id)
+            uniqueFiltered.push(item)
+          }
+        }
+
+        setAgentsAndAdmins(uniqueFiltered)
+
+      } catch (err) {
+        console.error('Error fetching agents/admins:', err)
+      }
+    }
+    fetchAgentsAndAdmins()
+  }, [])
+
   const validateField = (name, value) => {
     const v = typeof value === 'string' ? value.trim() : value
     switch (name) {
@@ -31,12 +150,11 @@ const Client_Register = () => {
         if (!/^[A-Za-z ]+$/.test(v)) return 'First Name must contain only letters'
         break
       case 'last_name':
-        if (!v) return 'Last Name is required'
-        if (v.length < 1) return 'Last Name must be at least 1 character'
+        if (!v) return ''
         if (!/^[A-Za-z ]+$/.test(v)) return 'Last Name must contain only letters'
         break
       case 'email':
-        if (!v) return 'Email is required'
+        if (!v) return ''
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return 'Enter a valid email address'
         break
       case 'phone':
@@ -44,14 +162,9 @@ const Client_Register = () => {
         if (!/^[6-9][0-9]{9}$/.test(v)) return 'Phone must be a valid 10-digit number starting with 6-9'
         break
       case 'reference_agent':
-        if (!v) return 'Reference Agent Code is required'
-        break
       case 'interested_project':
-        if (!v) return 'Interested Project is required'
-        break
       case 'interested_plot':
-        if (!v) return 'Interested Plot is required'
-        break
+        return ''
       default:
         return ''
     }
@@ -75,7 +188,13 @@ const Client_Register = () => {
     else if (['first_name', 'last_name'].includes(name)) sanitizedValue = value.replace(/[^A-Za-z ]/g, '')
     else if (name === 'email') sanitizedValue = value.replace(/[^A-Za-z0-9.@_\-+]/g, '')
 
-    setFormData(prev => ({ ...prev, [name]: sanitizedValue }))
+    setFormData(prev => {
+      const nextData = { ...prev, [name]: sanitizedValue }
+      if (name === 'interested_project') {
+        nextData.interested_plot = ''
+      }
+      return nextData
+    })
     const err = validateField(name, sanitizedValue)
     setErrors(prev => ({ ...prev, [name]: err }))
   }
@@ -132,8 +251,8 @@ const Client_Register = () => {
             <CCard className="mx-4">
               <CCardBody className="p-4">
                 <CForm onSubmit={handleSubmit}>
-                  <h1>Register</h1>
-                  <p className="text-body-secondary">Customer Registration</p>
+                  <h1>Lead Registration</h1>
+                  <p className="text-body-secondary">Register a new lead</p>
                   <CInputGroup className="mb-3">
                     <CInputGroupText><CIcon icon={cilUser} /></CInputGroupText>
                     <CFormInput
@@ -151,11 +270,10 @@ const Client_Register = () => {
                     <CInputGroupText><CIcon icon={cilUser} /></CInputGroupText>
                     <CFormInput
                       name="last_name"
-                      placeholder="Last Name *"
+                      placeholder="Last Name"
                       value={formData.last_name}
                       onChange={handleChange}
                       invalid={!!errors.last_name}
-                      required
                     />
                   </CInputGroup>
                   {renderError('last_name')}
@@ -164,12 +282,11 @@ const Client_Register = () => {
                     <CInputGroupText>@</CInputGroupText>
                     <CFormInput
                       name="email"
-                      placeholder="Email *"
+                      placeholder="Email"
                       type="email"
                       value={formData.email}
                       onChange={handleChange}
                       invalid={!!errors.email}
-                      required
                     />
                   </CInputGroup>
                   {renderError('email')}
@@ -189,38 +306,54 @@ const Client_Register = () => {
 
                   <CInputGroup className='mb-3'>
                     <CInputGroupText><CIcon icon={cilUser} /></CInputGroupText>
-                    <CFormInput
+                    <CFormSelect
                       name="reference_agent"
-                      placeholder="Reference Agent *"
                       value={formData.reference_agent}
                       onChange={handleChange}
                       invalid={!!errors.reference_agent}
-                      required
-                    />
+                    >
+                      <option value="">Select Reference Agent / Admin</option>
+                      {agentsAndAdmins.map((item) => (
+                        <option key={item.u_id} value={item.u_id}>
+                          {item.name} ({item.u_id})
+                        </option>
+                      ))}
+                    </CFormSelect>
                   </CInputGroup>
                   {renderError('reference_agent')}
 
                   <CInputGroup className='mb-3'>
-                    <CFormInput
+                    <CFormSelect
                       name='interested_project'
-                      placeholder='Interested Project *'
                       value={formData.interested_project}
                       onChange={handleChange}
                       invalid={!!errors.interested_project}
-                      required
-                    />
+                    >
+                      <option value="">Select Interested Project</option>
+                      {projects.map((proj) => (
+                        <option key={proj.id || proj.name} value={proj.name}>
+                          {proj.name}
+                        </option>
+                      ))}
+                    </CFormSelect>
                   </CInputGroup>
                   {renderError('interested_project')}
 
                   <CInputGroup className='mb-3'>
-                    <CFormInput
+                    <CFormSelect
                       name='interested_plot'
-                      placeholder='Interested Plot *'
                       value={formData.interested_plot}
                       onChange={handleChange}
                       invalid={!!errors.interested_plot}
-                      required
-                    />
+                      disabled={!formData.interested_project}
+                    >
+                      <option value="">Select Interested Plot</option>
+                      {plots.map((plot) => (
+                        <option key={plot.plot_number} value={plot.plot_number}>
+                          Plot {plot.plot_number} ({plot.status || 'available'})
+                        </option>
+                      ))}
+                    </CFormSelect>
                   </CInputGroup>
                   {renderError('interested_plot')}
                   {error && <div style={{ color: "red" }}>{error}</div>}
@@ -230,7 +363,7 @@ const Client_Register = () => {
                     </div>
                   )}
                   <div className="d-grid">
-                    <CButton color="success" type='submit'>Submit Registration</CButton>
+                    <CButton color="success" type='submit'>Submit Lead</CButton>
                   </div>
                 </CForm>
               </CCardBody>
