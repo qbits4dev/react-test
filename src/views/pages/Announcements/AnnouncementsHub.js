@@ -164,11 +164,114 @@ const AnnouncementCard = ({ item }) => {
   )
 }
 
-const AnnouncementEditor = ({ visible, onClose, onSave, form, setForm, saving, isAdmin }) => {
+const AnnouncementEditor = ({ visible, onClose, onSave, form, setForm, errors, setErrors, saving, isAdmin, items }) => {
+  const fieldLabel = (key) =>
+    key
+      .replace(/_text$/g, '')
+      .replace(/_/g, ' ')
+      .replace(/\b\w/g, (c) => c.toUpperCase())
+
+  const validateField = (name, value) => {
+    if (name === 'banner_image') return ''
+
+    const isVenture = form.category === AnnouncementCategory.VENTURE
+    const isOffer = form.category === AnnouncementCategory.OFFER
+    const isPayment = form.category === AnnouncementCategory.PAYMENT
+
+    const showVisibilityDetail = [
+      AnnouncementVisibility.SPECIFIC_CLIENT,
+      AnnouncementVisibility.SPECIFIC_TEAM,
+      AnnouncementVisibility.SELECTED_DESIGNATIONS,
+    ].includes(form.visibility)
+
+    if (name === 'title') {
+      const trimmedVal = String(value || '').trim()
+      if (!trimmedVal) {
+        return 'Title is required'
+      }
+      if (!/^[A-Za-z0-9 .,&\-()]*$/.test(value)) {
+        return 'Title can only contain letters, numbers, spaces, and basic punctuation: .,&-()'
+      }
+      if (value.length > 100) {
+        return 'Title must not exceed 100 characters'
+      }
+      const isDuplicate = (items || []).some(
+        (item) =>
+          item.title?.trim().toLowerCase() === trimmedVal.toLowerCase() &&
+          item.id !== form.id
+      )
+      if (isDuplicate) {
+        return 'An announcement with this title already exists'
+      }
+    }
+
+    if (['description', 'start_date', 'expiry_date'].includes(name)) {
+      if (!String(value || '').trim()) {
+        return `${fieldLabel(name)} is required`
+      }
+    }
+
+    if (name === 'expiry_date' && value && form.start_date && value < form.start_date) {
+      return 'Expiry date must be after start date'
+    }
+    if (name === 'start_date' && value && form.expiry_date && value > form.expiry_date) {
+      return 'Start date must be before expiry date'
+    }
+
+    if (showVisibilityDetail) {
+      if (name === 'selected_client' && form.visibility === AnnouncementVisibility.SPECIFIC_CLIENT && !String(value || '').trim()) {
+        return 'Client UID is required'
+      }
+      if (name === 'selected_teams_text' && form.visibility === AnnouncementVisibility.SPECIFIC_TEAM && !String(value || '').trim()) {
+        return 'Selected teams are required'
+      }
+      if (name === 'selected_designations_text' && form.visibility === AnnouncementVisibility.SELECTED_DESIGNATIONS && !String(value || '').trim()) {
+        return 'Selected designations are required'
+      }
+    }
+
+    if (isVenture) {
+      if (['venture_name', 'launch_date', 'location', 'cta_text', 'cta_url'].includes(name) && !String(value || '').trim()) {
+        return `${fieldLabel(name)} is required`
+      }
+    } else if (isOffer) {
+      if (['offer_description', 'target_required', 'reward_details'].includes(name) && !String(value || '').trim()) {
+        return `${fieldLabel(name)} is required`
+      }
+    } else if (isPayment) {
+      if (['client_name', 'project', 'plot_number', 'payment_amount', 'payment_due_date', 'deducting_bank'].includes(name) && !String(value || '').trim()) {
+        return `${fieldLabel(name)} is required`
+      }
+    }
+
+    return ''
+  }
+
   const onChange = (e) => {
     const { name, value } = e.target
-    setForm((prev) => ({ ...prev, [name]: value }))
+    let nextValue = value
+
+    if (name === 'title') {
+      nextValue = value.slice(0, 100)
+    }
+
+    setForm((prev) => {
+      const updated = { ...prev, [name]: nextValue }
+      
+      const errorMsg = validateField(name, nextValue)
+      setErrors((errs) => ({ ...errs, [name]: errorMsg }))
+
+      if (name === 'category' || name === 'visibility') {
+        setErrors({})
+      }
+
+      return updated
+    })
   }
+
+  const renderError = (field) => errors[field] && (
+    <small className="text-danger d-block mt-1">{errors[field]}</small>
+  )
 
   const showVentureFields = form.category === AnnouncementCategory.VENTURE
   const showOfferFields = form.category === AnnouncementCategory.OFFER
@@ -210,47 +313,49 @@ const AnnouncementEditor = ({ visible, onClose, onSave, form, setForm, saving, i
           </CCol>
 
           <CCol md={6}>
-            <CFormInput label="Title" name="title" value={form.title} onChange={onChange} required />
+            <CFormInput label="Title" name="title" value={form.title} onChange={onChange} invalid={!!errors.title} required />
+            {renderError('title')}
           </CCol>
           <CCol md={6}>
             <CFormInput label="Banner Image URL" name="banner_image" value={form.banner_image} onChange={onChange} />
           </CCol>
 
           <CCol md={12}>
-            <CFormInput label="Description" name="description" value={form.description} onChange={onChange} />
+            <CFormInput label="Description" name="description" value={form.description} onChange={onChange} invalid={!!errors.description} />
+            {renderError('description')}
           </CCol>
 
           {showVentureFields && (
             <>
-              <CCol md={4}><CFormInput label="Venture Name" name="venture_name" value={form.venture_name} onChange={onChange} /></CCol>
-              <CCol md={4}><CFormInput type="date" label="Launch Date" name="launch_date" value={form.launch_date} onChange={onChange} /></CCol>
-              <CCol md={4}><CFormInput label="Location" name="location" value={form.location} onChange={onChange} /></CCol>
-              <CCol md={4}><CFormInput label="CTA Button Text" name="cta_text" value={form.cta_text} onChange={onChange} /></CCol>
-              <CCol md={8}><CFormInput label="CTA URL" name="cta_url" value={form.cta_url} onChange={onChange} /></CCol>
+              <CCol md={4}><CFormInput label="Venture Name" name="venture_name" value={form.venture_name} onChange={onChange} invalid={!!errors.venture_name} />{renderError('venture_name')}</CCol>
+              <CCol md={4}><CFormInput type="date" label="Launch Date" name="launch_date" value={form.launch_date} onChange={onChange} invalid={!!errors.launch_date} />{renderError('launch_date')}</CCol>
+              <CCol md={4}><CFormInput label="Location" name="location" value={form.location} onChange={onChange} invalid={!!errors.location} />{renderError('location')}</CCol>
+              <CCol md={4}><CFormInput label="CTA Button Text" name="cta_text" value={form.cta_text} onChange={onChange} invalid={!!errors.cta_text} />{renderError('cta_text')}</CCol>
+              <CCol md={8}><CFormInput label="CTA URL" name="cta_url" value={form.cta_url} onChange={onChange} invalid={!!errors.cta_url} />{renderError('cta_url')}</CCol>
             </>
           )}
 
           {showOfferFields && (
             <>
-              <CCol md={12}><CFormInput label="Offer Description" name="offer_description" value={form.offer_description} onChange={onChange} /></CCol>
-              <CCol md={6}><CFormInput label="Target Required" name="target_required" value={form.target_required} onChange={onChange} /></CCol>
-              <CCol md={6}><CFormInput label="Reward Details" name="reward_details" value={form.reward_details} onChange={onChange} /></CCol>
+              <CCol md={12}><CFormInput label="Offer Description" name="offer_description" value={form.offer_description} onChange={onChange} invalid={!!errors.offer_description} />{renderError('offer_description')}</CCol>
+              <CCol md={6}><CFormInput label="Target Required" name="target_required" value={form.target_required} onChange={onChange} invalid={!!errors.target_required} />{renderError('target_required')}</CCol>
+              <CCol md={6}><CFormInput label="Reward Details" name="reward_details" value={form.reward_details} onChange={onChange} invalid={!!errors.reward_details} />{renderError('reward_details')}</CCol>
             </>
           )}
 
           {showPaymentFields && (
             <>
-              <CCol md={4}><CFormInput label="Client" name="client_name" value={form.client_name} onChange={onChange} /></CCol>
-              <CCol md={4}><CFormInput label="Project" name="project" value={form.project} onChange={onChange} /></CCol>
-              <CCol md={4}><CFormInput label="Plot Number" name="plot_number" value={form.plot_number} onChange={onChange} /></CCol>
-              <CCol md={4}><CFormInput label="Payment Amount" name="payment_amount" value={form.payment_amount} onChange={onChange} /></CCol>
-              <CCol md={4}><CFormInput type="date" label="Payment Due Date" name="payment_due_date" value={form.payment_due_date} onChange={onChange} /></CCol>
-              <CCol md={4}><CFormInput label="Deducting Bank" name="deducting_bank" value={form.deducting_bank} onChange={onChange} /></CCol>
+              <CCol md={4}><CFormInput label="Client" name="client_name" value={form.client_name} onChange={onChange} invalid={!!errors.client_name} />{renderError('client_name')}</CCol>
+              <CCol md={4}><CFormInput label="Project" name="project" value={form.project} onChange={onChange} invalid={!!errors.project} />{renderError('project')}</CCol>
+              <CCol md={4}><CFormInput label="Plot Number" name="plot_number" value={form.plot_number} onChange={onChange} invalid={!!errors.plot_number} />{renderError('plot_number')}</CCol>
+              <CCol md={4}><CFormInput label="Payment Amount" name="payment_amount" value={form.payment_amount} onChange={onChange} invalid={!!errors.payment_amount} />{renderError('payment_amount')}</CCol>
+              <CCol md={4}><CFormInput type="date" label="Payment Due Date" name="payment_due_date" value={form.payment_due_date} onChange={onChange} invalid={!!errors.payment_due_date} />{renderError('payment_due_date')}</CCol>
+              <CCol md={4}><CFormInput label="Deducting Bank" name="deducting_bank" value={form.deducting_bank} onChange={onChange} invalid={!!errors.deducting_bank} />{renderError('deducting_bank')}</CCol>
             </>
           )}
 
-          <CCol md={6}><CFormInput type="date" label="Start Date" name="start_date" value={form.start_date} onChange={onChange} /></CCol>
-          <CCol md={6}><CFormInput type="date" label="Expiry Date" name="expiry_date" value={form.expiry_date} onChange={onChange} /></CCol>
+          <CCol md={6}><CFormInput type="date" label="Start Date" name="start_date" value={form.start_date} onChange={onChange} invalid={!!errors.start_date} />{renderError('start_date')}</CCol>
+          <CCol md={6}><CFormInput type="date" label="Expiry Date" name="expiry_date" value={form.expiry_date} onChange={onChange} invalid={!!errors.expiry_date} />{renderError('expiry_date')}</CCol>
 
           {showVisibilityDetail && form.visibility === AnnouncementVisibility.SPECIFIC_CLIENT && (
             <CCol md={12}>
@@ -262,7 +367,9 @@ const AnnouncementEditor = ({ visible, onClose, onSave, form, setForm, saving, i
                 value={form.selected_client}
                 onChange={onChange}
                 className="text-dark"
+                invalid={!!errors.selected_client}
               />
+              {renderError('selected_client')}
             </CCol>
           )}
 
@@ -276,7 +383,9 @@ const AnnouncementEditor = ({ visible, onClose, onSave, form, setForm, saving, i
                 value={form.selected_teams_text}
                 onChange={onChange}
                 className="text-dark"
+                invalid={!!errors.selected_teams_text}
               />
+              {renderError('selected_teams_text')}
             </CCol>
           )}
 
@@ -290,7 +399,9 @@ const AnnouncementEditor = ({ visible, onClose, onSave, form, setForm, saving, i
                 value={form.selected_designations_text}
                 onChange={onChange}
                 className="text-dark"
+                invalid={!!errors.selected_designations_text}
               />
+              {renderError('selected_designations_text')}
             </CCol>
           )}
 
@@ -342,6 +453,7 @@ const AnnouncementsHub = () => {
   const [editorOpen, setEditorOpen] = useState(false)
   const [editorForm, setEditorForm] = useState({ ...emptyForm })
   const [message, setMessage] = useState({ visible: false, color: 'success', text: '' })
+  const [errors, setErrors] = useState({})
 
   const load = async () => {
     setLoading(true)
@@ -383,23 +495,97 @@ const AnnouncementsHub = () => {
   const featured = filtered.slice(0, 8)
 
   const onCreate = () => {
+    setErrors({})
     setEditorForm({ ...emptyForm })
     setEditorOpen(true)
   }
 
   const onEdit = (item) => {
+    setErrors({})
     setEditorForm(fromItem(item))
     setEditorOpen(true)
   }
 
   const onSave = async () => {
-    if (!editorForm.title) {
-      setMessage({ visible: true, color: 'danger', text: 'Title is required.' })
-      return
+    const validateForm = () => {
+      const newErrors = {}
+      
+      const fieldLabel = (key) =>
+        key
+          .replace(/_text$/g, '')
+          .replace(/_/g, ' ')
+          .replace(/\b\w/g, (c) => c.toUpperCase())
+
+      if (!editorForm.title?.trim()) {
+        newErrors.title = 'Title is required'
+      } else {
+        if (!/^[A-Za-z0-9 .,&\-()]*$/.test(editorForm.title)) {
+          newErrors.title = 'Title can only contain letters, numbers, spaces, and basic punctuation: .,&-()'
+        } else if (editorForm.title.length > 100) {
+          newErrors.title = 'Title must not exceed 100 characters'
+        } else {
+          const isDuplicate = (items || []).some(
+            (item) =>
+              item.title?.trim().toLowerCase() === editorForm.title.trim().toLowerCase() &&
+              item.id !== editorForm.id
+          )
+          if (isDuplicate) {
+            newErrors.title = 'An announcement with this title already exists'
+          }
+        }
+      }
+
+      if (!editorForm.description?.trim()) newErrors.description = 'Description is required'
+      if (!editorForm.start_date) newErrors.start_date = 'Start date is required'
+      if (!editorForm.expiry_date) newErrors.expiry_date = 'Expiry date is required'
+      
+      if (editorForm.start_date && editorForm.expiry_date && editorForm.expiry_date < editorForm.start_date) {
+        newErrors.expiry_date = 'Expiry date must be after start date'
+      }
+
+      const showVisibilityDetail = [
+        AnnouncementVisibility.SPECIFIC_CLIENT,
+        AnnouncementVisibility.SPECIFIC_TEAM,
+        AnnouncementVisibility.SELECTED_DESIGNATIONS,
+      ].includes(editorForm.visibility)
+
+      if (showVisibilityDetail) {
+        if (editorForm.visibility === AnnouncementVisibility.SPECIFIC_CLIENT && !editorForm.selected_client?.trim()) {
+          newErrors.selected_client = 'Client UID is required'
+        }
+        if (editorForm.visibility === AnnouncementVisibility.SPECIFIC_TEAM && !editorForm.selected_teams_text?.trim()) {
+          newErrors.selected_teams_text = 'Selected teams are required'
+        }
+        if (editorForm.visibility === AnnouncementVisibility.SELECTED_DESIGNATIONS && !editorForm.selected_designations_text?.trim()) {
+          newErrors.selected_designations_text = 'Selected designations are required'
+        }
+      }
+
+      if (editorForm.category === AnnouncementCategory.VENTURE) {
+        if (!editorForm.venture_name?.trim()) newErrors.venture_name = 'Venture name is required'
+        if (!editorForm.launch_date) newErrors.launch_date = 'Launch date is required'
+        if (!editorForm.location?.trim()) newErrors.location = 'Location is required'
+        if (!editorForm.cta_text?.trim()) newErrors.cta_text = 'CTA button text is required'
+        if (!editorForm.cta_url?.trim()) newErrors.cta_url = 'CTA URL is required'
+      } else if (editorForm.category === AnnouncementCategory.OFFER) {
+        if (!editorForm.offer_description?.trim()) newErrors.offer_description = 'Offer description is required'
+        if (!editorForm.target_required?.trim()) newErrors.target_required = 'Target is required'
+        if (!editorForm.reward_details?.trim()) newErrors.reward_details = 'Reward details are required'
+      } else if (editorForm.category === AnnouncementCategory.PAYMENT) {
+        if (!editorForm.client_name?.trim()) newErrors.client_name = 'Client name is required'
+        if (!editorForm.project?.trim()) newErrors.project = 'Project is required'
+        if (!editorForm.plot_number?.trim()) newErrors.plot_number = 'Plot number is required'
+        if (!editorForm.payment_amount?.trim()) newErrors.payment_amount = 'Payment amount is required'
+        if (!editorForm.payment_due_date) newErrors.payment_due_date = 'Payment due date is required'
+        if (!editorForm.deducting_bank?.trim()) newErrors.deducting_bank = 'Deducting bank is required'
+      }
+
+      setErrors(newErrors)
+      return Object.keys(newErrors).length === 0
     }
 
-    if (editorForm.expiry_date && editorForm.start_date && editorForm.expiry_date < editorForm.start_date) {
-      setMessage({ visible: true, color: 'danger', text: 'Expiry date must be after start date.' })
+    if (!validateForm()) {
+      setMessage({ visible: true, color: 'danger', text: 'Please fill in all required details.' })
       return
     }
 
@@ -580,12 +766,18 @@ const AnnouncementsHub = () => {
 
       <AnnouncementEditor
         visible={editorOpen}
-        onClose={() => setEditorOpen(false)}
+        onClose={() => {
+          setEditorOpen(false)
+          setErrors({})
+        }}
         onSave={onSave}
         form={editorForm}
         setForm={setEditorForm}
+        errors={errors}
+        setErrors={setErrors}
         saving={saving}
         isAdmin={isAdmin}
+        items={items}
       />
     </CContainer>
   )

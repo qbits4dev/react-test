@@ -70,14 +70,9 @@ const GetClients = () => {
     setLoading(true)
     try {
       let rawUsersList = []
-      if (viewType === 'leads') {
-        const userRes = await fetch(`${globalThis.apiBaseUrl}/users/cl000015`)
-        const u = await userRes.json()
-        if (u && (u.success || u.u_id)) {
-          rawUsersList = [u]
-        }
-      } else {
-        const res = await fetch(`${globalThis.apiBaseUrl}/users/customers`)
+      const urlSegment = viewType === 'leads' ? 'clients' : 'customers'
+      const res = await fetch(`${globalThis.apiBaseUrl}/users/${urlSegment}`)
+      if (res.ok) {
         const listData = await res.json()
         
         let userDetails = []
@@ -93,7 +88,7 @@ const GetClients = () => {
             userDetails = listData
           }
         } else if (listData && typeof listData === 'object') {
-          const usersArray = listData.users || listData.customers || listData.data || []
+          const usersArray = listData.users || listData.clients || listData.customers || listData.data || []
           if (Array.isArray(usersArray)) {
             if (typeof usersArray[0] === 'string' || typeof usersArray[0] === 'number') {
               userDetails = await Promise.all(
@@ -281,9 +276,12 @@ const GetClients = () => {
   const handleDelete = async () => {
     if (!selectedClient) return
     try {
-      const res = await fetch(`${globalThis.apiBaseUrl}/users/${selectedClient.u_id}`, { method: 'DELETE' })
+      const deleteUrl = viewType === 'leads'
+        ? `${globalThis.apiBaseUrl}/users/client/${selectedClient.u_id}`
+        : `${globalThis.apiBaseUrl}/users/${selectedClient.u_id}`
+      const res = await fetch(deleteUrl, { method: 'DELETE' })
       if (!res.ok) throw new Error('delete failed')
-      setMessage({ visible: true, color: 'success', text: 'Lead deleted successfully.' })
+      setMessage({ visible: true, color: 'success', text: `${viewType === 'leads' ? 'Lead' : 'Client'} deleted successfully.` })
       await fetchClients()
     } catch {
       setClients((prev) => prev.filter((c) => c.id !== selectedClient.id))

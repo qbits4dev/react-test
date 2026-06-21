@@ -308,16 +308,28 @@ export default function RegisterClientWizard() {
       }
       console.log('Submitting form data (JSON):', JSON.stringify(jsonObj, null, 2));
       const isConverting = !!form.u_id;
-      const method = isConverting ? 'PATCH' : 'POST';
-      const url = isConverting
-        ? `${globalThis.apiBaseUrl}/users/${form.u_id}`
-        : `${globalThis.apiBaseUrl}/register/client`;
+      const url = `${globalThis.apiBaseUrl}/register/customer`;
 
-      const res = await fetch(url, { method, body: formData });
+      const res = await fetch(url, { method: 'POST', body: formData });
 
       const data = await res.json();
       if (res.ok) {
         setRegisteredUID(data.u_id || data.user_id || form.u_id || 'N/A');
+        
+        if (isConverting) {
+          try {
+            const deleteUrl = `${globalThis.apiBaseUrl}/users/client/${form.u_id}`;
+            const deleteRes = await fetch(deleteUrl, { method: 'DELETE' });
+            if (deleteRes.ok) {
+              console.log(`Converted lead ${form.u_id} deleted successfully.`);
+            } else {
+              console.error(`Failed to delete converted lead ${form.u_id}. Status: ${deleteRes.status}`);
+            }
+          } catch (err) {
+            console.error('Error deleting lead after conversion:', err);
+          }
+        }
+
         setModalMessage(isConverting ? 'Success: Lead converted to client successfully' : 'Success: Client registered successfully');
         setShowModal(true);
         localStorage.removeItem('registerClientForm');

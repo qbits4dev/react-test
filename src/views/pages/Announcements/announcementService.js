@@ -1,5 +1,3 @@
-const STORAGE_KEY = 'crm_announcements_v2'
-
 const CATEGORY = {
   VENTURE: 'venture_launch',
   OFFER: 'target_offer',
@@ -22,114 +20,6 @@ const PRIORITY_WEIGHT = {
   low: 1,
 }
 
-const DUMMY_ANNOUNCEMENTS = [
-  {
-    id: 'ann_demo_venture_1',
-    category: CATEGORY.VENTURE,
-    title: 'Green Valley Premium Villas Launch',
-    venture_name: 'Green Valley Premium Villas',
-    banner_image: 'https://images.unsplash.com/photo-1613977257365-aaae5a9817ff?auto=format&fit=crop&w=1600&q=80',
-    description: 'Experience luxury living with premium gated community villas surrounded by nature and modern amenities.',
-    launch_date: '2026-08-15',
-    location: 'Hyderabad',
-    cta_text: 'Book Site Visit',
-    cta_url: '#/bookvisit',
-    start_date: '2026-06-01',
-    expiry_date: '2026-09-30',
-    visibility: VISIBILITY.BOTH,
-    status: 'published',
-    published: true,
-    reminder_priority: 'high',
-    created_at: '2026-07-20T09:00:00.000Z',
-    updated_at: '2026-07-20T09:00:00.000Z',
-  },
-  {
-    id: 'ann_demo_offer_1',
-    category: CATEGORY.OFFER,
-    title: 'Achieve Rs.50 Lakhs Sales & Win an iPhone',
-    description: 'Agents achieving sales of Rs.50 Lakhs during this quarter will receive an iPhone and additional performance bonus.',
-    offer_description: 'Agents achieving sales of Rs.50 Lakhs during this quarter will receive an iPhone and additional performance bonus.',
-    target_required: 'Rs.50 Lakhs',
-    reward_details: 'iPhone + Cash Bonus',
-    banner_image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1600&q=80',
-    start_date: '2026-06-01',
-    expiry_date: '2026-12-31',
-    visibility: VISIBILITY.BOTH,
-    status: 'published',
-    published: true,
-    reminder_priority: 'high',
-    created_at: '2026-07-01T10:30:00.000Z',
-    updated_at: '2026-07-01T10:30:00.000Z',
-  },
-  {
-    id: 'ann_demo_payment_1',
-    category: CATEGORY.PAYMENT,
-    title: 'Payment Reminder',
-    description: 'Your next installment is due soon. Please ensure sufficient funds are available before the due date.',
-    client_name: 'Sample Client',
-    project: 'Green Valley Phase 2',
-    plot_number: 'A-102',
-    payment_amount: 'Rs.1,50,000',
-    payment_due_date: '2026-08-15',
-    deducting_bank: 'HDFC Bank',
-    banner_image: 'https://images.unsplash.com/photo-1565514020179-026b92b4a2f8?auto=format&fit=crop&w=1600&q=80',
-    start_date: '2026-06-10',
-    expiry_date: '2026-08-20',
-    visibility: VISIBILITY.BOTH,
-    status: 'published',
-    published: true,
-    reminder_priority: 'high',
-    created_at: '2026-08-01T07:20:00.000Z',
-    updated_at: '2026-08-01T07:20:00.000Z',
-  },
-  {
-    id: 'ann_demo_general_1',
-    category: CATEGORY.GENERAL,
-    title: 'Independence Day Special Booking Offer',
-    description: 'Book any plot during the Independence Day campaign and receive exclusive registration benefits.',
-    banner_image: 'https://images.unsplash.com/photo-1460472178825-e5240623afd5?auto=format&fit=crop&w=1600&q=80',
-    start_date: '2026-06-01',
-    expiry_date: '2026-08-20',
-    visibility: VISIBILITY.BOTH,
-    status: 'published',
-    published: true,
-    reminder_priority: 'medium',
-    created_at: '2026-08-01T06:00:00.000Z',
-    updated_at: '2026-08-01T06:00:00.000Z',
-  },
-  {
-    id: 'ann_demo_team_1',
-    category: CATEGORY.OFFER,
-    title: 'Team Challenge - South Zone Sprint',
-    offer_description: 'Top team in South Zone gets quarterly recognition and team retreat sponsorship.',
-    target_required: '30 combined bookings',
-    reward_details: 'Team retreat sponsorship',
-    start_date: '2026-06-20',
-    expiry_date: '2026-09-10',
-    visibility: VISIBILITY.SPECIFIC_TEAM,
-    selected_teams: ['Sales Team A', 'Marketing Team'],
-    status: 'scheduled',
-    published: true,
-    reminder_priority: 'medium',
-    created_at: '2026-06-15T08:30:00.000Z',
-    updated_at: '2026-06-15T08:30:00.000Z',
-  },
-  {
-    id: 'ann_demo_expired_1',
-    category: CATEGORY.GENERAL,
-    title: 'Financial Year Policy Update (Archived)',
-    description: 'Policy update published for FY closing and now archived for audit history.',
-    start_date: '2026-04-01',
-    expiry_date: '2026-05-01',
-    visibility: VISIBILITY.BOTH,
-    status: 'published',
-    published: true,
-    reminder_priority: 'low',
-    created_at: '2026-03-31T06:00:00.000Z',
-    updated_at: '2026-05-01T06:00:00.000Z',
-  },
-]
-
 const safeJson = async (res) => {
   try {
     return await res.json()
@@ -141,21 +31,6 @@ const safeJson = async (res) => {
 const nowIso = () => new Date().toISOString()
 
 const uid = () => `ann_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`
-
-const readLocal = () => {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return []
-    const parsed = JSON.parse(raw)
-    return Array.isArray(parsed) ? parsed : []
-  } catch {
-    return []
-  }
-}
-
-const writeLocal = (items) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
-}
 
 const normalize = (item) => {
   const details = item.category_details || {}
@@ -289,29 +164,7 @@ const roleMatchesVisibility = (item, role, user) => {
   return false
 }
 
-const upsertLocal = (record) => {
-  const items = readLocal()
-  const idx = items.findIndex((i) => i.id === record.id)
-  if (idx >= 0) items[idx] = record
-  else items.unshift(record)
-  writeLocal(items)
-  return record
-}
-
-const removeLocal = (id) => {
-  const items = readLocal().filter((item) => item.id !== id)
-  writeLocal(items)
-}
-
-const ensureSeedData = () => {
-  const existing = readLocal()
-  if (existing.length > 0) return existing
-  const seed = DUMMY_ANNOUNCEMENTS.map(normalize)
-  writeLocal(seed)
-  return seed
-}
-
-const endpoint = () => `${globalThis.apiBaseUrl}/announcements`
+const endpoint = () => `${globalThis.apiBaseUrl}/announcements/`
 
 export const AnnouncementCategory = CATEGORY
 export const AnnouncementVisibility = VISIBILITY
@@ -322,14 +175,12 @@ export const listAnnouncementsForAdmin = async () => {
     if (res.ok) {
       const data = await safeJson(res)
       const list = Array.isArray(data) ? data : data?.items || []
-      if (list.length > 0) {
-        return sortByPriorityAndDate(list.map(normalize))
-      }
+      return sortByPriorityAndDate(list.map(normalize))
     }
-  } catch {
-    // local fallback
+  } catch (err) {
+    console.error('Error fetching announcements:', err)
   }
-  return sortByPriorityAndDate(ensureSeedData().map(normalize))
+  return []
 }
 
 export const listAnnouncementsForUser = async ({ role, user }) => {
@@ -351,53 +202,37 @@ export const createAnnouncement = async (payload) => {
     published: Boolean(payload.published),
   })
 
-  try {
-    const res = await fetch(endpoint(), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(serialize(record)),
-    })
-    if (res.ok) {
-      const data = await safeJson(res)
-      return normalize(data || record)
-    }
-  } catch {
-    // local fallback
+  const res = await fetch(endpoint(), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(serialize(record)),
+  })
+  if (res.ok) {
+    const data = await safeJson(res)
+    return normalize(data || record)
   }
-
-  return upsertLocal(record)
+  throw new Error('Failed to create announcement')
 }
 
 export const updateAnnouncement = async (id, payload) => {
-  const existing = readLocal().find((item) => item.id === id) || { id }
-  const record = normalize({ ...existing, ...payload, id, updated_at: nowIso() })
+  const record = normalize({ ...payload, id, updated_at: nowIso() })
 
-  try {
-    const res = await fetch(`${endpoint()}/${encodeURIComponent(id)}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(serialize(record)),
-    })
-    if (res.ok) {
-      const data = await safeJson(res)
-      return normalize(data || record)
-    }
-  } catch {
-    // local fallback
+  const res = await fetch(`${globalThis.apiBaseUrl}/announcements/${encodeURIComponent(id)}/`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(serialize(record)),
+  })
+  if (res.ok) {
+    const data = await safeJson(res)
+    return normalize(data || record)
   }
-
-  return upsertLocal(record)
+  throw new Error('Failed to update announcement')
 }
 
 export const deleteAnnouncement = async (id) => {
-  try {
-    const res = await fetch(`${endpoint()}/${encodeURIComponent(id)}`, { method: 'DELETE' })
-    if (res.ok) return true
-  } catch {
-    // local fallback
-  }
-  removeLocal(id)
-  return true
+  const res = await fetch(`${globalThis.apiBaseUrl}/announcements/${encodeURIComponent(id)}/`, { method: 'DELETE' })
+  if (res.ok) return true
+  throw new Error('Failed to delete announcement')
 }
 
 export const publishAnnouncement = async (id) =>
