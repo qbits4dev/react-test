@@ -43,7 +43,102 @@ export default function LeadForm() {
   const [plots, setPlots] = useState([])
   const [projectsLoading, setProjectsLoading] = useState(false)
   const [plotsLoading, setPlotsLoading] = useState(false)
+  const [agentsAndAdmins, setAgentsAndAdmins] = useState([])
   const minVisitDate = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+
+  useEffect(() => {
+    const fetchAgentsAndAdmins = async () => {
+      try {
+        const resAgents = await fetch(`${globalThis.apiBaseUrl}/users/`)
+        let agentUserIds = []
+        if (resAgents.ok) {
+          const agentData = await resAgents.json()
+          if (agentData?.success && Array.isArray(agentData.users)) {
+            agentUserIds = agentData.users
+          } else if (Array.isArray(agentData)) {
+            agentUserIds = agentData
+          }
+        }
+
+        let adminData = null
+        try {
+          const resAdmins = await fetch(`${globalThis.apiBaseUrl}/users/admin`)
+          if (resAdmins.ok) {
+            adminData = await resAdmins.json()
+          } else {
+            const resAdminsBackup = await fetch(`${globalThis.apiBaseUrl}/users/admin/`)
+            if (resAdminsBackup.ok) {
+              adminData = await resAdminsBackup.json()
+            }
+          }
+        } catch (e) {
+          console.error('Failed to fetch admin list without trailing slash, trying backup:', e)
+          try {
+            const resAdminsBackup = await fetch(`${globalThis.apiBaseUrl}/users/admin/`)
+            if (resAdminsBackup.ok) {
+              adminData = await resAdminsBackup.json()
+            }
+          } catch (errBackup) {
+            console.error('Backup admin fetch failed:', errBackup)
+          }
+        }
+
+        let adminUserIds = []
+        let directAdminDetails = []
+        if (adminData) {
+          const rawAdmins = adminData?.users || adminData?.admins || adminData || []
+          if (Array.isArray(rawAdmins)) {
+            rawAdmins.forEach(item => {
+              if (typeof item === 'string' || typeof item === 'number') {
+                adminUserIds.push(String(item))
+              } else if (item && typeof item === 'object') {
+                directAdminDetails.push(item)
+              }
+            })
+          }
+        }
+
+        const idsToFetch = Array.from(new Set([...agentUserIds, ...adminUserIds]))
+        
+        const fetchedDetails = await Promise.all(
+          idsToFetch.map(async (uId) => {
+            try {
+              const userRes = await fetch(`${globalThis.apiBaseUrl}/users/${uId}`)
+              if (userRes.ok) {
+                return await userRes.json()
+              }
+            } catch (e) {
+              console.error(e)
+            }
+            return null
+          })
+        )
+
+        const allDetails = [...fetchedDetails, ...directAdminDetails]
+
+        const filtered = allDetails.filter(
+          (u) => u && (u.success || u.u_id || u.id) && (String(u.role || '').toLowerCase() === 'agent' || String(u.role || '').toLowerCase() === 'admin')
+        ).map((u) => ({
+          u_id: u.u_id || u.id,
+          name: `${u.first_name || ''} ${u.last_name || ''}`.trim() || u.u_id
+        }))
+
+        const uniqueFiltered = []
+        const seen = new Set()
+        for (const item of filtered) {
+          if (item.u_id && !seen.has(item.u_id)) {
+            seen.add(item.u_id)
+            uniqueFiltered.push(item)
+          }
+        }
+
+        setAgentsAndAdmins(uniqueFiltered)
+      } catch (err) {
+        console.error('Error fetching agents/admins:', err)
+      }
+    }
+    fetchAgentsAndAdmins()
+  }, [])
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -99,7 +194,7 @@ export default function LeadForm() {
     }
 
     if (!formData.agentId) {
-      errs.agentId = 'Agent ID missing from session'
+      errs.agentId = 'Please select an agent / admin'
     }
 
     if (!validateIndianMobile(formData.phone)) {
@@ -285,13 +380,21 @@ export default function LeadForm() {
               )}
 
               {/* Agent ID */}
-              <CFormLabel>Agent ID</CFormLabel>
-              <CFormInput
+              <CFormLabel>Agent / Admin</CFormLabel>
+              <CFormSelect
                 name="agentId"
                 value={formData.agentId}
-                readOnly
+                onChange={handleChange}
+                onBlur={handleBlur}
                 invalid={touched.agentId && !!errors.agentId}
-              />
+              >
+                <option value="">Select Agent / Admin</option>
+                {agentsAndAdmins.map((agent) => (
+                  <option key={agent.u_id} value={agent.u_id}>
+                    {agent.name} ({agent.u_id})
+                  </option>
+                ))}
+              </CFormSelect>
               <CFormFeedback invalid>{errors.agentId}</CFormFeedback>
               <br />
 

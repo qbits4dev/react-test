@@ -116,6 +116,102 @@ export default function SiteVisitsTable() {
     const [visitToDelete, setVisitToDelete] = useState(null)
     const [deleting, setDeleting] = useState(false)
 
+    const [agentsAndAdmins, setAgentsAndAdmins] = useState([])
+
+    useEffect(() => {
+        const fetchAgentsAndAdmins = async () => {
+            try {
+                const resAgents = await fetch(`${globalThis.apiBaseUrl}/users/`)
+                let agentUserIds = []
+                if (resAgents.ok) {
+                    const agentData = await resAgents.json()
+                    if (agentData?.success && Array.isArray(agentData.users)) {
+                        agentUserIds = agentData.users
+                    } else if (Array.isArray(agentData)) {
+                        agentUserIds = agentData
+                    }
+                }
+
+                let adminData = null
+                try {
+                    const resAdmins = await fetch(`${globalThis.apiBaseUrl}/users/admin`)
+                    if (resAdmins.ok) {
+                        adminData = await resAdmins.json()
+                    } else {
+                        const resAdminsBackup = await fetch(`${globalThis.apiBaseUrl}/users/admin/`)
+                        if (resAdminsBackup.ok) {
+                            adminData = await resAdminsBackup.json()
+                        }
+                    }
+                } catch (e) {
+                    console.error('Failed to fetch admin list without trailing slash, trying backup:', e)
+                    try {
+                        const resAdminsBackup = await fetch(`${globalThis.apiBaseUrl}/users/admin/`)
+                        if (resAdminsBackup.ok) {
+                            adminData = await resAdminsBackup.json()
+                        }
+                    } catch (errBackup) {
+                        console.error('Backup admin fetch failed:', errBackup)
+                    }
+                }
+
+                let adminUserIds = []
+                let directAdminDetails = []
+                if (adminData) {
+                    const rawAdmins = adminData?.users || adminData?.admins || adminData || []
+                    if (Array.isArray(rawAdmins)) {
+                        rawAdmins.forEach(item => {
+                            if (typeof item === 'string' || typeof item === 'number') {
+                                adminUserIds.push(String(item))
+                            } else if (item && typeof item === 'object') {
+                                directAdminDetails.push(item)
+                            }
+                        })
+                    }
+                }
+
+                const idsToFetch = Array.from(new Set([...agentUserIds, ...adminUserIds]))
+                
+                const fetchedDetails = await Promise.all(
+                    idsToFetch.map(async (uId) => {
+                        try {
+                            const userRes = await fetch(`${globalThis.apiBaseUrl}/users/${uId}`)
+                            if (userRes.ok) {
+                                return await userRes.json()
+                            }
+                        } catch (e) {
+                            console.error(e)
+                        }
+                        return null
+                    })
+                )
+
+                const allDetails = [...fetchedDetails, ...directAdminDetails]
+
+                const filtered = allDetails.filter(
+                    (u) => u && (u.success || u.u_id || u.id) && (String(u.role || '').toLowerCase() === 'agent' || String(u.role || '').toLowerCase() === 'admin')
+                ).map((u) => ({
+                    u_id: u.u_id || u.id,
+                    name: `${u.first_name || ''} ${u.last_name || ''}`.trim() || u.u_id
+                }))
+
+                const uniqueFiltered = []
+                const seen = new Set()
+                for (const item of filtered) {
+                    if (item.u_id && !seen.has(item.u_id)) {
+                        seen.add(item.u_id)
+                        uniqueFiltered.push(item)
+                    }
+                }
+
+                setAgentsAndAdmins(uniqueFiltered)
+            } catch (err) {
+                console.error('Error fetching agents/admins:', err)
+            }
+        }
+        fetchAgentsAndAdmins()
+    }, [])
+
     useEffect(() => {
         const fetchVisits = async () => {
             try {
@@ -142,7 +238,7 @@ export default function SiteVisitsTable() {
         }
         // If admin, show all, but filter if searchAgentId is entered
         if (userRole === 'admin' && searchAgentId.trim() !== '') {
-            return String(visit.agent_id || '').toLowerCase().includes(searchAgentId.toLowerCase().trim())
+            return String(visit.agent_id || '').toLowerCase() === String(searchAgentId || '').toLowerCase()
         }
         return true
     })
@@ -219,13 +315,18 @@ export default function SiteVisitsTable() {
                     {userRole === 'admin' && (
                         <CRow className="mb-4">
                             <CCol md={6} lg={4}>
-                                <CFormLabel className="fw-semibold text-muted">Search Agent visits (Agent ID)</CFormLabel>
-                                <CFormInput
-                                    type="text"
-                                    placeholder="Enter Agent ID (e.g. AG123456)"
+                                <CFormLabel className="fw-semibold text-muted">Filter by Agent / Admin</CFormLabel>
+                                <CFormSelect
                                     value={searchAgentId}
                                     onChange={(e) => setSearchAgentId(e.target.value)}
-                                />
+                                >
+                                    <option value="">All Agents & Admins</option>
+                                    {agentsAndAdmins.map((item) => (
+                                        <option key={item.u_id} value={item.u_id}>
+                                            {item.name} ({item.u_id})
+                                        </option>
+                                    ))}
+                                </CFormSelect>
                             </CCol>
                         </CRow>
                     )}
@@ -315,8 +416,15 @@ export default function SiteVisitsTable() {
                                 <CFormInput name="customer_id" value={selectedVisit.customer_id || ''} onChange={handleEditChange} />
                             </CCol>
                             <CCol md={6}>
-                                <CFormLabel>Agent ID</CFormLabel>
-                                <CFormInput name="agent_id" value={selectedVisit.agent_id || ''} onChange={handleEditChange} />
+                                <CFormLabel>Agent / Admin</CFormLabel>
+                                <CFormSelect name="agent_id" value={selectedVisit.agent_id || ''} onChange={handleEditChange}>
+                                    <option value="">Select Agent / Admin</option>
+                                    {agentsAndAdmins.map((item) => (
+                                        <option key={item.u_id} value={item.u_id}>
+                                            {item.name} ({item.u_id})
+                                        </option>
+                                    ))}
+                                </CFormSelect>
                             </CCol>
                             <CCol md={6}>
                                 <CFormLabel>Phone</CFormLabel>

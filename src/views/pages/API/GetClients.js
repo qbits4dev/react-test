@@ -65,6 +65,9 @@ const GetClients = () => {
 
   const [designations, setDesignations] = useState([])
   const [designationError, setDesignationError] = useState('')
+  const [projects, setProjects] = useState([])
+  const [plots, setPlots] = useState([])
+  const [agentsAndAdmins, setAgentsAndAdmins] = useState([])
 
   const fetchClients = async () => {
     setLoading(true)
@@ -171,6 +174,139 @@ const GetClients = () => {
       .catch(() => setDesignationError('Failed to fetch designations'))
   }, [])
 
+  useEffect(() => {
+    if (!editModalVisible || viewType !== 'leads') return
+
+    const fetchProjects = async () => {
+      try {
+        const res = await fetch(`${globalThis.apiBaseUrl}/projects/`)
+        if (res.ok) {
+          const data = await res.json()
+          const list = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : [])
+          setProjects(list)
+        }
+      } catch (err) {
+        console.error('Error fetching projects:', err)
+      }
+    }
+
+    const fetchAgentsAndAdmins = async () => {
+      try {
+        const resAgents = await fetch(`${globalThis.apiBaseUrl}/users/`)
+        let agentUserIds = []
+        if (resAgents.ok) {
+          const agentData = await resAgents.json()
+          if (agentData?.success && Array.isArray(agentData.users)) {
+            agentUserIds = agentData.users
+          } else if (Array.isArray(agentData)) {
+            agentUserIds = agentData
+          }
+        }
+
+        let adminData = null
+        try {
+          const resAdmins = await fetch(`${globalThis.apiBaseUrl}/users/admin`)
+          if (resAdmins.ok) {
+            adminData = await resAdmins.json()
+          } else {
+            const resAdminsBackup = await fetch(`${globalThis.apiBaseUrl}/users/admin/`)
+            if (resAdminsBackup.ok) {
+              adminData = await resAdminsBackup.json()
+            }
+          }
+        } catch (e) {
+          console.error('Failed to fetch admin list without trailing slash, trying backup:', e)
+          try {
+            const resAdminsBackup = await fetch(`${globalThis.apiBaseUrl}/users/admin/`)
+            if (resAdminsBackup.ok) {
+              adminData = await resAdminsBackup.json()
+            }
+          } catch (errBackup) {
+            console.error('Backup admin fetch failed:', errBackup)
+          }
+        }
+
+        let adminUserIds = []
+        let directAdminDetails = []
+        if (adminData) {
+          const rawAdmins = adminData?.users || adminData?.admins || adminData || []
+          if (Array.isArray(rawAdmins)) {
+            rawAdmins.forEach(item => {
+              if (typeof item === 'string' || typeof item === 'number') {
+                adminUserIds.push(String(item))
+              } else if (item && typeof item === 'object') {
+                directAdminDetails.push(item)
+              }
+            })
+          }
+        }
+
+        const idsToFetch = Array.from(new Set([...agentUserIds, ...adminUserIds]))
+        
+        const fetchedDetails = await Promise.all(
+          idsToFetch.map(async (uId) => {
+            try {
+              const userRes = await fetch(`${globalThis.apiBaseUrl}/users/${uId}`)
+              if (userRes.ok) {
+                return await userRes.json()
+              }
+            } catch (e) {
+              console.error(e)
+            }
+            return null
+          })
+        )
+
+        const allDetails = [...fetchedDetails, ...directAdminDetails]
+
+        const filtered = allDetails.filter(
+          (u) => u && (u.success || u.u_id || u.id) && (String(u.role || '').toLowerCase() === 'agent' || String(u.role || '').toLowerCase() === 'admin')
+        ).map((u) => ({
+          u_id: u.u_id || u.id,
+          name: `${u.first_name || ''} ${u.last_name || ''}`.trim() || u.u_id
+        }))
+
+        const uniqueFiltered = []
+        const seen = new Set()
+        for (const item of filtered) {
+          if (item.u_id && !seen.has(item.u_id)) {
+            seen.add(item.u_id)
+            uniqueFiltered.push(item)
+          }
+        }
+
+        setAgentsAndAdmins(uniqueFiltered)
+      } catch (err) {
+        console.error('Error fetching agents/admins:', err)
+      }
+    }
+
+    fetchProjects()
+    fetchAgentsAndAdmins()
+  }, [editModalVisible, viewType])
+
+  useEffect(() => {
+    if (!editModalVisible || viewType !== 'leads' || !selectedClient?.interested_project) {
+      setPlots([])
+      return
+    }
+
+    const fetchPlots = async () => {
+      try {
+        const res = await fetch(`${globalThis.apiBaseUrl}/projects/plots?project_name=${encodeURIComponent(selectedClient.interested_project)}`)
+        if (res.ok) {
+          const data = await res.json()
+          const list = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : [])
+          setPlots(list)
+        }
+      } catch (err) {
+        console.error('Error fetching plots:', err)
+      }
+    }
+
+    fetchPlots()
+  }, [editModalVisible, viewType, selectedClient?.interested_project])
+
   const processedClients = useMemo(() => {
     let filtered = [...clients]
 
@@ -238,10 +374,22 @@ const GetClients = () => {
       nextValue = value.replace(/[^A-Za-z ]/g, '').slice(0, 60)
     } else if (name === 'email') {
       nextValue = value.replace(/[^A-Za-z0-9.@_\-+]/g, '').slice(0, 100)
-    } else if (['mobile', 'nominee_mobile', 'adhar', 'pincode', 'account_number', 'income'].includes(name)) {
+    } else if (['mobile', 'nominee_mobile', 'adhar', 'pincode', 'account_number', 'income', 'phone'].includes(name)) {
       nextValue = value.replace(/[^0-9]/g, '')
     }
-    setSelectedClient((prev) => ({ ...prev, [name]: nextValue }))
+    
+    setSelectedClient((prev) => {
+      const updated = { ...prev, [name]: nextValue }
+      if (name === 'interested_project') {
+        updated.interested_plot = ''
+      }
+      if (name === 'mobile') {
+        updated.phone = nextValue
+      } else if (name === 'phone') {
+        updated.mobile = nextValue
+      }
+      return updated
+    })
   }
 
   const handleSave = async () => {
@@ -249,10 +397,14 @@ const GetClients = () => {
     console.log('handleSave initiated with selectedClient:', selectedClient)
     setSaving(true)
     try {
-      const url = `${globalThis.apiBaseUrl}/users/${selectedClient.u_id}`
-      console.log('Hitting PATCH API:', url)
+      const isLead = viewType === 'leads'
+      const url = isLead
+        ? `${globalThis.apiBaseUrl}/users/client/${selectedClient.u_id}`
+        : `${globalThis.apiBaseUrl}/users/${selectedClient.u_id}`
+      const method = isLead ? 'PUT' : 'PATCH'
+      console.log(`Hitting ${method} API:`, url)
       const res = await fetch(url, {
-        method: 'PATCH',
+        method: method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(selectedClient),
       })
@@ -260,7 +412,7 @@ const GetClients = () => {
       console.log('API Response status:', res.status)
       if (!res.ok) throw new Error('update failed')
 
-      setMessage({ visible: true, color: 'success', text: 'Lead updated successfully.' })
+      setMessage({ visible: true, color: 'success', text: `${isLead ? 'Lead' : 'Client'} updated successfully.` })
       setEditModalVisible(false)
       await fetchClients()
     } catch {
@@ -430,30 +582,86 @@ const GetClients = () => {
 
       <CModal visible={editModalVisible} onClose={() => setEditModalVisible(false)} size="lg" backdrop="static">
         <CModalHeader>
-          <CModalTitle>Edit Lead</CModalTitle>
+          <CModalTitle>{viewType === 'leads' ? 'Edit Lead' : 'Edit Client'}</CModalTitle>
         </CModalHeader>
         <CModalBody>
           {selectedClient && (
             <CRow className="g-3">
-              {editableKeys.map((key) => (
-                <CCol md={6} key={key}>
-                  {key === 'designation' ? (
-                    <>
-                      <CFormSelect label={fieldLabel(key)} name={key} value={selectedClient[key] || ''} onChange={handleEditChange}>
-                        <option value="">Select Designation</option>
-                        {designations.map((d, idx) => (
-                          <option key={idx} value={d.id || d.name}>
-                            {d.name}
-                          </option>
-                        ))}
-                      </CFormSelect>
-                      {designationError && <small className="text-danger">{designationError}</small>}
-                    </>
-                  ) : (
-                    <CFormInput label={fieldLabel(key)} name={key} value={selectedClient[key] || ''} onChange={handleEditChange} />
-                  )}
-                </CCol>
-              ))}
+              {viewType === 'leads' ? (
+                <>
+                  <CCol md={6}>
+                    <CFormInput label="First Name *" name="first_name" value={selectedClient.first_name || ''} onChange={handleEditChange} required />
+                  </CCol>
+                  <CCol md={6}>
+                    <CFormInput label="Last Name *" name="last_name" value={selectedClient.last_name || ''} onChange={handleEditChange} required />
+                  </CCol>
+                  <CCol md={6}>
+                    <CFormInput label="Password" name="password" type="password" value={selectedClient.password || ''} onChange={handleEditChange} />
+                  </CCol>
+                  <CCol md={6}>
+                    <CFormInput label="Email" name="email" type="email" value={selectedClient.email || ''} onChange={handleEditChange} />
+                  </CCol>
+                  <CCol md={6}>
+                    <CFormInput label="Phone *" name="mobile" value={selectedClient.mobile || ''} onChange={handleEditChange} required />
+                  </CCol>
+                  <CCol md={6}>
+                    <CFormSelect label="Reference Agent" name="reference_agent" value={selectedClient.reference_agent || ''} onChange={handleEditChange}>
+                      <option value="">Select Reference Agent / Admin</option>
+                      {agentsAndAdmins.map((item) => (
+                        <option key={item.u_id} value={item.u_id}>
+                          {item.name} ({item.u_id})
+                        </option>
+                      ))}
+                    </CFormSelect>
+                  </CCol>
+                  <CCol md={6}>
+                    <CFormSelect label="Interested Project" name="interested_project" value={selectedClient.interested_project || ''} onChange={handleEditChange}>
+                      <option value="">Select Interested Project</option>
+                      {projects.map((proj) => (
+                        <option key={proj.id || proj.name} value={proj.name}>
+                          {proj.name}
+                        </option>
+                      ))}
+                    </CFormSelect>
+                  </CCol>
+                  <CCol md={6}>
+                    <CFormSelect
+                      label="Interested Plot"
+                      name="interested_plot"
+                      value={selectedClient.interested_plot || ''}
+                      onChange={handleEditChange}
+                      disabled={!selectedClient.interested_project}
+                    >
+                      <option value="">Select Interested Plot</option>
+                      {plots.map((plot) => (
+                        <option key={plot.plot_number} value={plot.plot_number}>
+                          Plot {plot.plot_number} ({plot.status || 'available'})
+                        </option>
+                      ))}
+                    </CFormSelect>
+                  </CCol>
+                </>
+              ) : (
+                editableKeys.map((key) => (
+                  <CCol md={6} key={key}>
+                    {key === 'designation' ? (
+                      <>
+                        <CFormSelect label={fieldLabel(key)} name={key} value={selectedClient[key] || ''} onChange={handleEditChange}>
+                          <option value="">Select Designation</option>
+                          {designations.map((d, idx) => (
+                            <option key={idx} value={d.id || d.name}>
+                              {d.name}
+                            </option>
+                          ))}
+                        </CFormSelect>
+                        {designationError && <small className="text-danger">{designationError}</small>}
+                      </>
+                    ) : (
+                      <CFormInput label={fieldLabel(key)} name={key} value={selectedClient[key] || ''} onChange={handleEditChange} />
+                    )}
+                  </CCol>
+                ))
+              )}
             </CRow>
           )}
         </CModalBody>

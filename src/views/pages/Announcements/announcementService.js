@@ -217,7 +217,7 @@ export const createAnnouncement = async (payload) => {
 export const updateAnnouncement = async (id, payload) => {
   const record = normalize({ ...payload, id, updated_at: nowIso() })
 
-  const res = await fetch(`${globalThis.apiBaseUrl}/announcements/${encodeURIComponent(id)}/`, {
+  const res = await fetch(`${globalThis.apiBaseUrl}/announcements/${encodeURIComponent(id)}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(serialize(record)),
@@ -230,7 +230,7 @@ export const updateAnnouncement = async (id, payload) => {
 }
 
 export const deleteAnnouncement = async (id) => {
-  const res = await fetch(`${globalThis.apiBaseUrl}/announcements/${encodeURIComponent(id)}/`, { method: 'DELETE' })
+  const res = await fetch(`${globalThis.apiBaseUrl}/announcements/${encodeURIComponent(id)}`, { method: 'DELETE' })
   if (res.ok) return true
   throw new Error('Failed to delete announcement')
 }

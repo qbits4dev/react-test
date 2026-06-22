@@ -65,7 +65,6 @@ const Client_Register = () => {
   useEffect(() => {
     const fetchAgentsAndAdmins = async () => {
       try {
-        // Fetch agents list
         const resAgents = await fetch(`${globalThis.apiBaseUrl}/users/`)
         let agentUserIds = []
         if (resAgents.ok) {
@@ -77,12 +76,32 @@ const Client_Register = () => {
           }
         }
 
-        // Fetch admins list
-        const resAdmins = await fetch(`${globalThis.apiBaseUrl}/users/admin`)
+        let adminData = null
+        try {
+          const resAdmins = await fetch(`${globalThis.apiBaseUrl}/users/admin`)
+          if (resAdmins.ok) {
+            adminData = await resAdmins.json()
+          } else {
+            const resAdminsBackup = await fetch(`${globalThis.apiBaseUrl}/users/admin/`)
+            if (resAdminsBackup.ok) {
+              adminData = await resAdminsBackup.json()
+            }
+          }
+        } catch (e) {
+          console.error('Failed to fetch admin list without trailing slash, trying backup:', e)
+          try {
+            const resAdminsBackup = await fetch(`${globalThis.apiBaseUrl}/users/admin/`)
+            if (resAdminsBackup.ok) {
+              adminData = await resAdminsBackup.json()
+            }
+          } catch (errBackup) {
+            console.error('Backup admin fetch failed:', errBackup)
+          }
+        }
+
         let adminUserIds = []
         let directAdminDetails = []
-        if (resAdmins.ok) {
-          const adminData = await resAdmins.json()
+        if (adminData) {
           const rawAdmins = adminData?.users || adminData?.admins || adminData || []
           if (Array.isArray(rawAdmins)) {
             rawAdmins.forEach(item => {
@@ -95,7 +114,6 @@ const Client_Register = () => {
           }
         }
 
-        // Combine IDs to fetch details for
         const idsToFetch = Array.from(new Set([...agentUserIds, ...adminUserIds]))
         
         const fetchedDetails = await Promise.all(
@@ -112,7 +130,6 @@ const Client_Register = () => {
           })
         )
 
-        // Combine both fetched details and direct details
         const allDetails = [...fetchedDetails, ...directAdminDetails]
 
         const filtered = allDetails.filter(
@@ -122,7 +139,6 @@ const Client_Register = () => {
           name: `${u.first_name || ''} ${u.last_name || ''}`.trim() || u.u_id
         }))
 
-        // Deduplicate final mapped list by u_id
         const uniqueFiltered = []
         const seen = new Set()
         for (const item of filtered) {
@@ -133,7 +149,6 @@ const Client_Register = () => {
         }
 
         setAgentsAndAdmins(uniqueFiltered)
-
       } catch (err) {
         console.error('Error fetching agents/admins:', err)
       }

@@ -11,7 +11,6 @@ import {
   getPasswordStrength,
   sanitizeAlphaNumericBasic,
   sanitizeName,
-  sanitizeText,
   sanitizeAddress,
   validateAgeRangeFromDob,
   validateStrongPassword,
@@ -20,66 +19,131 @@ import {
 export default function RegisterClientWizard() {
   const navigate = useNavigate()
   const location = useLocation()
+  
   const emptyForm = {
     first_name: '',
     last_name: '',
-    father_name: '',
+    email: '',
+    phone: '',
+    password: '',
     dob: '',
     gender: '',
-    email: '',
-    mobile: '',
-    password: '',
-    marital_status: '',
-    education: '',
-    language: '',
-    occupation: '',
-    work_experience: '',
-    income: '',
-    adhar: '',
-    pan: '',
-    designation: '',
     reference_agent: '',
-    agent_team: '',
-    work_location: '',
-    bank_name: '',
-    branch: '',
-    account_number: '',
-    ifsc_code: '',
     address: '',
-    nominiee: '',
-    relationship: '',
-    nominee_mobile: '',
-    aadhaar_file: null,
-    pan_file: null,
-    photo: null,
-    u_id: '',
-    address_line1: '',
-    address_line2: '',
-    city: '',
-    state: '',
-    pincode: ''
+    u_id: ''
   }
+
   const today = new Date()
   const maxDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate()).toISOString().split('T')[0]
   const minDate = new Date(today.getFullYear() - 80, today.getMonth(), today.getDate()).toISOString().split('T')[0]
 
-  // --- form state with all fields ---
   const [form, setForm] = useState(emptyForm)
-
-  const [designations, setDesignations] = useState([])
-  const [designationError, setDesignationError] = useState('')
-  const [loadingDesignations, setLoadingDesignations] = useState(true)
-
+  const [photoFile, setPhotoFile] = useState(null)
+  const [photoPreview, setPhotoPreview] = useState(null)
   const [errors, setErrors] = useState({})
   const [alert, setAlert] = useState({ visible: false, message: '', color: 'success' })
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [registeredUID, setRegisteredUID] = useState('')
-  const [showModal, setShowModal] = useState(false);
-  const [modalMessage, setModalMessage] = useState('');
+  const [showModal, setShowModal] = useState(false)
+  const [modalMessage, setModalMessage] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [agentsAndAdmins, setAgentsAndAdmins] = useState([])
 
-  // Restore form state from localStorage when page loads or populate from navigation state (lead conversion)
+  useEffect(() => {
+    const fetchAgentsAndAdmins = async () => {
+      try {
+        const resAgents = await fetch(`${globalThis.apiBaseUrl}/users/`)
+        let agentUserIds = []
+        if (resAgents.ok) {
+          const agentData = await resAgents.json()
+          if (agentData?.success && Array.isArray(agentData.users)) {
+            agentUserIds = agentData.users
+          } else if (Array.isArray(agentData)) {
+            agentUserIds = agentData
+          }
+        }
+
+        let adminData = null
+        try {
+          const resAdmins = await fetch(`${globalThis.apiBaseUrl}/users/admin`)
+          if (resAdmins.ok) {
+            adminData = await resAdmins.json()
+          } else {
+            const resAdminsBackup = await fetch(`${globalThis.apiBaseUrl}/users/admin/`)
+            if (resAdminsBackup.ok) {
+              adminData = await resAdminsBackup.json()
+            }
+          }
+        } catch (e) {
+          console.error('Failed to fetch admin list without trailing slash, trying backup:', e)
+          try {
+            const resAdminsBackup = await fetch(`${globalThis.apiBaseUrl}/users/admin/`)
+            if (resAdminsBackup.ok) {
+              adminData = await resAdminsBackup.json()
+            }
+          } catch (errBackup) {
+            console.error('Backup admin fetch failed:', errBackup)
+          }
+        }
+
+        let adminUserIds = []
+        let directAdminDetails = []
+        if (adminData) {
+          const rawAdmins = adminData?.users || adminData?.admins || adminData || []
+          if (Array.isArray(rawAdmins)) {
+            rawAdmins.forEach(item => {
+              if (typeof item === 'string' || typeof item === 'number') {
+                adminUserIds.push(String(item))
+              } else if (item && typeof item === 'object') {
+                directAdminDetails.push(item)
+              }
+            })
+          }
+        }
+
+        const idsToFetch = Array.from(new Set([...agentUserIds, ...adminUserIds]))
+        
+        const fetchedDetails = await Promise.all(
+          idsToFetch.map(async (uId) => {
+            try {
+              const userRes = await fetch(`${globalThis.apiBaseUrl}/users/${uId}`)
+              if (userRes.ok) {
+                return await userRes.json()
+              }
+            } catch (e) {
+              console.error(e)
+            }
+            return null
+          })
+        )
+
+        const allDetails = [...fetchedDetails, ...directAdminDetails]
+
+        const filtered = allDetails.filter(
+          (u) => u && (u.success || u.u_id || u.id) && (String(u.role || '').toLowerCase() === 'agent' || String(u.role || '').toLowerCase() === 'admin')
+        ).map((u) => ({
+          u_id: u.u_id || u.id,
+          name: `${u.first_name || ''} ${u.last_name || ''}`.trim() || u.u_id
+        }))
+
+        const uniqueFiltered = []
+        const seen = new Set()
+        for (const item of filtered) {
+          if (item.u_id && !seen.has(item.u_id)) {
+            seen.add(item.u_id)
+            uniqueFiltered.push(item)
+          }
+        }
+
+        setAgentsAndAdmins(uniqueFiltered)
+      } catch (err) {
+        console.error('Error fetching agents/admins:', err)
+      }
+    }
+    fetchAgentsAndAdmins()
+  }, [])
+
+  // Populate from navigation state if converting a lead
   useEffect(() => {
     if (location.state?.lead) {
       const lead = location.state.lead
@@ -88,96 +152,28 @@ export default function RegisterClientWizard() {
         first_name: lead.first_name || '',
         last_name: lead.last_name || '',
         email: lead.email || '',
-        mobile: lead.mobile || lead.phone || '',
+        phone: lead.phone || lead.mobile || '',
         reference_agent: lead.reference_agent || '',
-        interested_project: lead.interested_project || '',
-        interested_plot: lead.interested_plot || '',
         u_id: lead.u_id || '',
         address: lead.address || '',
-        city: lead.city || '',
-        state: lead.state || '',
-        pincode: lead.pincode || '',
       })
-      return
-    }
-
-    const hasSession = Boolean(localStorage.getItem('access_token') || localStorage.getItem('user'))
-    if (!hasSession) {
-      localStorage.removeItem('registerClientForm')
-      setForm(emptyForm)
-      return
-    }
-    const saved = localStorage.getItem('registerClientForm')
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved)
-        // Files cannot be persisted, always null on reload
-        parsed.aadhaar_file = null
-        parsed.pan_file = null
-        parsed.photo = null
-        setForm(parsed)
-      } catch { }
     }
   }, [location.state])
 
-  useEffect(() => {
-    fetch(`${globalThis.apiBaseUrl}/register/?key=designation`, { headers: { accept: 'application/json' } })
-      .then(res => res.json())
-      .then(data => {
-        if (data && data.status === 'ok' && Array.isArray(data.designation)) setDesignations(data.designation)
-        else setDesignationError('No designations found')
-      })
-      .catch(() => setDesignationError('Failed to fetch designations'))
-      .finally(() => setLoadingDesignations(false))
-  }, [])
-
-  // Helper: updates field and persists to localStorage
-  const setFormField = (name, value) => {
-    setForm(prev => {
-      const updated = { ...prev, [name]: value }
-      // Only primitive values, files are not persisted
-      const serializable = { ...updated, aadhaar_file: null, pan_file: null, photo: null }
-      localStorage.setItem('registerClientForm', JSON.stringify(serializable))
-      return updated
-    })
-    setErrors(prev => ({ ...prev, [name]: '' }))
-  }
-
-  // Handle file input (do not persist file/blobs)
-  const handleFileChange = (e) => {
-    const { name, files } = e.target
-    if (!files || files.length === 0) return
-    const file = files[0]
-    if (file.size > 2 * 1024 * 1024) {
-      setErrors(prev => ({ ...prev, [name]: 'File size must be less than 2MB' }))
-      setForm(prev => ({ ...prev, [name]: null }))
-    } else {
-      setFormField(name, file)
-    }
-  }
-
-  // Universal change handler (persists on every change)
   const handleChange = (e) => {
     const name = e.target.name
     let value = e.target.value
 
     // Input sanitation
-    if (name === 'pan') value = value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10)
-    else if (name === 'ifsc_code') value = value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 11)
-    else if (['first_name', 'last_name', 'father_name'].includes(name)) value = sanitizeName(value, 50)
-    else if (['nominiee', 'relationship'].includes(name)) value = sanitizeName(value, 60)
-    else if (['city', 'state'].includes(name)) value = sanitizeName(value, 50)
-    else if (name === 'bank_name') value = sanitizeName(value, 80)
-    else if (['language', 'education', 'work_location', 'branch'].includes(name)) value = sanitizeText(value, 80)
-    else if (name === 'occupation') value = sanitizeText(value, 80)
+    if (['first_name', 'last_name'].includes(name)) value = sanitizeName(value, 50)
     else if (name === 'email') value = value.replace(/[^A-Za-z0-9.@_\-+]/g, '').slice(0, 100)
-    else if (['mobile', 'work_experience', 'account_number', 'income', 'adhar', 'nominee_mobile', 'pincode'].includes(name))
-      value = value.replace(/[^0-9]/g, '')
-    else if (name === 'reference_agent' || name === 'agent_team') value = sanitizeAlphaNumericBasic(value, 30)
+    else if (name === 'phone') value = value.replace(/[^0-9]/g, '').slice(0, 10)
     else if (name === 'password') value = value.replace(/\s/g, '').slice(0, 32)
-    else if (['address', 'address_line1', 'address_line2'].includes(name)) value = sanitizeAddress(value, 150)
+    else if (name === 'address') value = sanitizeAddress(value, 150)
+    else if (name === 'reference_agent') value = sanitizeAlphaNumericBasic(value, 30)
 
-    setFormField(name, value)
+    setForm(prev => ({ ...prev, [name]: value }))
+    setErrors(prev => ({ ...prev, [name]: '' }))
 
     if (name === 'dob' && value) {
       const birthDate = new Date(value)
@@ -189,48 +185,20 @@ export default function RegisterClientWizard() {
     }
   }
 
-  const renderError = (field) => errors[field] && (
-    <small className="text-danger d-block mt-1">{errors[field]}</small>
-  )
-
   const validateField = (name, value) => {
     switch (name) {
-      case 'first_name': case 'last_name': case 'father_name': case 'nominiee': case 'relationship':
-      case 'reference_agent': case 'agent_team': case 'branch': case 'bank_name': case 'work_location':
-      case 'city': case 'state': case 'pincode':
-        if (!value) return 'This field is required'
+      case 'first_name':
+        if (!value) return 'First Name is required'
         break
-      case 'address': case 'address_line1':
-        if (!value) return 'This field is required'
-        if (/[^A-Za-z0-9 .,\-()/#]/.test(value)) {
-          return 'Address contains invalid characters. Only letters, numbers, spaces, and . , - ( ) / # are allowed.'
-        }
+      case 'last_name':
+        if (!value) return 'Last Name is required'
         break
-      case 'address_line2':
-        if (value && /[^A-Za-z0-9 .,\-()/#]/.test(value)) {
-          return 'Address contains invalid characters. Only letters, numbers, spaces, and . , - ( ) / # are allowed.'
-        }
-        break
-      case 'mobile': case 'nominee_mobile':
+      case 'phone':
+        if (!value) return 'Phone number is required'
         if (!/^[6-9][0-9]{9}$/.test(value)) return 'Enter a valid 10-digit mobile number starting with 6-9'
         break
       case 'email':
-        if (!value || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Enter a valid email address'
-        break
-      case 'work_experience':
-        if (value && !/^[0-9]{1,2}$/.test(value)) return 'Enter valid experience'
-        break
-      case 'account_number':
-        if (value && !/^[0-9]{9,18}$/.test(value)) return 'Invalid account number'
-        break
-      case 'ifsc_code':
-        if (value && !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(value)) return 'Invalid IFSC code'
-        break
-      case 'adhar':
-        if (!/^[0-9]{12}$/.test(value)) return 'Aadhaar must be 12 digits'
-        break
-      case 'pan':
-        if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(value)) return 'Invalid PAN format'
+        if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Enter a valid email address'
         break
       case 'password':
         if (!value) return 'Password is required'
@@ -242,15 +210,11 @@ export default function RegisterClientWizard() {
         if (!value) return 'Date of Birth is required'
         if (!validateAgeRangeFromDob(value, 18, 80)) return 'Age must be between 18 and 80 years old'
         break
-      case 'photo':
-        if (!value) return 'File required'
-        if (!/^image\/(jpeg|jpg|png|webp)$/i.test(value.type)) return 'Photo must be JPG, PNG, or WEBP'
-        if (value.size > 2 * 1024 * 1024) return 'Photo must be under 2MB'
-        break
-      case 'aadhaar_file': case 'pan_file':
-        if (!value) return 'File required'
-        if (!/^image\/(jpeg|jpg|png|webp)$|^application\/pdf$/i.test(value.type)) return 'File must be JPG, PNG, WEBP, or PDF'
-        if (value.size > 2 * 1024 * 1024) return 'File must be under 2MB'
+      case 'address':
+        if (!value) return 'Address is required'
+        if (/[^A-Za-z0-9 .,\-()/#]/.test(value)) {
+          return 'Address contains invalid characters. Only letters, numbers, spaces, and . , - ( ) / # are allowed.'
+        }
         break
       default:
         return ''
@@ -259,110 +223,105 @@ export default function RegisterClientWizard() {
   }
 
   const validateAll = () => {
-    const requiredFields = [
-      'first_name', 'last_name', 'father_name', 'dob', 'gender', 'email', 'mobile', 'password']
-    //   , 'marital_status', 'education', 'language', 'occupation', 'work_experience', 'income', 'adhar', 'pan',
-    //   'designation', 'reference_agent', 'agent_team', 'work_location', 'bank_name', 'branch', 'account_number', 'ifsc_code', 'nominiee', 'relationship', 'nominee_mobile',
-    //   'aadhaar_file', 'pan_file', 'photo', 'address', 'city', 'state', 'pincode'
-    // ]
+    const requiredFields = ['first_name', 'last_name', 'dob', 'gender', 'phone', 'password', 'address']
     const newErrors = {}
     requiredFields.forEach(f => {
       const err = validateField(f, form[f])
       if (err) newErrors[f] = err
     })
+    if (form.email) {
+      const emailErr = validateField('email', form.email)
+      if (emailErr) newErrors.email = emailErr
+    }
+    if (photoFile) {
+      if (!/^image\/(jpeg|jpg|png|webp)$/i.test(photoFile.type)) {
+        newErrors.photo_file = 'Photo must be JPG, PNG, or WEBP'
+      } else if (photoFile.size > 2 * 1024 * 1024) {
+        newErrors.photo_file = 'Photo must be under 2MB'
+      }
+    }
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
+  const renderError = (field) => errors[field] && (
+    <small className="text-danger d-block mt-1">{errors[field]}</small>
+  )
+
   const handleSubmit = async (e) => {
-    e && e.preventDefault();
+    e && e.preventDefault()
     if (!validateAll()) {
-      setAlert({ visible: true, message: 'Please fix the validation errors.', color: 'danger' });
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
+      setAlert({ visible: true, message: 'Please fix the validation errors.', color: 'danger' })
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
     }
 
-    setIsSubmitting(true);
-    setAlert({ visible: false, message: '' });
-    setModalMessage('Submitting...');
-    setShowModal(true);
+    setIsSubmitting(true)
+    setAlert({ visible: false, message: '' })
+    setModalMessage('Submitting...')
+    setShowModal(true)
 
     try {
-      const formData = new FormData();
+      const formData = new FormData()
       Object.entries(form).forEach(([key, val]) => {
         if (val !== null && val !== undefined && val !== '') {
-          if (key === 'photo' && val?.file) formData.append('photo', val.file);
-          else if (['aadhaar_file', 'pan_file'].includes(key)) formData.append(key, val);
-          else formData.append(key, val);
+          formData.append(key, val)
         }
-      });
-      formData.append('role', 'customer');
-      // console.log('Submitting form data:', Array.from(formData.entries()));
-      for (let [key, value] of formData.entries()) {
-        console.log(`${key}:`, value);
+      })
+      if (photoFile) {
+        formData.append('photo_file', photoFile)
       }
-      const jsonObj = {};
+      formData.append('role', 'customer')
+
+      console.log('Submitting form data:')
       for (let [key, value] of formData.entries()) {
-        // For files, print just the file name
-        jsonObj[key] = value instanceof File ? value.name : value;
+        console.log(`${key}:`, value)
       }
-      console.log('Submitting form data (JSON):', JSON.stringify(jsonObj, null, 2));
-      const isConverting = !!form.u_id;
-      const url = `${globalThis.apiBaseUrl}/register/customer`;
 
-      const res = await fetch(url, { method: 'POST', body: formData });
+      const isConverting = !!form.u_id
+      const url = `${globalThis.apiBaseUrl}/register/customer`
 
-      const data = await res.json();
+      const res = await fetch(url, { method: 'POST', body: formData })
+      const data = await res.json()
+
       if (res.ok) {
-        setRegisteredUID(data.u_id || data.user_id || form.u_id || 'N/A');
+        setRegisteredUID(data.u_id || data.user_id || form.u_id || 'N/A')
         
         if (isConverting) {
           try {
-            const deleteUrl = `${globalThis.apiBaseUrl}/users/client/${form.u_id}`;
-            const deleteRes = await fetch(deleteUrl, { method: 'DELETE' });
+            const deleteUrl = `${globalThis.apiBaseUrl}/users/client/${form.u_id}`
+            const deleteRes = await fetch(deleteUrl, { method: 'DELETE' })
             if (deleteRes.ok) {
-              console.log(`Converted lead ${form.u_id} deleted successfully.`);
+              console.log(`Converted lead ${form.u_id} deleted successfully.`)
             } else {
-              console.error(`Failed to delete converted lead ${form.u_id}. Status: ${deleteRes.status}`);
+              console.error(`Failed to delete converted lead ${form.u_id}. Status: ${deleteRes.status}`)
             }
           } catch (err) {
-            console.error('Error deleting lead after conversion:', err);
+            console.error('Error deleting lead after conversion:', err)
           }
         }
 
-        setModalMessage(isConverting ? 'Success: Lead converted to client successfully' : 'Success: Client registered successfully');
-        setShowModal(true);
-        localStorage.removeItem('registerClientForm');
+        setModalMessage(isConverting ? 'Success: Lead converted to client successfully' : 'Success: Client registered successfully')
+        setShowModal(true)
       } else {
-        let errorMsg = data.message || 'Registration failed.';
-        errorMsg = errorMsg.replace(/[{}"]/g, '');
-        setModalMessage(`Error: ${errorMsg}`);
-        setShowModal(true);
-        setForm(emptyForm)
-        localStorage.removeItem('registerClientForm')
+        let errorMsg = data.message || 'Registration failed.'
+        errorMsg = errorMsg.replace(/[{}"]/g, '')
+        setModalMessage(`Error: ${errorMsg}`)
+        setShowModal(true)
       }
     } catch (err) {
-      setModalMessage('Error: Network error.');
-      setShowModal(true);
-      setForm(emptyForm)
-      localStorage.removeItem('registerClientForm')
+      setModalMessage('Error: Network error.')
+      setShowModal(true)
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
   }
 
-  const handleModalClose = () => {
-    localStorage.removeItem('registerClientForm')
-    setShowSuccessModal(false)
-    navigate('/AdminDashboard')
-  }
-
-  // --- UI ---
   return (
     <CContainer className="py-5">
       <CRow className="justify-content-center">
         <CCol xs={12} lg={10} xl={8}>
-          <CCard className="mb-4" style={{ borderRadius: '16px', border: 'none' }}>
+          <CCard className="mb-4" style={{ borderRadius: '16px', border: 'none', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)' }}>
             <CCardBody className="p-4 p-md-5">
               <div className="d-flex justify-content-between align-items-center mb-4">
                 <CButton color="primary" variant="ghost" onClick={() => navigate(-1)}>
@@ -372,26 +331,39 @@ export default function RegisterClientWizard() {
                 <div style={{ width: 80 }} />
               </div>
 
-              {alert.visible &&
+              {alert.visible && (
                 <CAlert color={alert.color} dismissible onClose={() => setAlert({ ...alert, visible: false })}>{alert.message}</CAlert>
-              }
+              )}
 
               <CForm onSubmit={handleSubmit}>
-                {/* Personal Details */}
                 <h5 className="text-primary mb-3">Personal Details</h5>
+                
                 <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="First Name" name="first_name" value={form.first_name} onChange={handleChange} required />{renderError('first_name')}</CCol>
-                  <CCol md={6}><CFormInput floating="true" label="Last Name" name="last_name" value={form.last_name} onChange={handleChange} required />{renderError('last_name')}</CCol>
+                  <CCol md={6}>
+                    <CFormInput floating="true" label="First Name *" name="first_name" value={form.first_name} onChange={handleChange} required />
+                    {renderError('first_name')}
+                  </CCol>
+                  <CCol md={6}>
+                    <CFormInput floating="true" label="Last Name *" name="last_name" value={form.last_name} onChange={handleChange} required />
+                    {renderError('last_name')}
+                  </CCol>
                 </CRow>
+
                 <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="Father's Name" name="father_name" value={form.father_name} onChange={handleChange} required />{renderError('father_name')}</CCol>
-                  <CCol md={6}><CFormInput floating="true" label="Email" name="email" type="email" value={form.email} onChange={handleChange} required />{renderError('email')}</CCol>
+                  <CCol md={6}>
+                    <CFormInput floating="true" label="Email" name="email" type="email" value={form.email} onChange={handleChange} />
+                    {renderError('email')}
+                  </CCol>
+                  <CCol md={6}>
+                    <CFormInput floating="true" label="Phone Number *" name="phone" maxLength={10} value={form.phone} onChange={handleChange} required />
+                    {renderError('phone')}
+                  </CCol>
                 </CRow>
+
                 <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="Mobile" name="mobile" maxLength={10} value={form.mobile} onChange={handleChange} required />{renderError('mobile')}</CCol>
                   <CCol md={6}>
                     <div style={{ position: 'relative' }}>
-                      <CFormInput floating="true" label="Password" name="password" type={showPassword ? 'text' : 'password'} maxLength={32} value={form.password} onChange={handleChange} required style={{ paddingRight: 68 }} />
+                      <CFormInput floating="true" label="Password *" name="password" type={showPassword ? 'text' : 'password'} maxLength={32} value={form.password} onChange={handleChange} required style={{ paddingRight: 68 }} />
                       <CButton
                         type="button"
                         color="link"
@@ -409,272 +381,116 @@ export default function RegisterClientWizard() {
                     )}
                     {renderError('password')}
                   </CCol>
-                </CRow>
-                <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="Date of Birth" type="date" name="dob" value={form.dob} onChange={handleChange} min={minDate} max={maxDate} required />{renderError('dob')}</CCol>
                   <CCol md={6}>
-                    <CFormSelect floating="true" label="Gender" name="gender" value={form.gender} onChange={handleChange} required>
-                      <option value="">Select</option>
+                    <CFormInput floating="true" label="Date of Birth *" type="date" name="dob" value={form.dob} onChange={handleChange} min={minDate} max={maxDate} required />
+                    {renderError('dob')}
+                  </CCol>
+                </CRow>
+
+                <CRow className="g-3 mb-3">
+                  <CCol md={6}>
+                    <CFormSelect floating="true" label="Gender *" name="gender" value={form.gender} onChange={handleChange} required>
+                      <option value="">Select Gender</option>
                       <option>Male</option>
                       <option>Female</option>
+                      <option>Other</option>
                     </CFormSelect>
                     {renderError('gender')}
                   </CCol>
-                </CRow>
-                <CRow className="g-3 mb-3">
-                  <CCol md={4}><CFormSelect floating="true" label="Marital Status" name="marital_status" value={form.marital_status} onChange={handleChange}>
-                    <option value="">Select</option>
-                    <option>Single</option>
-                    <option>Married</option>
-                  </CFormSelect>{renderError('marital_status')}</CCol>
-                  <CCol md={4}><CFormInput floating="true" label="Education" name="education" value={form.education} onChange={handleChange} />{renderError('education')}</CCol>
-                  <CCol md={4}><CFormSelect floating="true" label="Language" name="language" value={form.language} onChange={handleChange}>
-                    <option value="">Select</option>
-                    <option>English</option>
-                    <option>Hindi</option>
-                    <option>Telugu</option>
-                  </CFormSelect>{renderError('language')}</CCol>
-                </CRow>
-                <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="Occupation" name="occupation" value={form.occupation} onChange={handleChange} />{renderError('occupation')}</CCol>
-                  {/* <CCol md={6}><CFormInput floating="true" label="Work Experience (Years)" name="work_experience" maxLength={2} value={form.work_experience} onChange={handleChange} />{renderError('work_experience')}</CCol> */}
-                  <CCol md={6}><CFormInput floating="true" label="Annual Income" name="income" value={form.income} onChange={handleChange} />{renderError('income')}</CCol>
-                </CRow>
-                <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="Aadhaar Number" name="adhar" maxLength={12} value={form.adhar} onChange={handleChange} />{renderError('adhar')}</CCol>
-                  <CCol md={6}><CFormInput floating="true" label="PAN Number" name="pan" maxLength={10} value={form.pan} onChange={handleChange} />{renderError('pan')}</CCol>
-                </CRow>
-                {/* <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="PAN Number" name="pan" maxLength={10} value={form.pan} onChange={handleChange} />{renderError('pan')}</CCol>
                   <CCol md={6}>
-                    <CFormSelect
-                      floating
-                      label="Designation"
-                      name="designation"
-                      value={form.designation}
-                      onChange={handleChange}
-                      disabled={loadingDesignations}
-                    >
-                      <option value="">Select Designation</option>
-                      {!loadingDesignations && !designationError && designations.map((d, idx) => (
-                        <option key={idx} value={d.id || d.name}>{d.name}</option>
+                    <CFormSelect floating="true" label="Reference Agent" name="reference_agent" value={form.reference_agent} onChange={handleChange}>
+                      <option value="">Select Reference Agent / Admin</option>
+                      {agentsAndAdmins.map((item) => (
+                        <option key={item.u_id} value={item.u_id}>
+                          {item.name} ({item.u_id})
+                        </option>
                       ))}
                     </CFormSelect>
-                    {designationError && <div className="text-danger small mt-1">{designationError}</div>}
-                    {renderError('designation')}
+                    {renderError('reference_agent')}
                   </CCol>
-                </CRow> */}
-
-                {/* Work & Bank */}
-                <h5 className="text-primary mb-3 mt-4">Work & Bank Details</h5>
-                <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="Reference Agent Code" name="reference_agent" value={form.reference_agent} onChange={handleChange} />{renderError('reference_agent')}</CCol>
-                  {/* <CCol md={6}><CFormInput floating="true" label="Agent Team" name="agent_team" value={form.agent_team} onChange={handleChange} />{renderError('agent_team')}</CCol> */}
-                  <CCol md={6}><CFormInput floating="true" label="Bank Name" name="bank_name" value={form.bank_name} onChange={handleChange} />{renderError('bank_name')}</CCol>
-                </CRow>
-                {/* <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="Work Location" name="work_location" value={form.work_location} onChange={handleChange} />{renderError('work_location')}</CCol>
-                  <CCol md={6}><CFormInput floating="true" label="Bank Name" name="bank_name" value={form.bank_name} onChange={handleChange} />{renderError('bank_name')}</CCol>
-                </CRow> */}
-                <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="Branch" name="branch" value={form.branch} onChange={handleChange} />{renderError('branch')}</CCol>
-                  <CCol md={6}><CFormInput floating="true" label="Account Number" name="account_number" value={form.account_number} onChange={handleChange} />{renderError('account_number')}</CCol>
-                </CRow>
-                <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="IFSC Code" name="ifsc_code" maxLength={11} value={form.ifsc_code} onChange={handleChange} />{renderError('ifsc_code')}</CCol>
-                  <CCol md={6}><CFormInput floating="true" label="Nominee Name" name="nominiee" value={form.nominiee} onChange={handleChange} />{renderError('nominiee')}</CCol>
-                </CRow>
-                <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="Relation with Nominee" name="relationship" value={form.relationship} onChange={handleChange} />{renderError('relationship')}</CCol>
-                  <CCol md={6}><CFormInput floating="true" label="Nominee Mobile" name="nominee_mobile" maxLength={10} value={form.nominee_mobile} onChange={handleChange} />{renderError('nominee_mobile')}</CCol>
                 </CRow>
 
-                {/* Upload Documents */}
-                <h5 className="text-primary mb-3 mt-4">Upload Documents</h5>
-                <CRow className="g-4 align-items-stretch text-center mb-4">
-                  {/* Profile Photo */}
+                <CRow className="g-3 mb-3">
+                  <CCol md={12}>
+                    <CFormTextarea floating="true" label="Address *" name="address" rows={2} value={form.address} onChange={handleChange} required />
+                    {renderError('address')}
+                  </CCol>
+                </CRow>
+
+                <h5 className="text-primary mb-3 mt-4">Profile Photo</h5>
+                <CRow className="mb-4 justify-content-center">
                   <CCol xs={12} md={6}>
                     <div
-                      className="p-4 rounded-4 shadow-sm border bg-white h-100 d-flex flex-column align-items-center justify-content-center"
-                      style={{ minHeight: 400 }}
+                      className="p-4 rounded-4 shadow-sm border bg-white d-flex flex-column align-items-center justify-content-center"
+                      style={{ minHeight: 250 }}
                     >
-                      <CFormLabel className="fw-semibold d-block mb-3 fs-5 text-primary">
-                        Profile Photo
-                      </CFormLabel>
-                      {form.photo ?
+                      {photoPreview ? (
                         <>
                           <img
-                            src={form.photo.previewUrl}
+                            src={photoPreview}
                             alt="Profile Preview"
                             className="rounded-circle shadow-sm mb-3 border border-primary"
                             style={{
                               width: 140,
                               height: 140,
                               objectFit: 'cover',
-                              transition: 'transform 0.2s ease-in-out',
                             }}
-                            onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.05)')}
-                            onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
                           />
-                          <div className="d-flex justify-content-center gap-2">
-                            <CButton
-                              color="danger"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setFormField('photo', null)}
-                            >
-                              Remove Photo
-                            </CButton>
-                          </div>
-                        </>
-                        : (
-                          <div
-                            className="d-flex flex-column align-items-center justify-content-center p-3 rounded-3 border border-dashed w-100"
-                            style={{
-                              borderStyle: 'dashed',
-                              borderColor: '#6c757d',
-                              minHeight: 200,
-                              maxWidth: 260,
+                          <CButton
+                            color="danger"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setPhotoFile(null)
+                              setPhotoPreview(null)
                             }}
                           >
-                            <CButton
-                              color="primary"
-                              variant="ghost"
-                              className="fw-semibold mb-2"
-                              onClick={() => document.getElementById('photoInput').click()}
-                            >
-                              Upload Photo
-                            </CButton>
-                            <small className="text-muted mt-2">JPG / PNG • Max 2 MB</small>
-                            <input
-                              id="photoInput"
-                              type="file"
-                              accept="image/*"
-                              hidden
-                              onChange={e => {
-                                const file = e.target.files[0]
-                                if (!file) return
-                                const previewUrl = URL.createObjectURL(file)
-                                setFormField('photo', { file, previewUrl })
-                              }}
-                            />
-                          </div>
-                        )}
-                      {renderError('photo')}
+                            Remove Photo
+                          </CButton>
+                        </>
+                      ) : (
+                        <div
+                          className="d-flex flex-column align-items-center justify-content-center p-3 rounded-3 border border-dashed w-100"
+                          style={{
+                            borderStyle: 'dashed',
+                            borderColor: '#6c757d',
+                            minHeight: 150,
+                            maxWidth: 260,
+                          }}
+                        >
+                          <CButton
+                            color="primary"
+                            variant="ghost"
+                            className="fw-semibold mb-2"
+                            onClick={() => document.getElementById('photoInput').click()}
+                          >
+                            Upload Photo
+                          </CButton>
+                          <small className="text-muted">JPG / PNG • Max 2 MB</small>
+                          <input
+                            id="photoInput"
+                            type="file"
+                            accept="image/*"
+                            hidden
+                            onChange={e => {
+                              const file = e.target.files[0]
+                              if (!file) return
+                              if (file.size > 2 * 1024 * 1024) {
+                                setErrors(prev => ({ ...prev, photo_file: 'Photo must be under 2MB' }))
+                                return
+                              }
+                              setPhotoFile(file)
+                              setPhotoPreview(URL.createObjectURL(file))
+                              setErrors(prev => ({ ...prev, photo_file: '' }))
+                            }}
+                          />
+                        </div>
+                      )}
+                      {errors.photo_file && (
+                        <small className="text-danger d-block mt-2">{errors.photo_file}</small>
+                      )}
                     </div>
                   </CCol>
-                  {/* Aadhaar + PAN Upload */}
-                  <CCol xs={12} md={6}>
-                    <div
-                      className="p-4 rounded-4 shadow-sm border bg-white h-100 d-flex flex-column justify-content-between"
-                      style={{ minHeight: 400 }}
-                    >
-                      <CFormLabel className="fw-semibold d-block mb-4 fs-5 text-primary text-center">
-                        Aadhaar & PAN Uploads
-                      </CFormLabel>
-                      <CRow className="g-4 text-center flex-grow-1">
-                        <CCol xs={12} sm={6}>
-                          {form.aadhaar_file ? (
-                            <div className="border border-success rounded-3 p-3 bg-light d-flex flex-column align-items-center justify-content-between h-100">
-                              <div>
-                                <i className="bi bi-file-earmark-pdf text-danger fs-1"></i>
-                                <div className="fw-semibold mt-2">{form.aadhaar_file.name}</div>
-                              </div>
-                              <CButton
-                                color="danger"
-                                variant="outline"
-                                size="sm"
-                                className="mt-3"
-                                onClick={() => setFormField('aadhaar_file', null)}
-                              >
-                                Remove Aadhaar
-                              </CButton>
-                            </div>
-                          ) : (
-                            <div
-                              className="d-flex flex-column align-items-center justify-content-center p-3 rounded-3 border border-dashed h-100"
-                              style={{ borderStyle: 'dashed', borderColor: '#6c757d', minHeight: 160 }}
-                            >
-                              <CButton
-                                color="primary"
-                                variant="ghost"
-                                className="fw-semibold"
-                                onClick={() => document.getElementById('aadhaarFileInput').click()}
-                              >
-                                Upload Aadhaar (PDF)
-                              </CButton>
-                              <small className="text-muted mt-2">PDF • Max 2 MB</small>
-                              <input
-                                id="aadhaarFileInput"
-                                type="file"
-                                accept="application/pdf"
-                                hidden
-                                name="aadhaar_file"
-                                onChange={handleFileChange}
-                              />
-                            </div>
-                          )}
-                          {renderError('aadhaar_file')}
-                        </CCol>
-                        <CCol xs={12} sm={6}>
-                          {form.pan_file ? (
-                            <div className="border border-success rounded-3 p-3 bg-light d-flex flex-column align-items-center justify-content-between h-100">
-                              <div>
-                                <i className="bi bi-file-earmark-pdf text-danger fs-1"></i>
-                                <div className="fw-semibold mt-2">{form.pan_file.name}</div>
-                              </div>
-                              <CButton
-                                color="danger"
-                                variant="outline"
-                                size="sm"
-                                className="mt-3"
-                                onClick={() => setFormField('pan_file', null)}
-                              >
-                                Remove PAN
-                              </CButton>
-                            </div>
-                          ) : (
-                            <div
-                              className="d-flex flex-column align-items-center justify-content-center p-3 rounded-3 border border-dashed h-100"
-                              style={{ borderStyle: 'dashed', borderColor: '#6c757d', minHeight: 160 }}
-                            >
-                              <CButton
-                                color="primary"
-                                variant="ghost"
-                                className="fw-semibold"
-                                onClick={() => document.getElementById('panFileInput').click()}
-                              >
-                                Upload PAN (PDF)
-                              </CButton>
-                              <small className="text-muted mt-2">PDF • Max 2 MB</small>
-                              <input
-                                id="panFileInput"
-                                type="file"
-                                accept="application/pdf"
-                                hidden
-                                name="pan_file"
-                                onChange={handleFileChange}
-                              />
-                            </div>
-                          )}
-                          {renderError('pan_file')}
-                        </CCol>
-                      </CRow>
-                    </div>
-                  </CCol>
-                </CRow>
-
-                {/* Address */}
-                <h5 className="text-primary mb-3 mt-4">Address</h5>
-                <CRow className="g-3 mb-3">
-                  <CCol md={12}><CFormTextarea floating="true" label="Address Line 1" name="address" rows={2} value={form.address} onChange={handleChange} />{renderError('address')}</CCol>
-                </CRow>
-                <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="City" name="city" value={form.city} onChange={handleChange} />{renderError('city')}</CCol>
-                  <CCol md={6}><CFormInput floating="true" label="State" name="state" value={form.state} onChange={handleChange} />{renderError('state')}</CCol>
-                </CRow>
-                <CRow className="g-3 mb-3">
-                  <CCol md={6}><CFormInput floating="true" label="Pincode" name="pincode" maxLength={6} value={form.pincode} onChange={handleChange} />{renderError('pincode')}</CCol>
                 </CRow>
 
                 <div className="d-grid mt-4">
@@ -687,15 +503,6 @@ export default function RegisterClientWizard() {
           </CCard>
         </CCol>
       </CRow>
-
-      <CModal visible={showSuccessModal} onClose={handleModalClose} alignment="center" backdrop="static">
-        <CModalHeader><CModalTitle>Registration Successful!</CModalTitle></CModalHeader>
-        <CModalBody>
-          <p>The Client has been registered successfully.</p>
-          <p><strong>CLient UID:</strong> {registeredUID}</p>
-        </CModalBody>
-        <CModalFooter><CButton color="primary" onClick={handleModalClose}>Go to Dashboard</CButton></CModalFooter>
-      </CModal>
 
       {showModal && (
         <div
@@ -712,9 +519,9 @@ export default function RegisterClientWizard() {
             zIndex: 9999,
           }}
           onClick={() => {
-            setShowModal(false);
+            setShowModal(false)
             if (modalMessage.startsWith('Success:') || !modalMessage.startsWith('Error:')) {
-              navigate(form.u_id ? '/GetClients?type=clients' : '/AdminDashboard');
+              navigate(form.u_id ? '/GetClients?type=clients' : '/AdminDashboard')
             }
           }}
         >
@@ -739,6 +546,11 @@ export default function RegisterClientWizard() {
             >
               {modalMessage.replace(/^Error:\s*/, '').replace(/^Success:\s*/, '')}
             </div>
+            {modalMessage.startsWith('Success:') && registeredUID && (
+              <div className="mb-3">
+                <strong>Registered UID:</strong> {registeredUID}
+              </div>
+            )}
             <button
               style={{
                 padding: '0.5rem 1.5rem',
@@ -750,9 +562,9 @@ export default function RegisterClientWizard() {
                 cursor: 'pointer',
               }}
               onClick={() => {
-                setShowModal(false);
+                setShowModal(false)
                 if (modalMessage.startsWith('Success:') || !modalMessage.startsWith('Error:')) {
-                  navigate(form.u_id ? '/GetClients?type=clients' : '/AdminDashboard');
+                  navigate(form.u_id ? '/GetClients?type=clients' : '/AdminDashboard')
                 }
               }}
             >
