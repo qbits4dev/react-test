@@ -98,6 +98,7 @@ const PostTargets = React.lazy(() => import('./views/pages/API/PostTargets'))
 const GetAgents = React.lazy(() => import('./views/pages/API/GetAgents'))
 const GetClients = React.lazy(() => import('./views/pages/API/GetClients'))
 const GetBookVisit = React.lazy(() => import('./views/pages/register/GetBookVisit'))
+const GetBookings = React.lazy(() => import('./views/pages/register/GetBookings'))
 const SendNotification = React.lazy(() => import('./views/pages/API/SendNotification'))
 
 const Widgets = React.lazy(() => import('./views/widgets/Widgets'))
@@ -181,6 +182,7 @@ const routes = [
   { path: '/register_client', name: 'Client Register', element: ClientRegister ,meta:{allowedRoles:["admin","agent"]}},
   { path: '/Targets', name: 'Targets', element: Targets ,meta:{allowedRoles:["admin","agent"]}},
   { path: '/GetBookVisit', name: 'Get Book Visit', element: GetBookVisit ,meta:{allowedRoles:["admin","agent"]}},
+  { path: '/GetBookings', name: 'Bookings', element: GetBookings, meta: { allowedRoles: ["admin", "agent", "customer"] } },
   { path: '/VisitCalender', name: 'Visit Calender', element: VisitCalender ,meta:{allowedRoles:["admin","agent"]}},
   { path: '/privacy', name: 'Privacy Policy', element: PrivacyStatic },
   { path: '/privacy/*', name: 'Privacy Policy (trailing slash)', element: PrivacyStatic },

@@ -112,6 +112,13 @@ const navigationConfig = [
     icon: <CIcon icon={cilCalendar} customClassName="nav-icon" />,
     allowedRoles: [ROLES.ADMIN, ROLES.AGENT],
   },
+  {
+    component: CNavItem,
+    name: 'Bookings',
+    to: '/GetBookings',
+    icon: <CIcon icon={cilChartLine} customClassName="nav-icon" />,
+    allowedRoles: [ROLES.ADMIN, ROLES.AGENT, ROLES.CLIENT],
+  },
 
   // CATEGORY 4: TARGETS & GOALS (ADMIN & AGENT)
   {
