@@ -166,6 +166,7 @@ export default function BookingsManager() {
                     if (uidStr && !seenUids.has(uidStr)) {
                         seenUids.add(uidStr)
                         uniqueUsers.push({
+                            id: u.id,
                             u_id: uidStr,
                             name: `${u.first_name || ''} ${u.last_name || ''}`.trim() || uidStr,
                             role: u.role || 'customer'
@@ -322,10 +323,11 @@ export default function BookingsManager() {
 
         setSaving(true)
         const payload = {
-            customer_id: parseInt(formCustomerId, 10),
+            customer_id: formCustomerId,
             plot_id: parseInt(formPlotId, 10),
             amount: parseFloat(formAmount),
-            status: formStatus
+            status: formStatus,
+            project_name: formProjectName
         }
 
         try {
@@ -345,7 +347,7 @@ export default function BookingsManager() {
                 }
             } else {
                 // Edit
-                const res = await fetch(`${globalThis.apiBaseUrl}/bookings/${selectedBooking.id}`, {
+                const res = await fetch(`${globalThis.apiBaseUrl}/bookings/${selectedBooking.id}/`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -376,7 +378,7 @@ export default function BookingsManager() {
         setDeleting(true)
 
         try {
-            const res = await fetch(`${globalThis.apiBaseUrl}/bookings/${bookingToDelete.id}`, {
+            const res = await fetch(`${globalThis.apiBaseUrl}/bookings/${bookingToDelete.id}/`, {
                 method: 'DELETE'
             })
             if (res.ok) {
@@ -578,7 +580,7 @@ export default function BookingsManager() {
                             <CFormSelect value={formCustomerId} onChange={(e) => setFormCustomerId(e.target.value)}>
                                 <option value="">Select Customer / Client</option>
                                 {usersList.map((c) => (
-                                    <option key={c.u_id} value={c.id}>
+                                    <option key={c.u_id} value={c.u_id}>
                                         {c.name} ({c.u_id})
                                     </option>
                                 ))}

@@ -11,6 +11,7 @@ import {
   CButton,
   CRow,
   CCol,
+  CInputGroup,
 } from '@coreui/react'
 import { useNavigate } from 'react-router-dom'
 import { sanitizeName, sanitizeNumeric, sanitizeText, validateIndianMobile } from '../../utils/validation'
@@ -183,9 +184,79 @@ export default function LeadForm() {
   const projectId = chosenProject ? chosenProject.id : null
   const plotId = formData.plot !== undefined && formData.plot !== '' ? formData.plot : null
 
+  const fetchCustomerDetails = async (customerId) => {
+    if (!customerId || customerId.length !== 8) return
+    const normalizedId = customerId.trim().toLowerCase()
+    try {
+      const res = await fetch(`${globalThis.apiBaseUrl}/users/${normalizedId}`)
+      if (!res.ok) {
+        console.error('Failed to fetch user details')
+        setErrors((prev) => ({ ...prev, customerId: 'Client not found' }))
+        return
+      }
+      const data = await res.json()
+      console.log('Fetched customer details:', data)
+
+      setErrors((prev) => {
+        const { customerId, ...rest } = prev
+        return rest
+      })
+
+      const firstName = data.first_name || ''
+      const lastName = data.last_name || ''
+      const phone = data.mobile || data.phone || ''
+      const agentId = data.reference_agent || data.agent_id || formData.agentId
+      const interestedIn = data.interested_project || ''
+
+      setFormData((prev) => ({
+        ...prev,
+        customerId: normalizedId,
+        firstName,
+        lastName,
+        phone,
+        agentId,
+        interestedIn,
+        plot: '',
+      }))
+
+      if (interestedIn) {
+        setPlotsLoading(true)
+        try {
+          const plotsRes = await fetch(
+            `${globalThis.apiBaseUrl}/projects/plots?project_name=${encodeURIComponent(interestedIn)}`
+          )
+          if (plotsRes.ok) {
+            const plotsData = await plotsRes.json()
+            const plotsList = Array.isArray(plotsData) ? plotsData : []
+            setPlots(plotsList)
+
+            if (data.interested_plot) {
+              const matchedPlot = plotsList.find(
+                (p) => String(p.plot_number) === String(data.interested_plot)
+              )
+              if (matchedPlot) {
+                setFormData((prev) => ({ ...prev, plot: String(matchedPlot.id) }))
+              }
+            }
+          }
+        } catch (plotErr) {
+          console.error('Failed to fetch plots for auto-population:', plotErr)
+        } finally {
+          setPlotsLoading(false)
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching customer details:', err)
+    }
+  }
+
   // -------------------- VALIDATION --------------------
   const validate = () => {
     let errs = {}
+
+    if (!leadType) {
+      errs.leadType = 'Please select lead type'
+    }
 
     if (leadType === 'Existing') {
       if (!/^[A-Za-z]{2}[0-9]{6}$/.test(formData.customerId)) {
@@ -236,7 +307,12 @@ export default function LeadForm() {
   const handleChange = (e) => {
     const { name, value } = e.target
     let nextValue = value
-    if (name === 'customerId') nextValue = value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8)
+    if (name === 'customerId') {
+      nextValue = value.replace(/[^A-Za-z0-9]/g, '').slice(0, 8)
+      if (nextValue.length === 8) {
+        fetchCustomerDetails(nextValue)
+      }
+    }
     else if (name === 'phone') nextValue = sanitizeNumeric(value, 10)
     else if (name === 'firstName' || name === 'lastName') nextValue = sanitizeName(value, 50)
     else if (name === 'purpose') nextValue = sanitizeText(value, 100)
@@ -246,15 +322,19 @@ export default function LeadForm() {
   }
 
   const handleBlur = (e) => {
-    const { name } = e.target
+    const { name, value } = e.target
     setTouched({ ...touched, [name]: true })
     validate()
+    if (name === 'customerId' && value.length === 8) {
+      fetchCustomerDetails(value)
+    }
   }
 
   // -------------------- SUBMIT --------------------
   const handleSubmit = async (e) => {
     e.preventDefault()
     setTouched({
+      leadType: true,
       customerId: true,
       agentId: true,
       phone: true,
@@ -268,8 +348,57 @@ export default function LeadForm() {
 
     setLoading(true)
 
+    let finalCustomerId = formData.customerId || ''
+
+    if (leadType === 'New') {
+      try {
+        const params = new URLSearchParams()
+        params.append('first_name', formData.firstName)
+        params.append('last_name', formData.lastName)
+        params.append('email', '')
+        params.append('phone', formData.phone)
+        params.append('reference_agent', formData.agentId)
+        params.append('interested_project', formData.interestedIn || '')
+
+        const selectedPlotObj = plots.find((p) => String(p.id) === String(formData.plot))
+        const plotNumber = selectedPlotObj ? selectedPlotObj.plot_number : ''
+        params.append('interested_plot', plotNumber)
+
+        const clientRegisterUrl = `${globalThis.apiBaseUrl}/register/client`
+        console.log('Registering new lead first:', clientRegisterUrl, params.toString())
+
+        const leadRes = await fetch(clientRegisterUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: params.toString(),
+        })
+
+        const leadResult = await leadRes.json()
+
+        let leadId = leadResult.u_id || leadResult.user_id || leadResult.id
+        if (!leadId && leadResult.message) {
+          const match = leadResult.message.match(/ID\s+(\S+)/i)
+          if (match) {
+            leadId = match[1]
+          }
+        }
+
+        if (!leadRes.ok || !leadId) {
+          const errorMsg = leadResult.message || leadRes.statusText || 'Failed to register lead.'
+          throw new Error(errorMsg)
+        }
+
+        finalCustomerId = leadId
+        console.log('Lead Registered successfully. Client ID:', finalCustomerId)
+      } catch (err) {
+        alert('Lead creation failed: ' + err.message)
+        setLoading(false)
+        return
+      }
+    }
+
     const apiBody = {
-      customer_id: formData.customerId || '',
+      customer_id: finalCustomerId,
       plot_id: plotId,
       agent_id: formData.agentId,
       visit_date: formData.dateOfVisit,
@@ -280,7 +409,7 @@ export default function LeadForm() {
     }
 
     try {
-      const postUrl = `${globalThis.apiBaseUrl}/visits`
+      const postUrl = `${globalThis.apiBaseUrl}/visits/`
       console.log('Add Visit — payload being sent to POST:', postUrl, apiBody)
 
       const res = await fetch(postUrl, {
@@ -338,15 +467,28 @@ export default function LeadForm() {
               {leadType === 'Existing' && (
                 <>
                   <CFormLabel>Customer ID</CFormLabel>
-                  <CFormInput
-                    name="customerId"
-                    value={formData.customerId}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    placeholder="Ex: AB123456"
-                    invalid={touched.customerId && !!errors.customerId}
-                  />
-                  <CFormFeedback invalid>{errors.customerId}</CFormFeedback>
+                  <CInputGroup className="mb-1">
+                    <CFormInput
+                      name="customerId"
+                      value={formData.customerId}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      placeholder="Ex: cl000012"
+                      invalid={touched.customerId && !!errors.customerId}
+                    />
+                    <CButton
+                      type="button"
+                      color="primary"
+                      variant="outline"
+                      onClick={() => fetchCustomerDetails(formData.customerId)}
+                      disabled={formData.customerId.length !== 8}
+                    >
+                      Fetch Details
+                    </CButton>
+                  </CInputGroup>
+                  {touched.customerId && errors.customerId && (
+                    <div className="text-danger small mb-3">{errors.customerId}</div>
+                  )}
                   <br />
                 </>
               )}
