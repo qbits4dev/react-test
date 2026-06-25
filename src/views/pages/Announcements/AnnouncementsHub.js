@@ -131,7 +131,7 @@ const AnnouncementCard = ({ item }) => {
 
   return (
     <CCard
-      className="border-0 shadow h-100"
+      className="border-0 shadow flex-grow-1"
       style={{
         borderRadius: 20,
         overflow: 'hidden',
@@ -714,7 +714,7 @@ const AnnouncementsHub = () => {
           ) : (
             <CRow className="g-3 mb-4">
               {filtered.map((item) => (
-                <CCol key={item.id} md={6} xl={4}>
+                <CCol key={item.id} md={6} xl={4} className="d-flex flex-column">
                   <AnnouncementCard item={item} />
                   {isAdmin && (
                     <div className="d-flex gap-2 mt-2 flex-wrap">
