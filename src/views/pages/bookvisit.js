@@ -33,6 +33,7 @@ export default function LeadForm() {
     interestedIn: '',
     plot: '',
     dateOfVisit: '',
+    timeOfVisit: '',
     purpose: '',
     feedback: '',
   })
@@ -299,6 +300,10 @@ export default function LeadForm() {
       errs.dateOfVisit = 'Date of visit required'
     }
 
+    if (!formData.timeOfVisit) {
+      errs.timeOfVisit = 'Time of visit required'
+    }
+
     setErrors(errs)
     return Object.keys(errs).length === 0
   }
@@ -343,6 +348,7 @@ export default function LeadForm() {
       interestedIn: true,
       plot: true,
       dateOfVisit: true,
+      timeOfVisit: true,
     })
     if (!validate()) return
 
@@ -402,6 +408,7 @@ export default function LeadForm() {
       plot_id: plotId,
       agent_id: formData.agentId,
       visit_date: formData.dateOfVisit,
+      visit_time: formData.timeOfVisit,
       purpose: formData.purpose || 'Site Visit',
       feedback: formData.feedback || '',
       status: 'scheduled',
@@ -609,6 +616,19 @@ export default function LeadForm() {
                 min={minVisitDate}
               />
               <CFormFeedback invalid>{errors.dateOfVisit}</CFormFeedback>
+              <br />
+
+              {/* Time of Visit */}
+              <CFormLabel>Time of Visit</CFormLabel>
+              <CFormInput
+                type="time"
+                name="timeOfVisit"
+                value={formData.timeOfVisit}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                invalid={touched.timeOfVisit && !!errors.timeOfVisit}
+              />
+              <CFormFeedback invalid>{errors.timeOfVisit}</CFormFeedback>
               <br />
 
               {/* Purpose */}

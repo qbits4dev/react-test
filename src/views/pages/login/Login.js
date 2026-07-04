@@ -76,7 +76,7 @@ const Login = () => {
         localStorage.setItem('access_token', data.access_token)
         localStorage.setItem('refresh_token', data.refresh_token || '')
         localStorage.setItem('user', JSON.stringify(data)); // Store the whole user object
-        console.log('LocalStorage values:', JSON.stringify(localStorage));
+        //console.log('LocalStorage values:', JSON.stringify(localStorage));
 
         // Role-based navigation
         switch (data.role) {

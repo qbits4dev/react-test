@@ -34,6 +34,7 @@ const updateVisitOnServer = async (visit) => {
         plot_id: visit.plot_id !== undefined && visit.plot_id !== '' ? visit.plot_id : null,
         agent_id: visit.agent_id || '',
         visit_date: visit.visit_date || '',
+        visit_time: visit.visit_time || '',
         purpose: visit.purpose || '',
         feedback: visit.feedback || '',
         status: visit.status || 'scheduled',
@@ -117,6 +118,9 @@ export default function SiteVisitsTable() {
     const [deleting, setDeleting] = useState(false)
 
     const [agentsAndAdmins, setAgentsAndAdmins] = useState([])
+    const [projects, setProjects] = useState([])
+    const [projectPlots, setProjectPlots] = useState([])
+    const [plotsLoading, setPlotsLoading] = useState(false)
 
     useEffect(() => {
         const fetchAgentsAndAdmins = async () => {
@@ -213,14 +217,24 @@ export default function SiteVisitsTable() {
     }, [])
 
     useEffect(() => {
-        const fetchVisits = async () => {
+        const loadAllData = async () => {
             try {
+                // 1. Fetch visits
                 const response = await fetch(`${globalThis.apiBaseUrl}/visits/`)
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`)
                 }
                 const data = await response.json()
                 setSiteVisits(Array.isArray(data) ? data : [])
+
+                // 2. Fetch projects
+                const resProjects = await fetch(`${globalThis.apiBaseUrl}/projects/`)
+                let projectsData = []
+                if (resProjects.ok) {
+                    const parsed = await resProjects.json()
+                    projectsData = Array.isArray(parsed?.data) ? parsed.data : (Array.isArray(parsed) ? parsed : [])
+                }
+                setProjects(projectsData)
             } catch (err) {
                 setError(err.message)
             } finally {
@@ -228,7 +242,7 @@ export default function SiteVisitsTable() {
             }
         }
 
-        fetchVisits()
+        loadAllData()
     }, [])
 
     const displayVisits = siteVisits.filter(visit => {
@@ -243,14 +257,99 @@ export default function SiteVisitsTable() {
         return true
     })
 
-    const handleEditOpen = (visit) => {
-        setSelectedVisit({ ...visit })
+    // Name resolving helpers
+    const resolveAgentName = (agentId) => {
+        if (!agentId) return '—'
+        const found = agentsAndAdmins.find(
+            (u) =>
+                String(u.u_id).toLowerCase() === String(agentId).toLowerCase() ||
+                String(u.id) === String(agentId)
+        )
+        return found ? found.name : agentId
+    }
+
+    const formatTime12h = (timeStr) => {
+        if (!timeStr) return '—'
+        const parts = timeStr.split(/[T ]/)
+        const tPart = parts.length > 1 ? parts[1] : parts[0]
+        const rawTime = tPart.slice(0, 5) // "HH:mm"
+        const [hourStr, minStr] = rawTime.split(':')
+        const hour = parseInt(hourStr, 10)
+        if (!isNaN(hour)) {
+            const ampm = hour >= 12 ? 'PM' : 'AM'
+            const hour12 = hour % 12 || 12
+            return `${String(hour12).padStart(2, '0')}:${minStr} ${ampm}`
+        }
+        return timeStr
+    }
+
+    const handleEditOpen = async (visit) => {
+        setSelectedVisit({
+            ...visit,
+            phone: visit.customer_mobile || visit.phone || '',
+            visit_date_only: visit.visit_date || '',
+            visit_time_only: visit.visit_time || ''
+        })
+
+        // Fetch plots for the current project of the visit
+        setProjectPlots([])
+        if (visit.project_id) {
+            const proj = projects.find(p => String(p.id) === String(visit.project_id))
+            if (proj) {
+                setPlotsLoading(true)
+                try {
+                    const res = await fetch(`${globalThis.apiBaseUrl}/projects/plots?project_name=${encodeURIComponent(proj.name)}`)
+                    if (res.ok) {
+                        const data = await res.json()
+                        setProjectPlots(Array.isArray(data) ? data : [])
+                    }
+                } catch (e) {
+                    console.error('Failed to load plots in edit modal:', e)
+                } finally {
+                    setPlotsLoading(false)
+                }
+            }
+        }
         setEditModalVisible(true)
+    }
+
+    const handleEditProjectChange = async (e) => {
+        const selectedProjId = e.target.value
+        setSelectedVisit(prev => ({
+            ...prev,
+            project_id: selectedProjId,
+            plot_id: '' // reset plot
+        }))
+        setProjectPlots([])
+
+        const proj = projects.find(p => String(p.id) === String(selectedProjId))
+        if (!proj) return
+
+        setPlotsLoading(true)
+        try {
+            const res = await fetch(`${globalThis.apiBaseUrl}/projects/plots?project_name=${encodeURIComponent(proj.name)}`)
+            if (res.ok) {
+                const data = await res.json()
+                setProjectPlots(Array.isArray(data) ? data : [])
+            }
+        } catch (err) {
+            console.error('Failed to fetch plots for project:', err)
+        } finally {
+            setPlotsLoading(false)
+        }
     }
 
     const handleEditChange = (e) => {
         const { name, value } = e.target
-        setSelectedVisit(prev => ({ ...prev, [name]: value }))
+        setSelectedVisit(prev => {
+            const nextVisit = { ...prev, [name]: value }
+            if (name === 'visit_date_only') {
+                nextVisit.visit_date = value
+            } else if (name === 'visit_time_only') {
+                nextVisit.visit_time = value
+            }
+            return nextVisit
+        })
     }
 
     const handleSave = async () => {
@@ -351,12 +450,13 @@ export default function SiteVisitsTable() {
                                         <CTableRow>
                                             <CTableHeaderCell>#</CTableHeaderCell>
                                             <CTableHeaderCell>Lead Type</CTableHeaderCell>
-                                            <CTableHeaderCell>Customer ID</CTableHeaderCell>
-                                            <CTableHeaderCell>Agent ID</CTableHeaderCell>
+                                            <CTableHeaderCell>Customer Name</CTableHeaderCell>
+                                            <CTableHeaderCell>Agent Name</CTableHeaderCell>
                                             <CTableHeaderCell>Phone</CTableHeaderCell>
-                                            <CTableHeaderCell>Project ID</CTableHeaderCell>
-                                            <CTableHeaderCell>Plot ID</CTableHeaderCell>
+                                            <CTableHeaderCell>Project Name</CTableHeaderCell>
+                                            <CTableHeaderCell>Plot Name</CTableHeaderCell>
                                             <CTableHeaderCell>Date of Visit</CTableHeaderCell>
+                                            <CTableHeaderCell>Time of Visit</CTableHeaderCell>
                                             <CTableHeaderCell>Status</CTableHeaderCell>
                                             <CTableHeaderCell>Actions</CTableHeaderCell>
                                         </CTableRow>
@@ -366,14 +466,15 @@ export default function SiteVisitsTable() {
                                             <CTableRow key={visit.id || index}>
                                                 <CTableDataCell>{index + 1}</CTableDataCell>
                                                 <CTableDataCell>
-                                                    {visit.customer_id && visit.customer_id.startsWith('cu') ? 'Existing' : 'New'}
+                                                    {visit.customer_id && (visit.customer_id.startsWith('cu') || visit.customer_id.startsWith('cl')) ? 'Existing' : 'New'}
                                                 </CTableDataCell>
-                                                <CTableDataCell>{visit.customer_id || '—'}</CTableDataCell>
-                                                <CTableDataCell>{visit.agent_id || '—'}</CTableDataCell>
-                                                <CTableDataCell>{visit.phone || '—'}</CTableDataCell>
-                                                <CTableDataCell>{visit.project_id ? `${visit.project_id}` : '—'}</CTableDataCell>
-                                                <CTableDataCell>{visit.plot_id ? `${visit.plot_id}` : '—'}</CTableDataCell>
+                                                <CTableDataCell>{visit.customer_name || visit.customer_id || '—'}</CTableDataCell>
+                                                <CTableDataCell>{resolveAgentName(visit.agent_id)}</CTableDataCell>
+                                                <CTableDataCell>{visit.customer_mobile || visit.phone || '—'}</CTableDataCell>
+                                                <CTableDataCell>{visit.project_name || visit.project_id || '—'}</CTableDataCell>
+                                                <CTableDataCell>{visit.plot_data?.plot_number || visit.plot_id || '—'}</CTableDataCell>
                                                 <CTableDataCell>{visit.visit_date || '—'}</CTableDataCell>
+                                                <CTableDataCell>{formatTime12h(visit.visit_time)}</CTableDataCell>
                                                 <CTableDataCell>{visit.status || 'scheduled'}</CTableDataCell>
                                                  <CTableDataCell>
                                                      <div className="d-flex gap-2 justify-content-center">
@@ -430,17 +531,35 @@ export default function SiteVisitsTable() {
                                 <CFormLabel>Phone</CFormLabel>
                                 <CFormInput name="phone" value={selectedVisit.phone || ''} onChange={handleEditChange} />
                             </CCol>
-                            <CCol md={6}>
+                            <CCol md={3}>
                                 <CFormLabel>Date of Visit</CFormLabel>
-                                <CFormInput type="date" name="visit_date" value={selectedVisit.visit_date || ''} onChange={handleEditChange} />
+                                <CFormInput type="date" name="visit_date_only" value={selectedVisit.visit_date_only || ''} onChange={handleEditChange} />
+                            </CCol>
+                            <CCol md={3}>
+                                <CFormLabel>Time of Visit</CFormLabel>
+                                <CFormInput type="time" name="visit_time_only" value={selectedVisit.visit_time_only || ''} onChange={handleEditChange} />
                             </CCol>
                             <CCol md={6}>
-                                <CFormLabel>Project ID</CFormLabel>
-                                <CFormInput type="text" name="project_id" value={selectedVisit.project_id || ''} onChange={handleEditChange} placeholder="e.g. 1 or PRJ-001" />
+                                <CFormLabel>Project Name</CFormLabel>
+                                <CFormSelect name="project_id" value={selectedVisit.project_id || ''} onChange={handleEditProjectChange}>
+                                    <option value="">Select Project</option>
+                                    {projects.map((p) => (
+                                        <option key={p.id} value={p.id}>
+                                            {p.name}
+                                        </option>
+                                    ))}
+                                </CFormSelect>
                             </CCol>
                             <CCol md={6}>
-                                <CFormLabel>Plot ID</CFormLabel>
-                                <CFormInput type="text" name="plot_id" value={selectedVisit.plot_id || ''} onChange={handleEditChange} placeholder="e.g. 2 or PLT-101" />
+                                <CFormLabel>Plot Name</CFormLabel>
+                                <CFormSelect name="plot_id" value={selectedVisit.plot_id || ''} onChange={handleEditChange} disabled={!selectedVisit.project_id || plotsLoading}>
+                                    <option value="">{plotsLoading ? 'Loading plots...' : 'Select Plot'}</option>
+                                    {projectPlots.map((plot) => (
+                                        <option key={plot.id} value={plot.id}>
+                                            Plot {plot.plot_number} ({plot.status || 'available'})
+                                        </option>
+                                    ))}
+                                </CFormSelect>
                             </CCol>
                             <CCol md={6}>
                                 <CFormLabel>Status</CFormLabel>
