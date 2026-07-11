@@ -22,6 +22,7 @@ import {
   CTableHead,
   CTableHeaderCell,
   CTableRow,
+  CFormFeedback,
 } from '@coreui/react'
 
 const PLOT_STATUS_OPTIONS = ['available', 'sold', 'reserved', 'on hold']
@@ -82,7 +83,7 @@ const updatePlotOnServer = async (plot) => {
 }
 
 const deletePlotOnServer = async (plot) => {
-  const url = `${globalThis.apiBaseUrl}/projects/plots/${encodeURIComponent(plot.plot_number)}`
+  const url = `${globalThis.apiBaseUrl}/projects/${encodeURIComponent(plot.project_name)}/plots/${encodeURIComponent(plot.plot_number)}`
   const res = await fetch(url, { method: 'DELETE' })
   return res.ok
 }
@@ -102,6 +103,7 @@ export default function ProjectsList() {
   const [deletePlotModalVisible, setDeletePlotModalVisible] = useState(false)
   const [selectedPlot, setSelectedPlot] = useState(null)
   const [savingPlot, setSavingPlot] = useState(false)
+  const [plotErrors, setPlotErrors] = useState({})
 
   const [editProjectModalVisible, setEditProjectModalVisible] = useState(false)
   const [selectedProjectForEdit, setSelectedProjectForEdit] = useState(null)
@@ -147,12 +149,22 @@ export default function ProjectsList() {
 
   const handleEditPlotOpen = (plot) => {
     setSelectedPlot(normalizePlot(plot))
+    setPlotErrors({})
     setEditPlotModalVisible(true)
   }
 
   const handleEditPlotChange = (e) => {
     const { name, value } = e.target
-    setSelectedPlot((prev) => ({ ...prev, [name]: value }))
+    let nextValue = value
+    if (name === 'project_name') {
+      nextValue = value.replace(/[^A-Za-z0-9 \-]/g, '')
+    } else if (name === 'plot_number') {
+      nextValue = value.replace(/[^A-Za-z0-9\-]/g, '')
+    } else if (name === 'size' || name === 'price') {
+      nextValue = value.replace(/[^0-9]/g, '')
+    }
+    setSelectedPlot((prev) => ({ ...prev, [name]: nextValue }))
+    setPlotErrors((prev) => ({ ...prev, [name]: '' }))
   }
 
   const handleEditProjectOpen = (project) => {
@@ -211,8 +223,34 @@ export default function ProjectsList() {
 
   const handleSavePlot = async () => {
     if (!selectedPlot) return
-    if (!selectedPlot.project_name || !selectedPlot.plot_number || !selectedPlot.size || !selectedPlot.price || !selectedPlot.status) {
-      setMessage({ visible: true, color: 'danger', text: 'Please fill all plot fields before saving.' })
+
+    const errs = {}
+    if (!selectedPlot.project_name?.trim()) {
+      errs.project_name = 'Project Name is required'
+    } else if (/[^A-Za-z0-9 \-]/.test(selectedPlot.project_name)) {
+      errs.project_name = 'Project Name must contain only letters, numbers, spaces, and hyphens'
+    }
+
+    if (!selectedPlot.plot_number?.trim()) {
+      errs.plot_number = 'Plot Number is required'
+    } else if (/[^A-Za-z0-9\-]/.test(selectedPlot.plot_number)) {
+      errs.plot_number = 'Plot Number must contain only letters, numbers, and hyphens'
+    }
+
+    if (!selectedPlot.size || Number(selectedPlot.size) <= 0 || /[^0-9]/.test(selectedPlot.size)) {
+      errs.size = 'Size must be a valid positive integer'
+    }
+
+    if (selectedPlot.price === undefined || selectedPlot.price === '' || Number(selectedPlot.price) <= 0 || /[^0-9]/.test(selectedPlot.price)) {
+      errs.price = 'Price must be a valid positive integer'
+    }
+
+    if (!selectedPlot.status) {
+      errs.status = 'Plot Status is required'
+    }
+
+    if (Object.keys(errs).length > 0) {
+      setPlotErrors(errs)
       return
     }
 
@@ -471,24 +509,29 @@ export default function ProjectsList() {
           {selectedPlot && (
             <CRow className="g-3">
               <CCol md={6}>
-                <CFormInput label="Project Name" name="project_name" value={selectedPlot.project_name} onChange={handleEditPlotChange} />
+                <CFormInput label="Project Name" name="project_name" value={selectedPlot.project_name} onChange={handleEditPlotChange} invalid={!!plotErrors.project_name} />
+                {plotErrors.project_name && <CFormFeedback className="d-block">{plotErrors.project_name}</CFormFeedback>}
               </CCol>
               <CCol md={6}>
-                <CFormInput label="Plot Number" name="plot_number" value={selectedPlot.plot_number} onChange={handleEditPlotChange} />
+                <CFormInput label="Plot Number" name="plot_number" value={selectedPlot.plot_number} onChange={handleEditPlotChange} invalid={!!plotErrors.plot_number} />
+                {plotErrors.plot_number && <CFormFeedback className="d-block">{plotErrors.plot_number}</CFormFeedback>}
               </CCol>
               <CCol md={6}>
-                <CFormInput label="Size" type="number" name="size" value={selectedPlot.size} onChange={handleEditPlotChange} />
+                <CFormInput label="Size" type="number" name="size" value={selectedPlot.size} onChange={handleEditPlotChange} invalid={!!plotErrors.size} />
+                {plotErrors.size && <CFormFeedback className="d-block">{plotErrors.size}</CFormFeedback>}
               </CCol>
               <CCol md={6}>
-                <CFormInput label="Price" type="number" name="price" value={selectedPlot.price} onChange={handleEditPlotChange} />
+                <CFormInput label="Price" type="number" name="price" value={selectedPlot.price} onChange={handleEditPlotChange} invalid={!!plotErrors.price} />
+                {plotErrors.price && <CFormFeedback className="d-block">{plotErrors.price}</CFormFeedback>}
               </CCol>
               <CCol md={12}>
-                <CFormSelect label="Status" name="status" value={selectedPlot.status} onChange={handleEditPlotChange}>
+                <CFormSelect label="Status" name="status" value={selectedPlot.status} onChange={handleEditPlotChange} invalid={!!plotErrors.status}>
                   <option value="">Select Status</option>
                   {PLOT_STATUS_OPTIONS.map((status) => (
                     <option key={status} value={status}>{status}</option>
                   ))}
                 </CFormSelect>
+                {plotErrors.status && <CFormFeedback className="d-block">{plotErrors.status}</CFormFeedback>}
               </CCol>
             </CRow>
           )}

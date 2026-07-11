@@ -25,7 +25,7 @@ import {
     CFormLabel,
     CBadge,
 } from '@coreui/react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 
 export default function BookingsManager() {
     const navigate = useNavigate()
@@ -96,7 +96,7 @@ export default function BookingsManager() {
                 const allPlots = []
                 for (const proj of projectsData) {
                     try {
-                        const resPlots = await fetch(`${globalThis.apiBaseUrl}/projects/plots?project_name=${encodeURIComponent(proj.name)}`)
+                        const resPlots = await fetch(`${globalThis.apiBaseUrl}/projects/plots?project_name=${encodeURIComponent(proj.name)}/`)
                         if (resPlots.ok) {
                             const plotsList = await resPlots.json()
                             if (Array.isArray(plotsList)) {
@@ -126,7 +126,7 @@ export default function BookingsManager() {
                     } else if (listData && typeof listData === 'object') {
                         items = listData.users || listData.clients || listData.customers || listData.data || []
                     }
-                    
+
                     if (!Array.isArray(items) || items.length === 0) return []
 
                     // Check if it is an array of IDs or detailed objects
@@ -197,6 +197,47 @@ export default function BookingsManager() {
         loadAllData()
     }, [])
 
+    const location = useLocation()
+
+    useEffect(() => {
+        if (loading) return
+
+        const queryParams = new URLSearchParams(location.search)
+        const preselectProject = queryParams.get('project_name')
+        const preselectPlotId = queryParams.get('plot_id')
+
+        if (preselectProject && preselectPlotId) {
+            setModalMode('add')
+            setFormProjectName(preselectProject)
+            if (isCustomer) {
+                setFormCustomerId(userUid)
+            } else {
+                setFormCustomerId('')
+            }
+            setFormAmount('')
+            setFormStatus('pending')
+
+            const fetchProjPlots = async () => {
+                setPlotsLoading(true)
+                try {
+                    const res = await fetch(`${globalThis.apiBaseUrl}/projects/plots?project_name=${encodeURIComponent(preselectProject)}`)
+                    if (res.ok) {
+                        const data = await res.json()
+                        setProjectPlots(Array.isArray(data) ? data : [])
+                    }
+                } catch (e) {
+                    console.error('Failed to load project plots in preselection:', e)
+                } finally {
+                    setPlotsLoading(false)
+                    setFormPlotId(preselectPlotId)
+                    setModalVisible(true)
+                }
+            }
+            fetchProjPlots()
+            navigate(location.pathname, { replace: true })
+        }
+    }, [loading, location.search])
+
     // Load plots for currently selected project in Form
     const handleProjectChange = async (projectName) => {
         setFormProjectName(projectName)
@@ -252,7 +293,7 @@ export default function BookingsManager() {
     const displayBookings = bookings.filter(b => {
         if (isCustomer) {
             return (loggedInIntegerId && String(b.customer_id) === String(loggedInIntegerId)) ||
-                   String(b.customer_id).toLowerCase() === String(userUid).toLowerCase()
+                String(b.customer_id).toLowerCase() === String(userUid).toLowerCase()
         }
         return true
     })
@@ -264,9 +305,9 @@ export default function BookingsManager() {
             const isPublished = ann.published || ann.status === 'published'
             if (!isPublished) return false
 
-            const isSpecificUser = ann.visibility === 'specific_client' && 
+            const isSpecificUser = ann.visibility === 'specific_client' &&
                 (String(ann.selected_client).toLowerCase() === String(booking.customer_id).toLowerCase() ||
-                 (loggedInIntegerId && String(ann.selected_client).toLowerCase() === String(loggedInIntegerId).toLowerCase()))
+                    (loggedInIntegerId && String(ann.selected_client).toLowerCase() === String(loggedInIntegerId).toLowerCase()))
             const isGeneralOrClients = ann.visibility === 'both' || ann.visibility === 'clients'
 
             const matchProject = String(ann.project).toLowerCase() === String(details.projectName).toLowerCase()
@@ -292,11 +333,11 @@ export default function BookingsManager() {
         setModalMode('edit')
         setSelectedBooking(booking)
         setFormCustomerId(booking.customer_id !== undefined && booking.customer_id !== null ? String(booking.customer_id) : '')
-        
+
         // Find project name for plot_id
         const details = resolvePlotDetails(booking.plot_id)
         setFormProjectName(details.projectName || '')
-        
+
         // Trigger load plots for that project
         if (details.projectName) {
             setPlotsLoading(true)

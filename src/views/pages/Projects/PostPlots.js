@@ -194,7 +194,7 @@ export default function PlotForm() {
               <CCol md={6}>
                 <CFormSelect
                   floating
-                  label="Project Name"
+                  label="Project Name *"
                   name="project_name"
                   value={form.project_name}
                   onChange={handleChange}
@@ -215,7 +215,7 @@ export default function PlotForm() {
               <CCol md={6}>
                 <CFormInput
                   floating
-                  label="Plot Number"
+                  label="Plot Number *"
                   name="plot_number"
                   value={form.plot_number}
                   onChange={handleChange}
@@ -232,7 +232,7 @@ export default function PlotForm() {
               <CCol md={6}>
                 <CFormInput
                   floating
-                  label="Size (sq. ft)"
+                  label="Size (sq. ft) *"
                   name="size"
                   type="number"
                   value={form.size}
@@ -247,7 +247,7 @@ export default function PlotForm() {
               <CCol md={6}>
                 <CFormInput
                   floating
-                  label="Price"
+                  label="Price *"
                   name="price"
                   type="number"
                   value={form.price}
@@ -265,7 +265,7 @@ export default function PlotForm() {
               <CCol>
                 <CFormSelect
                   floating
-                  label="Plot Status"
+                  label="Plot Status *"
                   name="status"
                   value={form.status}
                   onChange={handleChange}

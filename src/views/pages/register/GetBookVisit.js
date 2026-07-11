@@ -341,12 +341,21 @@ export default function SiteVisitsTable() {
 
     const handleEditChange = (e) => {
         const { name, value } = e.target
+        let cleanValue = value
+        if (name === 'phone') {
+            cleanValue = value.replace(/[^0-9]/g, '').slice(0, 10)
+        } else if (name === 'customer_id') {
+            cleanValue = value.replace(/[^A-Za-z0-9\-]/g, '').toUpperCase()
+        } else if (name === 'purpose' || name === 'feedback') {
+            cleanValue = value.replace(/[^A-Za-z0-9 ,.\-\/()]/g, '')
+        }
+
         setSelectedVisit(prev => {
-            const nextVisit = { ...prev, [name]: value }
+            const nextVisit = { ...prev, [name]: cleanValue }
             if (name === 'visit_date_only') {
-                nextVisit.visit_date = value
+                nextVisit.visit_date = cleanValue
             } else if (name === 'visit_time_only') {
-                nextVisit.visit_time = value
+                nextVisit.visit_time = cleanValue
             }
             return nextVisit
         })

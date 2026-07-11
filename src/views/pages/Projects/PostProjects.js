@@ -258,7 +258,7 @@ export default function ProjectForm() {
                 <div style={{ minHeight: '90px' }}>
                   <CFormInput
                     floating
-                    label="Project Name"
+                    label="Project Name *"
                     name="name"
                     value={form.name}
                     onChange={handleChange}
@@ -273,7 +273,7 @@ export default function ProjectForm() {
                 <div style={{ minHeight: '90px' }}>
                   <CFormInput
                     floating
-                    label="Location"
+                    label="Location *"
                     name="location"
                     value={form.location}
                     onChange={handleChange}
@@ -293,7 +293,7 @@ export default function ProjectForm() {
                   <CFormInput
                     floating
                     type="number"
-                    label="Total Area (sq. ft)"
+                    label="Total Area (sq. ft) *"
                     name="total_area"
                     value={form.total_area}
                     onChange={handleChange}
@@ -308,7 +308,7 @@ export default function ProjectForm() {
                 <div style={{ minHeight: '90px' }}>
                   <CFormSelect
                     floating
-                    label="Project Status"
+                    label="Project Status *"
                     name="status"
                     value={form.status}
                     onChange={handleChange}
@@ -334,7 +334,7 @@ export default function ProjectForm() {
                   <CFormInput
                     floating
                     type="date"
-                    label="Start Date"
+                    label="Start Date *"
                     name="start_date"
                     value={form.start_date}
                     onChange={handleChange}
@@ -350,7 +350,7 @@ export default function ProjectForm() {
                   <CFormInput
                     floating
                     type="date"
-                    label="End Date"
+                    label="End Date *"
                     name="end_date"
                     value={form.end_date}
                     onChange={handleChange}
@@ -369,7 +369,7 @@ export default function ProjectForm() {
                 <div style={{ minHeight: '120px' }}>
                   <CFormTextarea
                     floating
-                    label="Project Description"
+                    label="Project Description *"
                     name="description"
                     value={form.description}
                     onChange={handleChange}

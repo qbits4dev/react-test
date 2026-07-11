@@ -283,9 +283,20 @@ export default function RegisterClientWizard() {
 
       const res = await fetch(url, { method: 'POST', body: formData })
       const data = await res.json()
+      console.log('Client registration success response data:', data)
 
       if (res.ok) {
-        setRegisteredUID(data.u_id || data.user_id || form.u_id || 'N/A')
+        let resolvedUID = data.uid || data.u_id || data.user_id || data.data?.uid || data.data?.u_id || data.user?.uid || data.user?.u_id || form.u_id
+        if (!resolvedUID && data.message && typeof data.message === 'string') {
+          const match = data.message.match(/ID\s+([A-Za-z0-9_]+)/i)
+          if (match) {
+            resolvedUID = match[1]
+          }
+        }
+        if (!resolvedUID) {
+          resolvedUID = 'N/A'
+        }
+        setRegisteredUID(resolvedUID)
         
         if (isConverting) {
           try {

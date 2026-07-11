@@ -154,8 +154,12 @@ export default function RegisterAgentWizard() {
     else if (['nominiee', 'relationship'].includes(name)) value = sanitizeName(value, 60)
     else if (['city', 'state'].includes(name)) value = sanitizeName(value, 50)
     else if (name === 'bank_name') value = sanitizeName(value, 80)
-    else if (['language', 'education', 'work_location', 'branch'].includes(name))
-      value = sanitizeText(value, 80)
+    else if (['work_location', 'branch'].includes(name))
+      value = value.replace(/[^A-Za-z0-9 ,\-]/g, '').slice(0, 80)
+    else if (name === 'education')
+      value = value.replace(/[^A-Za-z0-9 ,.\-\/()]/g, '').slice(0, 80)
+    else if (name === 'language')
+      value = value.replace(/[^A-Za-z ]/g, '').slice(0, 80)
     else if (name === 'occupation')
       value = sanitizeText(value, 80)
     else if (name === 'email')
@@ -255,6 +259,7 @@ export default function RegisterAgentWizard() {
       case 'education':
         if (!v) return 'Education is required'
         if (v.length > 80) return 'Education must not exceed 80 characters'
+        if (/[^A-Za-z0-9 ,.\-\/()]/.test(v)) return 'Education can only contain letters, numbers, spaces, dots, commas, hyphens, slashes, and parentheses'
         break
       case 'language':
         if (!v) return 'Language is required'
@@ -301,6 +306,7 @@ export default function RegisterAgentWizard() {
       case 'work_location':
         if (!v) return 'Work Location is required'
         if (v.length > 80) return 'Work Location must not exceed 80 characters'
+        if (/[^A-Za-z0-9 ,\-]/.test(v)) return 'Work Location can only contain letters, numbers, spaces, commas, and hyphens'
         break
 
       // ── Bank details ──
@@ -313,6 +319,7 @@ export default function RegisterAgentWizard() {
       case 'branch':
         if (!v) return 'Branch is required'
         if (v.length > 80) return 'Branch must not exceed 80 characters'
+        if (/[^A-Za-z0-9 ,\-]/.test(v)) return 'Branch can only contain letters, numbers, spaces, commas, and hyphens'
         break
       case 'account_number':
         if (!v) return 'Account Number is required'
