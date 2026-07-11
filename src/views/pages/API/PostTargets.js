@@ -38,6 +38,8 @@ const PostTargets = () => {
 
   const [formData, setFormData] = useState({
     designation: '',
+    description: '',
+    value: '',
     sale_type: '',
     stage: '',
     timeframe: '',
@@ -61,7 +63,8 @@ const PostTargets = () => {
 
   const validateField = (name, value) => {
     const v = String(value || '').trim()
-    if (['stage', 'designation', 'targetType'].includes(name) && !v) return 'This field is required'
+    if (['stage', 'designation', 'targetType', 'description'].includes(name) && !v) return 'This field is required'
+    if (name === 'value' && (!v || Number(v) <= 0)) return 'Value must be greater than 0'
     if (name === 'timeframe' && (!v || Number(v) <= 0 || Number(v) > 120)) return 'Timeframe must be between 1 and 120'
     if (name === 'target_units' && (!v || Number(v) <= 0)) return 'Target Units must be greater than 0'
     if (name === 'salary_monthly' && v && Number(v) < 0) return 'Salary cannot be negative'
@@ -165,8 +168,8 @@ const PostTargets = () => {
   const handleChange = (e) => {
     const { name, value } = e.target
     let nextValue = value
-    if (['timeframe', 'target_units', 'salary_monthly'].includes(name)) nextValue = sanitizeNumeric(value, 8)
-    if (['rewards', 'commission_notes', 'salary_eligibility_notes', 'other_notes', 'tour', 'insurance_cover', 'medical_cover', 'stage'].includes(name)) {
+    if (['timeframe', 'target_units', 'salary_monthly', 'value'].includes(name)) nextValue = sanitizeNumeric(value, 8)
+    if (['rewards', 'commission_notes', 'salary_eligibility_notes', 'other_notes', 'tour', 'insurance_cover', 'medical_cover', 'stage', 'description'].includes(name)) {
       nextValue = sanitizeText(value, 250)
     }
     setFormData((prev) => ({ ...prev, [name]: nextValue }))
@@ -191,6 +194,8 @@ const PostTargets = () => {
     const nextErrors = {
       targetType: validateField('targetType', formData.targetType),
       designation: validateField('designation', formData.designation),
+      description: validateField('description', formData.description),
+      value: validateField('value', formData.value),
       stage: validateField('stage', formData.stage),
       timeframe: validateField('timeframe', formData.timeframe),
       target_units: validateField('target_units', formData.target_units),
@@ -218,11 +223,23 @@ const PostTargets = () => {
     }
 
     const payload = {
-      ...formData,
-      sale_type: formData.sale_type || 'Direct sale',
+      designation: formData.designation,
+      description: formData.description,
+      value: Number(formData.value),
+      stage: formData.stage,
+      timeframe: Number(formData.timeframe),
+      target_units: Number(formData.target_units),
+      insurance_cover: formData.insurance_cover,
+      medical_cover: formData.medical_cover,
+      tour: formData.tour,
+      rewards: formData.rewards,
+      salary_monthly: formData.salary_monthly ? Number(formData.salary_monthly) : null,
+      commission_notes: formData.commission_notes,
+      salary_eligibility_notes: formData.salary_eligibility_notes,
+      other_notes: formData.other_notes,
     }
 
-    fetch(`${globalThis.apiBaseUrl}/api/targets`, {
+    fetch(`${globalThis.apiBaseUrl}/targets`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -318,6 +335,19 @@ const PostTargets = () => {
                   {errors.designation && <CFormFeedback className="d-block">{errors.designation}</CFormFeedback>}
                   {designationError && <small className="text-danger">{designationError}</small>}
                 </div>
+
+                <CRow>
+                  <CCol sm={6} className="mb-3">
+                    <CFormLabel className="fw-semibold text-muted">Target Value *</CFormLabel>
+                    <CFormInput name="value" type="number" value={formData.value} onChange={handleChange} invalid={!!errors.value} required />
+                    {errors.value && <CFormFeedback className="d-block">{errors.value}</CFormFeedback>}
+                  </CCol>
+                  <CCol sm={6} className="mb-3">
+                    <CFormLabel className="fw-semibold text-muted">Target Description *</CFormLabel>
+                    <CFormInput name="description" value={formData.description} onChange={handleChange} invalid={!!errors.description} required />
+                    {errors.description && <CFormFeedback className="d-block">{errors.description}</CFormFeedback>}
+                  </CCol>
+                </CRow>
 
                 <CRow>
                   <CCol sm={6} className="mb-3">

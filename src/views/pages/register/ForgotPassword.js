@@ -83,14 +83,14 @@ export default function ForgotPassword() {
       console.log('Mobile number found:', mobile)
 
       // Step 2: Send OTP to user
-      const otpResponse = await fetch(`${globalThis.apiBaseUrl}/send-otp/${mobile}`, {
+      const otpResponse = await fetch(`${globalThis.apiBaseUrl}/send-otp/login/${mobile}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({}),
       })
-      console.log(`${globalThis.apiBaseUrl}/send-otp/${mobile}`)
+      console.log(`${globalThis.apiBaseUrl}/send-otp/login/${mobile}`)
       const otpResult = await otpResponse.json()
       console.log(otpResult)
 

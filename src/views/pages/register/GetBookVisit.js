@@ -27,18 +27,25 @@ import {
 
 import { useNavigate } from 'react-router-dom'
 
-const updateVisitOnServer = async (visit) => {
+const updateVisitOnServer = async (visit, projectsList = [], plotsList = []) => {
+    // Find plot number in projectPlots or visit.plot_data
+    const foundPlot = plotsList.find(p => String(p.id) === String(visit.plot_id))
+    const plotNumber = foundPlot ? foundPlot.plot_number : (visit.plot_number || visit.plot_data?.plot_number || visit.plot_id)
+
+    // Find project name
+    const foundProj = projectsList.find(p => String(p.id) === String(visit.project_id))
+    const projectName = foundProj ? foundProj.name : (visit.project_name || '')
+
     const payload = {
-        id: visit.id,
         customer_id: visit.customer_id || '',
-        plot_id: visit.plot_id !== undefined && visit.plot_id !== '' ? visit.plot_id : null,
+        plot_number: parseInt(plotNumber, 10),
         agent_id: visit.agent_id || '',
         visit_date: visit.visit_date || '',
         visit_time: visit.visit_time || '',
         purpose: visit.purpose || '',
         feedback: visit.feedback || '',
         status: visit.status || 'scheduled',
-        project_id: visit.project_id !== undefined && visit.project_id !== '' ? visit.project_id : null,
+        project_name: projectName || '',
     }
 
     const url = `${globalThis.apiBaseUrl}/visits/${visit.id}`
@@ -284,18 +291,12 @@ export default function SiteVisitsTable() {
     }
 
     const handleEditOpen = async (visit) => {
-        setSelectedVisit({
-            ...visit,
-            phone: visit.customer_mobile || visit.phone || '',
-            visit_date_only: visit.visit_date || '',
-            visit_time_only: visit.visit_time || ''
-        })
-
-        // Fetch plots for the current project of the visit
-        setProjectPlots([])
-        if (visit.project_id) {
-            const proj = projects.find(p => String(p.id) === String(visit.project_id))
+        const projName = visit.project_name || visit.project_id
+        let resolvedProjId = ''
+        if (projName) {
+            const proj = projects.find(p => String(p.id) === String(projName) || String(p.name).toLowerCase() === String(projName).toLowerCase())
             if (proj) {
+                resolvedProjId = proj.id
                 setPlotsLoading(true)
                 try {
                     const res = await fetch(`${globalThis.apiBaseUrl}/projects/plots?project_name=${encodeURIComponent(proj.name)}`)
@@ -310,6 +311,15 @@ export default function SiteVisitsTable() {
                 }
             }
         }
+
+        setSelectedVisit({
+            ...visit,
+            phone: visit.customer_mobile || visit.phone || '',
+            visit_date_only: visit.visit_date || '',
+            visit_time_only: visit.visit_time || '',
+            project_id: resolvedProjId,
+            plot_id: visit.plot_data?.id || visit.plot_id || ''
+        })
         setEditModalVisible(true)
     }
 
@@ -365,7 +375,7 @@ export default function SiteVisitsTable() {
         if (!selectedVisit) return
         setSaving(true)
         try {
-            const success = await updateVisitOnServer(selectedVisit)
+            const success = await updateVisitOnServer(selectedVisit, projects, projectPlots)
             if (success) {
                 setSiteVisits(prev => prev.map(v => v.id === selectedVisit.id ? selectedVisit : v))
                 setMessage({ visible: true, color: 'success', text: 'Site visit updated successfully.' })

@@ -403,16 +403,19 @@ export default function LeadForm() {
       }
     }
 
+    const chosenPlot = plots.find((p) => String(p.id) === String(formData.plot))
+    const plotNumber = chosenPlot ? parseInt(chosenPlot.plot_number, 10) : null
+
     const apiBody = {
       customer_id: finalCustomerId,
-      plot_id: plotId,
+      plot_number: plotNumber,
       agent_id: formData.agentId,
       visit_date: formData.dateOfVisit,
       visit_time: formData.timeOfVisit,
       purpose: formData.purpose || 'Site Visit',
       feedback: formData.feedback || '',
       status: 'scheduled',
-      project_id: projectId,
+      project_name: formData.interestedIn,
     }
 
     try {

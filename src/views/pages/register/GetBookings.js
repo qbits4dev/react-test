@@ -27,6 +27,15 @@ import {
 } from '@coreui/react'
 import { useNavigate, useLocation } from 'react-router-dom'
 
+const normalizeBooking = (b) => {
+    if (!b) return b
+    return {
+        ...b,
+        plot_id: b.plot_id || b.plot_number || '',
+        amount: b.amount !== undefined ? b.amount : (b.advance_amount !== undefined ? b.advance_amount : 0)
+    }
+}
+
 export default function BookingsManager() {
     const navigate = useNavigate()
 
@@ -81,7 +90,8 @@ export default function BookingsManager() {
                 if (resBookings.ok) {
                     bookingsData = await resBookings.json()
                 }
-                setBookings(Array.isArray(bookingsData) ? bookingsData : [])
+                const list = Array.isArray(bookingsData) ? bookingsData : []
+                setBookings(list.map(normalizeBooking))
 
                 // 2. Fetch projects
                 const resProjects = await fetch(`${globalThis.apiBaseUrl}/projects/`)
@@ -365,8 +375,8 @@ export default function BookingsManager() {
         setSaving(true)
         const payload = {
             customer_id: formCustomerId,
-            plot_id: parseInt(formPlotId, 10),
-            amount: parseFloat(formAmount),
+            plot_number: parseInt(formPlotId, 10),
+            advance_amount: parseFloat(formAmount),
             status: formStatus,
             project_name: formProjectName
         }
@@ -380,7 +390,7 @@ export default function BookingsManager() {
                 })
                 if (res.ok) {
                     const newBook = await res.json()
-                    setBookings(prev => [...prev, newBook])
+                    setBookings(prev => [...prev, normalizeBooking(newBook)])
                     setMessage({ visible: true, color: 'success', text: 'Booking created successfully.' })
                     setModalVisible(false)
                 } else {
@@ -395,7 +405,7 @@ export default function BookingsManager() {
                 })
                 if (res.ok) {
                     const updatedBook = await res.json()
-                    setBookings(prev => prev.map(b => b.id === selectedBooking.id ? updatedBook : b))
+                    setBookings(prev => prev.map(b => b.id === selectedBooking.id ? normalizeBooking(updatedBook) : b))
                     setMessage({ visible: true, color: 'success', text: 'Booking updated successfully.' })
                     setModalVisible(false)
                 } else {

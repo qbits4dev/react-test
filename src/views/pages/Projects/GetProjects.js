@@ -62,6 +62,7 @@ const updatePlotOnServer = async (plot) => {
 
   const plotId = plot.id || plot.plot_number
   const urls = [
+    `${globalThis.apiBaseUrl}/projects/${encodeURIComponent(plot.project_name)}/plots/${encodeURIComponent(plot.plot_number)}`,
     `${globalThis.apiBaseUrl}/projects/plots/${encodeURIComponent(plotId)}`,
     `${globalThis.apiBaseUrl}/projects/plots/${encodeURIComponent(plot.plot_number)}`,
     `${globalThis.apiBaseUrl}/projects/plots`,

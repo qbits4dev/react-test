@@ -27,6 +27,8 @@ import {
 
 const editableKeys = [
   'designation',
+  'description',
+  'value',
   'sale_type',
   'stage',
   'timeframe',
@@ -56,7 +58,11 @@ const normalizeTarget = (target) => {
 
 const updateTargetOnServer = async (target) => {
   const payload = editableKeys.reduce((acc, key) => {
-    acc[key] = target[key] ?? ''
+    if (key === 'value') {
+      acc[key] = target[key] !== '' && target[key] !== null ? Number(target[key]) : 0
+    } else {
+      acc[key] = target[key] ?? ''
+    }
     return acc
   }, {})
 
@@ -138,7 +144,7 @@ const GetTargets = () => {
   const handleSave = async () => {
     if (!selectedTarget) return
 
-    const required = ['designation', 'stage', 'target_units']
+    const required = ['designation', 'description', 'value', 'stage', 'target_units']
     for (const key of required) {
       if (!String(selectedTarget[key] || '').trim()) {
         setMessage({ visible: true, color: 'danger', text: `${keyLabel(key)} is required.` })
