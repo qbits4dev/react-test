@@ -468,7 +468,7 @@ export default function SiteVisitsTable() {
                                     <CTableHead color="light">
                                         <CTableRow>
                                             <CTableHeaderCell>#</CTableHeaderCell>
-                                            <CTableHeaderCell>Lead Type</CTableHeaderCell>
+                                            <CTableHeaderCell>Client Type</CTableHeaderCell>
                                             <CTableHeaderCell>Customer Name</CTableHeaderCell>
                                             <CTableHeaderCell>Agent Name</CTableHeaderCell>
                                             <CTableHeaderCell>Phone</CTableHeaderCell>

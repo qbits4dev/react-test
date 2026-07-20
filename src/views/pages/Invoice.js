@@ -71,13 +71,13 @@ export default function InvoiceLayout() {
                 <CCardBody>
                     <CFormInput
                         className="mb-2"
-                        placeholder="Client Name"
+                        placeholder="Customer Name"
                         value={billTo.name}
                         onChange={(e) => setBillTo({ ...billTo, name: e.target.value })}
                     />
                     <CFormTextarea
                         rows={3}
-                        placeholder="Client Address"
+                        placeholder="Customer Address"
                         value={billTo.address}
                         onChange={(e) => setBillTo({ ...billTo, address: e.target.value })}
                     />

@@ -312,7 +312,7 @@ export default function RegisterClientWizard() {
           }
         }
 
-        setModalMessage(isConverting ? 'Success: Lead converted to client successfully' : 'Success: Client registered successfully')
+        setModalMessage(isConverting ? 'Success: Client converted to customer successfully' : 'Success: Customer registered successfully')
         setShowModal(true)
       } else {
         let errorMsg = data.message || 'Registration failed.'
@@ -338,7 +338,7 @@ export default function RegisterClientWizard() {
                 <CButton color="primary" variant="ghost" onClick={() => navigate(-1)}>
                   <CIcon icon={cilArrowLeft} className="me-2" />
                 </CButton>
-                <h2 className="m-0">{form.u_id ? 'Convert Lead to Client' : 'Client Registration'}</h2>
+                <h2 className="m-0">{form.u_id ? 'Convert Client to Customer' : 'Customer Registration'}</h2>
                 <div style={{ width: 80 }} />
               </div>
 
@@ -506,7 +506,7 @@ export default function RegisterClientWizard() {
 
                 <div className="d-grid mt-4">
                   <CButton color="primary" size="lg" type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? <><CSpinner size="sm" className="me-2" />Submitting...</> : (form.u_id ? 'Convert to Client' : 'Register Client')}
+                    {isSubmitting ? <><CSpinner size="sm" className="me-2" />Submitting...</> : (form.u_id ? 'Convert to Customer' : 'Register Customer')}
                   </CButton>
                 </div>
               </CForm>

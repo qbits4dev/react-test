@@ -150,7 +150,7 @@ const GetClients = () => {
 
       setClients(normalized)
     } catch (error) {
-      setMessage({ visible: true, color: 'danger', text: `Failed to fetch ${viewType === 'clients' ? 'clients' : 'leads'}.` })
+      setMessage({ visible: true, color: 'danger', text: `Failed to fetch ${viewType === 'clients' ? 'customers' : 'clients'}.` })
     } finally {
       setLoading(false)
     }
@@ -412,7 +412,7 @@ const GetClients = () => {
       console.log('API Response status:', res.status)
       if (!res.ok) throw new Error('update failed')
 
-      setMessage({ visible: true, color: 'success', text: `${isLead ? 'Lead' : 'Client'} updated successfully.` })
+      setMessage({ visible: true, color: 'success', text: `${isLead ? 'Client' : 'Customer'} updated successfully.` })
       setEditModalVisible(false)
       await fetchClients()
     } catch {
@@ -433,7 +433,7 @@ const GetClients = () => {
         : `${globalThis.apiBaseUrl}/users/${selectedClient.u_id}`
       const res = await fetch(deleteUrl, { method: 'DELETE' })
       if (!res.ok) throw new Error('delete failed')
-      setMessage({ visible: true, color: 'success', text: `${viewType === 'leads' ? 'Lead' : 'Client'} deleted successfully.` })
+      setMessage({ visible: true, color: 'success', text: `${viewType === 'leads' ? 'Client' : 'Customer'} deleted successfully.` })
       await fetchClients()
     } catch {
       setClients((prev) => prev.filter((c) => c.id !== selectedClient.id))
@@ -462,7 +462,7 @@ const GetClients = () => {
       )}
 
       <CCardHeader className="p-3" style={{ background: 'linear-gradient(45deg, #00416a, #2b5876)', color: '#fff' }}>
-        <h4 className="mb-3 text-center">{viewType === 'clients' ? 'View Clients' : 'View Leads'}</h4>
+        <h4 className="mb-3 text-center">{viewType === 'clients' ? 'View Customers' : 'View Clients'}</h4>
         <CInputGroup style={{ maxWidth: 420, margin: '0 auto' }}>
           <CInputGroupText>
             <CIcon icon={cilSearch} />
@@ -480,7 +480,7 @@ const GetClients = () => {
 
       <CCardBody style={{ overflowX: 'auto' }}>
         {loading ? (
-          <div className="text-center py-5">Loading {viewType === 'clients' ? 'clients' : 'leads'}...</div>
+          <div className="text-center py-5">Loading {viewType === 'clients' ? 'customers' : 'clients'}...</div>
         ) : (
           <CTable responsive hover align="middle">
             <CTableHead color="light">
@@ -504,7 +504,7 @@ const GetClients = () => {
             <CTableBody>
               {pagedClients.length === 0 ? (
                 <CTableRow>
-                  <CTableDataCell colSpan={8} className="text-center text-muted">No {viewType === 'clients' ? 'clients' : 'leads'} found.</CTableDataCell>
+                  <CTableDataCell colSpan={8} className="text-center text-muted">No {viewType === 'clients' ? 'customers' : 'clients'} found.</CTableDataCell>
                 </CTableRow>
               ) : (
                 pagedClients.map((c) => (
@@ -528,7 +528,7 @@ const GetClients = () => {
                           </CDropdownItem>
                           {viewType === 'leads' && (
                             <CDropdownItem onClick={() => navigate('/register_client', { state: { lead: c } })}>
-                              Convert to Client
+                              Convert to Customer
                             </CDropdownItem>
                           )}
                           <CDropdownItem className="text-danger" onClick={() => handleDeleteOpen(c)}>
@@ -565,7 +565,7 @@ const GetClients = () => {
 
       <CModal visible={viewModalVisible} onClose={() => setViewModalVisible(false)} size="lg">
         <CModalHeader>
-          <CModalTitle>Lead Details</CModalTitle>
+          <CModalTitle>{viewType === 'leads' ? 'Client Details' : 'Customer Details'}</CModalTitle>
         </CModalHeader>
         <CModalBody>
           {selectedClient && (
@@ -582,7 +582,7 @@ const GetClients = () => {
 
       <CModal visible={editModalVisible} onClose={() => setEditModalVisible(false)} size="lg" backdrop="static">
         <CModalHeader>
-          <CModalTitle>{viewType === 'leads' ? 'Edit Lead' : 'Edit Client'}</CModalTitle>
+          <CModalTitle>{viewType === 'leads' ? 'Edit Client' : 'Edit Customer'}</CModalTitle>
         </CModalHeader>
         <CModalBody>
           {selectedClient && (
@@ -677,10 +677,10 @@ const GetClients = () => {
 
       <CModal visible={deleteModalVisible} onClose={() => setDeleteModalVisible(false)}>
         <CModalHeader>
-          <CModalTitle>Delete Lead</CModalTitle>
+          <CModalTitle>{viewType === 'leads' ? 'Delete Client' : 'Delete Customer'}</CModalTitle>
         </CModalHeader>
         <CModalBody>
-          Are you sure you want to delete this lead?
+          Are you sure you want to delete this {viewType === 'leads' ? 'client' : 'customer'}?
         </CModalBody>
         <CModalFooter>
           <CButton color="secondary" variant="ghost" onClick={() => setDeleteModalVisible(false)}>

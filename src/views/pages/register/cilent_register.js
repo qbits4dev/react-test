@@ -266,8 +266,8 @@ const Client_Register = () => {
             <CCard className="mx-4">
               <CCardBody className="p-4">
                 <CForm onSubmit={handleSubmit}>
-                  <h1>Lead Registration</h1>
-                  <p className="text-body-secondary">Register a new lead</p>
+                  <h1>Client Registration</h1>
+                  <p className="text-body-secondary">Register a new client</p>
                   <CInputGroup className="mb-3">
                     <CInputGroupText><CIcon icon={cilUser} /></CInputGroupText>
                     <CFormInput
@@ -378,7 +378,7 @@ const Client_Register = () => {
                     </div>
                   )}
                   <div className="d-grid">
-                    <CButton color="success" type='submit'>Submit Lead</CButton>
+                    <CButton color="success" type='submit'>Submit Client</CButton>
                   </div>
                 </CForm>
               </CCardBody>

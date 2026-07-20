@@ -40,7 +40,7 @@ const _nav = [
   },
   {
     component: CNavItem,
-    name: 'ClientDashboard',
+    name: 'CustomerDashboard',
     to: '/Clientdashboard',
     icon: <CIcon icon={cilSpeedometer} customClassName="nav-icon" />,
     badge: {
@@ -476,7 +476,7 @@ const _nav = [
       },
       {
         component: CNavItem,
-        name: 'Add Leads',
+        name: 'Add Clients',
         to: '/register_cilent',
       },
       {

@@ -51,10 +51,10 @@ const CATEGORIES = [
 ]
 
 const VISIBILITY_OPTIONS = [
-  { value: AnnouncementVisibility.CLIENTS, label: 'Clients Only' },
+  { value: AnnouncementVisibility.CLIENTS, label: 'Customers Only' },
   { value: AnnouncementVisibility.AGENTS, label: 'Agents Only' },
   { value: AnnouncementVisibility.BOTH, label: 'Both' },
-  { value: AnnouncementVisibility.SPECIFIC_CLIENT, label: 'Specific Client' },
+  { value: AnnouncementVisibility.SPECIFIC_CLIENT, label: 'Specific Customer' },
   { value: AnnouncementVisibility.SPECIFIC_TEAM, label: 'Specific Team' },
   { value: AnnouncementVisibility.SELECTED_DESIGNATIONS, label: 'Selected Designations' },
 ]
@@ -220,7 +220,7 @@ const AnnouncementEditor = ({ visible, onClose, onSave, form, setForm, errors, s
 
     if (showVisibilityDetail) {
       if (name === 'selected_client' && form.visibility === AnnouncementVisibility.SPECIFIC_CLIENT && !String(value || '').trim()) {
-        return 'Client UID is required'
+        return 'Customer UID is required'
       }
       if (name === 'selected_teams_text' && form.visibility === AnnouncementVisibility.SPECIFIC_TEAM && !String(value || '').trim()) {
         return 'Selected teams are required'
@@ -345,7 +345,7 @@ const AnnouncementEditor = ({ visible, onClose, onSave, form, setForm, errors, s
 
           {showPaymentFields && (
             <>
-              <CCol md={4}><CFormInput label="Client" name="client_name" value={form.client_name} onChange={onChange} invalid={!!errors.client_name} />{renderError('client_name')}</CCol>
+              <CCol md={4}><CFormInput label="Customer" name="client_name" value={form.client_name} onChange={onChange} invalid={!!errors.client_name} />{renderError('client_name')}</CCol>
               <CCol md={4}><CFormInput label="Project" name="project" value={form.project} onChange={onChange} invalid={!!errors.project} />{renderError('project')}</CCol>
               <CCol md={4}><CFormInput label="Plot Number" name="plot_number" value={form.plot_number} onChange={onChange} invalid={!!errors.plot_number} />{renderError('plot_number')}</CCol>
               <CCol md={4}><CFormInput label="Payment Amount" name="payment_amount" value={form.payment_amount} onChange={onChange} invalid={!!errors.payment_amount} />{renderError('payment_amount')}</CCol>
@@ -361,9 +361,9 @@ const AnnouncementEditor = ({ visible, onClose, onSave, form, setForm, errors, s
             <CCol md={12}>
               <CFormInput
                 type="text"
-                label="Specific Client UID"
+                label="Specific Customer UID"
                 name="selected_client"
-                placeholder="Enter client/agent UID (e.g. AG123456)"
+                placeholder="Enter customer/agent UID (e.g. AG123456)"
                 value={form.selected_client}
                 onChange={onChange}
                 className="text-dark"
@@ -551,7 +551,7 @@ const AnnouncementsHub = () => {
 
       if (showVisibilityDetail) {
         if (editorForm.visibility === AnnouncementVisibility.SPECIFIC_CLIENT && !editorForm.selected_client?.trim()) {
-          newErrors.selected_client = 'Client UID is required'
+          newErrors.selected_client = 'Customer UID is required'
         }
         if (editorForm.visibility === AnnouncementVisibility.SPECIFIC_TEAM && !editorForm.selected_teams_text?.trim()) {
           newErrors.selected_teams_text = 'Selected teams are required'
@@ -572,7 +572,7 @@ const AnnouncementsHub = () => {
         if (!editorForm.target_required?.trim()) newErrors.target_required = 'Target is required'
         if (!editorForm.reward_details?.trim()) newErrors.reward_details = 'Reward details are required'
       } else if (editorForm.category === AnnouncementCategory.PAYMENT) {
-        if (!editorForm.client_name?.trim()) newErrors.client_name = 'Client name is required'
+        if (!editorForm.client_name?.trim()) newErrors.client_name = 'Customer name is required'
         if (!editorForm.project?.trim()) newErrors.project = 'Project is required'
         if (!editorForm.plot_number?.trim()) newErrors.plot_number = 'Plot number is required'
         if (!editorForm.payment_amount?.trim()) newErrors.payment_amount = 'Payment amount is required'

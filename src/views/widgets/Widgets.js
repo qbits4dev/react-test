@@ -751,7 +751,7 @@ const Widgets = () => {
             <CWidgetStatsC
               icon={<CIcon icon={cilUserFollow} height={36} />}
               value="385"
-              title="New Clients"
+              title="New Customers"
               progress={{ color: 'success', value: 75 }}
             />
             <CWidgetStatsC
@@ -788,7 +788,7 @@ const Widgets = () => {
               <CWidgetStatsC
                 icon={<CIcon icon={cilUserFollow} height={36} />}
                 value="385"
-                title="New Clients"
+                title="New Customers"
                 progress={{ color: 'success', value: 75 }}
               />
             </CCol>
@@ -843,7 +843,7 @@ const Widgets = () => {
                 color="success"
                 icon={<CIcon icon={cilUserFollow} height={36} />}
                 value="385"
-                title="New Clients"
+                title="New Customers"
                 inverse
                 progress={{ value: 75 }}
               />

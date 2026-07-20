@@ -545,7 +545,7 @@ export default function BookingsManager() {
                                         </CRow>
                                     ) : (
                                         <div className="text-center py-5 text-muted">
-                                            <h4>No active bookings found under your Client ID.</h4>
+                                            <h4>No active bookings found under your Customer ID.</h4>
                                             <p className="mb-0">Please contact your relationship manager or agent to book a plot.</p>
                                         </div>
                                     )}
@@ -627,7 +627,7 @@ export default function BookingsManager() {
                 <CModalBody>
                     <CRow className="g-3">
                         <CCol md={6}>
-                            <CFormLabel>Customer / Lead *</CFormLabel>
+                            <CFormLabel>Customer / Client *</CFormLabel>
                             <CFormSelect value={formCustomerId} onChange={(e) => setFormCustomerId(e.target.value)}>
                                 <option value="">Select Customer / Client</option>
                                 {usersList.map((c) => (

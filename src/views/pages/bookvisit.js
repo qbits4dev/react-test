@@ -192,7 +192,7 @@ export default function LeadForm() {
       const res = await fetch(`${globalThis.apiBaseUrl}/users/${normalizedId}`)
       if (!res.ok) {
         console.error('Failed to fetch user details')
-        setErrors((prev) => ({ ...prev, customerId: 'Client not found' }))
+        setErrors((prev) => ({ ...prev, customerId: 'Customer not found' }))
         return
       }
       const data = await res.json()
@@ -256,7 +256,7 @@ export default function LeadForm() {
     let errs = {}
 
     if (!leadType) {
-      errs.leadType = 'Please select lead type'
+      errs.leadType = 'Please select client type'
     }
 
     if (leadType === 'Existing') {
@@ -390,14 +390,14 @@ export default function LeadForm() {
         }
 
         if (!leadRes.ok || !leadId) {
-          const errorMsg = leadResult.message || leadRes.statusText || 'Failed to register lead.'
+          const errorMsg = leadResult.message || leadRes.statusText || 'Failed to register client.'
           throw new Error(errorMsg)
         }
 
         finalCustomerId = leadId
         console.log('Lead Registered successfully. Client ID:', finalCustomerId)
       } catch (err) {
-        alert('Lead creation failed: ' + err.message)
+        alert('Client creation failed: ' + err.message)
         setLoading(false)
         return
       }
@@ -459,7 +459,7 @@ export default function LeadForm() {
           <CCardBody>
             <CForm onSubmit={handleSubmit}>
               {/* Lead Type */}
-              <CFormLabel>Lead Type</CFormLabel>
+              <CFormLabel>Client Type</CFormLabel>
               <CFormSelect
                 name="leadType"
                 value={leadType}
@@ -467,11 +467,11 @@ export default function LeadForm() {
                 onBlur={handleBlur}
                 invalid={touched.leadType && !leadType}
               >
-                <option value="">Select Lead Type</option>
-                <option value="New">New Lead</option>
-                <option value="Existing">Existing Lead</option>
+                <option value="">Select Client Type</option>
+                <option value="New">New Client</option>
+                <option value="Existing">Existing Client</option>
               </CFormSelect>
-              <CFormFeedback invalid>Please select lead type</CFormFeedback>
+              <CFormFeedback invalid>Please select client type</CFormFeedback>
               <br />
 
               {leadType === 'Existing' && (

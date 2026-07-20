@@ -64,7 +64,7 @@ const AgentDashboard = () => {
     },
     {
       id: 'leads',
-      title: 'Lead Registration',
+      title: 'Client Registration',
       color: 'info',
       buttonLink: '/register_cilent',
     }, 
@@ -89,7 +89,7 @@ const AgentDashboard = () => {
         <CCol md={4}>
           <CCard className="shadow-sm border-0 rounded-3 h-100">
             <CCardHeader className="bg-info text-white text-center fs-5 fw-semibold py-3">
-              Upcoming Client Visits
+              Upcoming Customer Visits
             </CCardHeader>
             <CCardBody className="p-3">
               <UpcomingVisitsWidget />

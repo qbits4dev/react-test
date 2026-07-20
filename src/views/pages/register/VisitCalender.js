@@ -141,7 +141,7 @@ export default function UpcomingVisitsWidget() {
             <CCard className="visit-card h-100">
                 <CCardHeader className="visit-header">
                     <div className="d-flex justify-content-between align-items-center">
-                        <h6 className="mb-0">Upcoming Client Visits</h6>
+                        <h6 className="mb-0">Upcoming Customer Visits</h6>
                         <small>{today.format('MMM D')}</small>
                     </div>
                 </CCardHeader>
