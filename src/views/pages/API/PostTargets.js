@@ -17,6 +17,8 @@ import {
   CFormFeedback,
 } from '@coreui/react'
 import { sanitizeNumeric, sanitizeText } from '../../../utils/validation'
+import ErrorModal from '../../../components/ErrorModal'
+import { extractErrorMessage, getResponseErrorMessage } from '../../../utils/errorUtils'
 
 const TARGET_TYPES = {
   TEAM: 'Team Target',
@@ -186,7 +188,10 @@ const PostTargets = () => {
     }))
   }
 
-  const handleSubmit = (e) => {
+  const [errorModalVisible, setErrorModalVisible] = useState(false)
+  const [errorModalMsg, setErrorModalMsg] = useState('')
+
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setMessage('')
     setError('')
@@ -203,22 +208,26 @@ const PostTargets = () => {
     }
     setErrors(nextErrors)
     if (Object.values(nextErrors).some(Boolean)) {
-      setError('Please fix validation errors before submitting.')
+      setErrorModalMsg('Please fix validation errors before submitting.')
+      setErrorModalVisible(true)
       return
     }
 
     if (!formData.targetType || !formData.designation) {
-      setError('Please select Target Type and Designation before submitting.')
+      setErrorModalMsg('Please select Target Type and Designation before submitting.')
+      setErrorModalVisible(true)
       return
     }
 
     if (formData.targetType === TARGET_TYPES.TEAM && !formData.team_name) {
-      setError('Please select a team for Team Target.')
+      setErrorModalMsg('Please select a team for Team Target.')
+      setErrorModalVisible(true)
       return
     }
 
     if (formData.targetType === TARGET_TYPES.INDIVIDUAL && !formData.agent_id) {
-      setError('Please select an agent for Individual Target.')
+      setErrorModalMsg('Please select an agent for Individual Target.')
+      setErrorModalVisible(true)
       return
     }
 
@@ -239,19 +248,19 @@ const PostTargets = () => {
       other_notes: formData.other_notes,
     }
 
-    fetch(`${globalThis.apiBaseUrl}/targets`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error('Network response was not ok')
-        return res.json()
+    try {
+      const res = await fetch(`${globalThis.apiBaseUrl}/targets`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
       })
-      .then(() => {
+
+      if (res.ok) {
         setMessage('Target posted successfully!')
         setFormData({
           designation: '',
+          description: '',
+          value: '',
           sale_type: '',
           stage: '',
           timeframe: '',
@@ -268,8 +277,15 @@ const PostTargets = () => {
           team_name: '',
           agent_id: '',
         })
-      })
-      .catch((err) => setError(`Submission failed: ${err.message}`))
+      } else {
+        const errMsg = await getResponseErrorMessage(res, 'Failed to post target.')
+        setErrorModalMsg(errMsg)
+        setErrorModalVisible(true)
+      }
+    } catch (err) {
+      setErrorModalMsg(extractErrorMessage(err, 'Submission failed. Please try again.'))
+      setErrorModalVisible(true)
+    }
   }
 
   return (
@@ -403,6 +419,14 @@ const PostTargets = () => {
           </CCard>
         </CCol>
       </CRow>
+
+      {/* Designated Error Modal */}
+      <ErrorModal
+        visible={errorModalVisible}
+        title="Target Submission Failed"
+        errorMessage={errorModalMsg}
+        onClose={() => setErrorModalVisible(false)}
+      />
     </CContainer>
   )
 }

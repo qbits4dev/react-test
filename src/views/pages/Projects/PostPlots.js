@@ -11,6 +11,8 @@ import {
   CFormFeedback,
 } from '@coreui/react';
 import { sanitizeNumeric, sanitizeText, sanitizeRestrictedText } from '../../../utils/validation';
+import ErrorModal from '../../../components/ErrorModal';
+import { extractErrorMessage, getResponseErrorMessage } from '../../../utils/errorUtils';
 
 // Options for plot status dropdown
 const plotStatusOptions = ['available', 'sold', 'reserved', 'on hold'];
@@ -77,6 +79,9 @@ export default function PlotForm() {
     setErrors((prev) => ({ ...prev, [name]: validateField(name, nextValue) }));
   };
 
+  const [errorModalVisible, setErrorModalVisible] = useState(false);
+  const [errorModalMsg, setErrorModalMsg] = useState('');
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const nextErrors = {
@@ -89,8 +94,6 @@ export default function PlotForm() {
     setErrors(nextErrors);
     if (Object.values(nextErrors).some(Boolean)) return;
     setLoading(true);
-    setModalMessage('Submitting...');
-    setShowModal(true);
 
     const payload = {
       project_name: form.project_name,
@@ -102,7 +105,6 @@ export default function PlotForm() {
 
     try {
       const postUrl = `${globalThis.apiBaseUrl}/projects/plots`;
-      console.log('Add Plot — payload being sent to POST:', postUrl, payload);
 
       const response = await fetch(postUrl, {
         method: 'POST',
@@ -112,24 +114,15 @@ export default function PlotForm() {
         body: JSON.stringify(payload),
       });
 
-      const responseText = await response.text();
       if (!response.ok) {
-        // Try to extract a readable error message
-        let errorMsg = responseText;
-        try {
-          const errorObj = JSON.parse(responseText);
-          errorMsg = errorObj.detail || errorObj.message || responseText;
-        } catch {
-          // If not JSON, just use the text
-          errorMsg = responseText;
-        }
-        // Remove curly braces and quotes
-        errorMsg = errorMsg.replace(/[{}"]/g, '');
-        setModalMessage(`Error: ${errorMsg}`);
-        throw new Error(errorMsg || 'Failed to submit');
+        const errorMsg = await getResponseErrorMessage(response, 'Failed to add plot.');
+        setErrorModalMsg(errorMsg);
+        setErrorModalVisible(true);
+        return;
       }
 
       setModalMessage('Success: Plot added successfully');
+      setShowModal(true);
       setForm({
         project_name: '',
         plot_number: '',
@@ -138,7 +131,8 @@ export default function PlotForm() {
         status: '',
       });
     } catch (error) {
-      setModalMessage(`Error: ${error.message.replace(/[{}"]/g, '')}`);
+      setErrorModalMsg(extractErrorMessage(error, 'Failed to submit plot.'));
+      setErrorModalVisible(true);
     } finally {
       setLoading(false);
     }
@@ -357,6 +351,14 @@ export default function PlotForm() {
           </div>
         </div>
       )}
+
+      {/* Designated Error Modal */}
+      <ErrorModal
+        visible={errorModalVisible}
+        title="Plot Creation Failed"
+        errorMessage={errorModalMsg}
+        onClose={() => setErrorModalVisible(false)}
+      />
     </div>
   );
 }

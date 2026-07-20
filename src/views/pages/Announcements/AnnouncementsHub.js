@@ -24,6 +24,8 @@ import {
   CTableRow,
   CAlert,
 } from '@coreui/react'
+import ErrorModal from '../../../components/ErrorModal'
+import { extractErrorMessage, getResponseErrorMessage } from '../../../utils/errorUtils'
 
 import AnnouncementCarousel from './AnnouncementCarousel'
 import {
@@ -550,9 +552,6 @@ const AnnouncementsHub = () => {
       ].includes(editorForm.visibility)
 
       if (showVisibilityDetail) {
-        if (editorForm.visibility === AnnouncementVisibility.SPECIFIC_CLIENT && !editorForm.selected_client?.trim()) {
-          newErrors.selected_client = 'Customer UID is required'
-        }
         if (editorForm.visibility === AnnouncementVisibility.SPECIFIC_TEAM && !editorForm.selected_teams_text?.trim()) {
           newErrors.selected_teams_text = 'Selected teams are required'
         }
@@ -563,20 +562,20 @@ const AnnouncementsHub = () => {
 
       if (editorForm.category === AnnouncementCategory.VENTURE) {
         if (!editorForm.venture_name?.trim()) newErrors.venture_name = 'Venture name is required'
-        if (!editorForm.launch_date) newErrors.launch_date = 'Launch date is required'
+        if (!editorForm.launch_date?.trim()) newErrors.launch_date = 'Launch date is required'
         if (!editorForm.location?.trim()) newErrors.location = 'Location is required'
-        if (!editorForm.cta_text?.trim()) newErrors.cta_text = 'CTA button text is required'
+        if (!editorForm.cta_text?.trim()) newErrors.cta_text = 'CTA text is required'
         if (!editorForm.cta_url?.trim()) newErrors.cta_url = 'CTA URL is required'
       } else if (editorForm.category === AnnouncementCategory.OFFER) {
         if (!editorForm.offer_description?.trim()) newErrors.offer_description = 'Offer description is required'
-        if (!editorForm.target_required?.trim()) newErrors.target_required = 'Target is required'
-        if (!editorForm.reward_details?.trim()) newErrors.reward_details = 'Reward details are required'
+        if (!editorForm.target_required?.trim()) newErrors.target_required = 'Target required is required'
+        if (!editorForm.reward_details?.trim()) newErrors.reward_details = 'Reward details is required'
       } else if (editorForm.category === AnnouncementCategory.PAYMENT) {
-        if (!editorForm.client_name?.trim()) newErrors.client_name = 'Customer name is required'
+        if (!editorForm.client_name?.trim()) newErrors.client_name = 'Customer is required'
         if (!editorForm.project?.trim()) newErrors.project = 'Project is required'
         if (!editorForm.plot_number?.trim()) newErrors.plot_number = 'Plot number is required'
         if (!editorForm.payment_amount?.trim()) newErrors.payment_amount = 'Payment amount is required'
-        if (!editorForm.payment_due_date) newErrors.payment_due_date = 'Payment due date is required'
+        if (!editorForm.payment_due_date?.trim()) newErrors.payment_due_date = 'Payment due date is required'
         if (!editorForm.deducting_bank?.trim()) newErrors.deducting_bank = 'Deducting bank is required'
       }
 
@@ -585,7 +584,7 @@ const AnnouncementsHub = () => {
     }
 
     if (!validateForm()) {
-      setMessage({ visible: true, color: 'danger', text: 'Please fill in all required details.' })
+      triggerErrorModal('Please fill in all required details before saving.', 'Validation Error')
       return
     }
 
@@ -601,8 +600,8 @@ const AnnouncementsHub = () => {
       }
       setEditorOpen(false)
       await load()
-    } catch {
-      setMessage({ visible: true, color: 'danger', text: 'Unable to save announcement.' })
+    } catch (err) {
+      triggerErrorModal(extractErrorMessage(err, 'Unable to save announcement.'), 'Save Announcement Error')
     } finally {
       setSaving(false)
     }
@@ -613,8 +612,8 @@ const AnnouncementsHub = () => {
       await deleteAnnouncement(id)
       setMessage({ visible: true, color: 'success', text: 'Announcement deleted.' })
       await load()
-    } catch {
-      setMessage({ visible: true, color: 'danger', text: 'Delete failed.' })
+    } catch (err) {
+      triggerErrorModal(extractErrorMessage(err, 'Delete failed.'), 'Delete Announcement Error')
     }
   }
 
@@ -628,8 +627,8 @@ const AnnouncementsHub = () => {
         setMessage({ visible: true, color: 'success', text: 'Announcement published.' })
       }
       await load()
-    } catch {
-      setMessage({ visible: true, color: 'danger', text: 'Publish action failed.' })
+    } catch (err) {
+      triggerErrorModal(extractErrorMessage(err, 'Publish action failed.'), 'Publish Action Error')
     }
   }
 
@@ -778,6 +777,14 @@ const AnnouncementsHub = () => {
         saving={saving}
         isAdmin={isAdmin}
         items={items}
+      />
+
+      {/* Designated Error Modal */}
+      <ErrorModal
+        visible={errorModalVisible}
+        title={errorModalTitle}
+        errorMessage={errorModalMsg}
+        onClose={() => setErrorModalVisible(false)}
       />
     </CContainer>
   )

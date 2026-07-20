@@ -30,6 +30,8 @@ import {
 import CIcon from '@coreui/icons-react'
 import { cilOptions, cilPencil, cilSearch, cilSortAlphaDown, cilSortAlphaUp, cilTrash } from '@coreui/icons'
 import { CDropdown, CDropdownItem, CDropdownMenu, CDropdownToggle } from '@coreui/react'
+import ErrorModal from '../../../components/ErrorModal'
+import { extractErrorMessage, getResponseErrorMessage } from '../../../utils/errorUtils'
 
 const itemsPerPage = 8
 
@@ -392,9 +394,18 @@ const GetClients = () => {
     })
   }
 
+  const [errorModalVisible, setErrorModalVisible] = useState(false)
+  const [errorModalMsg, setErrorModalMsg] = useState('')
+  const [errorModalTitle, setErrorModalTitle] = useState('')
+
+  const triggerErrorModal = (msg, title = 'Operation Failed') => {
+    setErrorModalTitle(title)
+    setErrorModalMsg(msg)
+    setErrorModalVisible(true)
+  }
+
   const handleSave = async () => {
     if (!selectedClient) return
-    console.log('handleSave initiated with selectedClient:', selectedClient)
     setSaving(true)
     try {
       const isLead = viewType === 'leads'
@@ -402,26 +413,25 @@ const GetClients = () => {
         ? `${globalThis.apiBaseUrl}/users/client/${selectedClient.u_id}`
         : `${globalThis.apiBaseUrl}/users/${selectedClient.u_id}`
       const method = isLead ? 'PUT' : 'PATCH'
-      console.log(`Hitting ${method} API:`, url)
       const res = await fetch(url, {
         method: method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(selectedClient),
       })
 
-      console.log('API Response status:', res.status)
-      if (!res.ok) throw new Error('update failed')
-
-      setMessage({ visible: true, color: 'success', text: `${isLead ? 'Client' : 'Customer'} updated successfully.` })
-      setEditModalVisible(false)
-      await fetchClients()
-    } catch {
-      setClients((prev) => prev.map((c) => (c.id === selectedClient.id ? selectedClient : c)))
-      setMessage({ visible: true, color: 'warning', text: 'Saved locally. Server update is unavailable.' })
-      setEditModalVisible(false)
+      if (res.ok) {
+        setMessage({ visible: true, color: 'success', text: `${isLead ? 'Client' : 'Customer'} updated successfully.` })
+        setEditModalVisible(false)
+        setSelectedClient(null)
+        await fetchClients()
+      } else {
+        const errDetail = await getResponseErrorMessage(res, `Failed to update ${isLead ? 'Client' : 'Customer'}.`)
+        triggerErrorModal(errDetail, `Update ${isLead ? 'Client' : 'Customer'} Failed`)
+      }
+    } catch (err) {
+      triggerErrorModal(extractErrorMessage(err), `Update ${viewType === 'leads' ? 'Client' : 'Customer'} Error`)
     } finally {
       setSaving(false)
-      setSelectedClient(null)
     }
   }
 
@@ -432,15 +442,17 @@ const GetClients = () => {
         ? `${globalThis.apiBaseUrl}/users/client/${selectedClient.u_id}`
         : `${globalThis.apiBaseUrl}/users/${selectedClient.u_id}`
       const res = await fetch(deleteUrl, { method: 'DELETE' })
-      if (!res.ok) throw new Error('delete failed')
-      setMessage({ visible: true, color: 'success', text: `${viewType === 'leads' ? 'Client' : 'Customer'} deleted successfully.` })
-      await fetchClients()
-    } catch {
-      setClients((prev) => prev.filter((c) => c.id !== selectedClient.id))
-      setMessage({ visible: true, color: 'warning', text: 'Deleted locally. Server delete is unavailable.' })
-    } finally {
-      setDeleteModalVisible(false)
-      setSelectedClient(null)
+      if (res.ok) {
+        setMessage({ visible: true, color: 'success', text: `${viewType === 'leads' ? 'Client' : 'Customer'} deleted successfully.` })
+        setDeleteModalVisible(false)
+        setSelectedClient(null)
+        await fetchClients()
+      } else {
+        const errDetail = await getResponseErrorMessage(res, `Failed to delete ${viewType === 'leads' ? 'Client' : 'Customer'}.`)
+        triggerErrorModal(errDetail, `Delete ${viewType === 'leads' ? 'Client' : 'Customer'} Failed`)
+      }
+    } catch (err) {
+      triggerErrorModal(extractErrorMessage(err), `Delete ${viewType === 'leads' ? 'Client' : 'Customer'} Error`)
     }
   }
 
@@ -691,6 +703,14 @@ const GetClients = () => {
           </CButton>
         </CModalFooter>
       </CModal>
+
+      {/* Designated Error Modal */}
+      <ErrorModal
+        visible={errorModalVisible}
+        title={errorModalTitle}
+        errorMessage={errorModalMsg}
+        onClose={() => setErrorModalVisible(false)}
+      />
     </CCard>
   )
 }

@@ -25,6 +25,8 @@ import {
   CTableRow,
   CFormFeedback,
 } from '@coreui/react'
+import ErrorModal from '../../../components/ErrorModal'
+import { extractErrorMessage, getResponseErrorMessage } from '../../../utils/errorUtils'
 
 const PLOT_STATUS_OPTIONS = ['available', 'sold', 'reserved', 'on hold']
 
@@ -170,6 +172,16 @@ export default function PlotsList() {
     setPlotErrors((prev) => ({ ...prev, [name]: '' }))
   }
 
+  const [errorModalVisible, setErrorModalVisible] = useState(false)
+  const [errorModalMsg, setErrorModalMsg] = useState('')
+  const [errorModalTitle, setErrorModalTitle] = useState('')
+
+  const triggerErrorModal = (msg, title = 'Plot Operation Failed') => {
+    setErrorModalTitle(title)
+    setErrorModalMsg(msg)
+    setErrorModalVisible(true)
+  }
+
   const handleSave = async () => {
     if (!selectedPlot) return
 
@@ -206,20 +218,20 @@ export default function PlotsList() {
     setSaving(true)
     try {
       const success = await updatePlotOnServer(selectedPlot)
-      setPlots((prev) => prev.map((p) => (p.plot_number === selectedPlot.plot_number ? { ...p, ...selectedPlot } : p)))
-      setFilteredPlots((prev) => prev.map((p) => (p.plot_number === selectedPlot.plot_number ? { ...p, ...selectedPlot } : p)))
-      setMessage({
-        visible: true,
-        color: success ? 'success' : 'warning',
-        text: success ? 'Plot updated successfully.' : 'Saved locally. Server update endpoint is unavailable.',
-      })
-      setEditModalVisible(false)
-      await fetchPlots()
-    } catch {
-      setMessage({ visible: true, color: 'danger', text: 'Failed to save plot changes.' })
+      if (success) {
+        setPlots((prev) => prev.map((p) => (p.plot_number === selectedPlot.plot_number ? { ...p, ...selectedPlot } : p)))
+        setFilteredPlots((prev) => prev.map((p) => (p.plot_number === selectedPlot.plot_number ? { ...p, ...selectedPlot } : p)))
+        setMessage({ visible: true, color: 'success', text: 'Plot updated successfully.' })
+        setEditModalVisible(false)
+        setSelectedPlot(null)
+        await fetchPlots()
+      } else {
+        triggerErrorModal('Failed to save plot changes to server.', 'Update Plot Failed')
+      }
+    } catch (err) {
+      triggerErrorModal(extractErrorMessage(err), 'Update Plot Error')
     } finally {
       setSaving(false)
-      setSelectedPlot(null)
     }
   }
 
@@ -236,18 +248,18 @@ export default function PlotsList() {
         method: 'DELETE',
       })
 
-      setPlots((prev) => prev.filter((p) => p.plot_number !== selectedPlot.plot_number))
-      setFilteredPlots((prev) => prev.filter((p) => p.plot_number !== selectedPlot.plot_number))
-      setMessage({
-        visible: true,
-        color: res.ok ? 'success' : 'warning',
-        text: res.ok ? 'Plot deleted successfully.' : 'Plot deleted locally. Server delete endpoint is unavailable.',
-      })
-      setDeleteModalVisible(false)
-    } catch {
-      setMessage({ visible: true, color: 'danger', text: 'Failed to delete plot.' })
-    } finally {
-      setSelectedPlot(null)
+      if (res.ok) {
+        setPlots((prev) => prev.filter((p) => p.plot_number !== selectedPlot.plot_number))
+        setFilteredPlots((prev) => prev.filter((p) => p.plot_number !== selectedPlot.plot_number))
+        setMessage({ visible: true, color: 'success', text: 'Plot deleted successfully.' })
+        setDeleteModalVisible(false)
+        setSelectedPlot(null)
+      } else {
+        const errMsg = await getResponseErrorMessage(res, 'Failed to delete plot.')
+        triggerErrorModal(errMsg, 'Delete Plot Failed')
+      }
+    } catch (err) {
+      triggerErrorModal(extractErrorMessage(err), 'Delete Plot Error')
     }
   }
 
@@ -394,6 +406,14 @@ export default function PlotsList() {
           <CButton color="danger" onClick={handleDelete}>Delete</CButton>
         </CModalFooter>
       </CModal>
+
+      {/* Designated Error Modal */}
+      <ErrorModal
+        visible={errorModalVisible}
+        title={errorModalTitle}
+        errorMessage={errorModalMsg}
+        onClose={() => setErrorModalVisible(false)}
+      />
     </div>
   )
 }

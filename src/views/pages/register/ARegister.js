@@ -14,6 +14,8 @@ import {
     CContainer,
 } from '@coreui/react';
 import { sanitizeName, sanitizeNumeric, validateEmail, validateIndianMobile, validateStrongPassword } from '../../../utils/validation';
+import ErrorModal from '../../../components/ErrorModal';
+import { extractErrorMessage, getResponseErrorMessage } from '../../../utils/errorUtils';
 
 export default function Register() {
     const navigate = useNavigate();
@@ -108,7 +110,10 @@ export default function Register() {
         setErrors({ ...errors, [name]: err });
     };
 
-    const handleSubmit = (e) => {
+    const [errorModalVisible, setErrorModalVisible] = useState(false);
+    const [errorModalMsg, setErrorModalMsg] = useState('');
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
         const validationErrors = validate();
         if (Object.keys(validationErrors).length > 0) {
@@ -116,15 +121,23 @@ export default function Register() {
             return;
         }
 
-        fetch('/api/register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(formData),
-        })
-            .then((res) => res.json())
-            .then(() => {
-                navigate('/verify-otp', { state: { email: formData.email } });
+        try {
+            const res = await fetch(`${globalThis.apiBaseUrl || ''}/api/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData),
             });
+            if (res.ok) {
+                navigate('/verify-otp', { state: { email: formData.email } });
+            } else {
+                const errMsg = await getResponseErrorMessage(res, 'Registration failed.');
+                setErrorModalMsg(errMsg);
+                setErrorModalVisible(true);
+            }
+        } catch (err) {
+            setErrorModalMsg(extractErrorMessage(err, 'Network error. Please try again.'));
+            setErrorModalVisible(true);
+        }
     };
 
     return (
@@ -194,6 +207,14 @@ export default function Register() {
                         </CForm>
                     </CCardBody>
                 </CCard>
+
+                {/* Designated Error Modal */}
+                <ErrorModal
+                    visible={errorModalVisible}
+                    title="Registration Failed"
+                    errorMessage={errorModalMsg}
+                    onClose={() => setErrorModalVisible(false)}
+                />
             </CContainer>
         </div>
     );

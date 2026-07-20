@@ -24,6 +24,8 @@ import {
   CTableRow,
   CFormFeedback,
 } from '@coreui/react'
+import ErrorModal from '../../../components/ErrorModal'
+import { extractErrorMessage, getResponseErrorMessage } from '../../../utils/errorUtils'
 
 const PLOT_STATUS_OPTIONS = ['available', 'sold', 'reserved', 'on hold']
 
@@ -178,11 +180,21 @@ export default function ProjectsList() {
     setSelectedProjectForEdit((prev) => ({ ...prev, [name]: value }))
   }
 
+  const [errorModalVisible, setErrorModalVisible] = useState(false)
+  const [errorModalMsg, setErrorModalMsg] = useState('')
+  const [errorModalTitle, setErrorModalTitle] = useState('')
+
+  const triggerErrorModal = (msg, title = 'Project / Plot Operation Failed') => {
+    setErrorModalTitle(title)
+    setErrorModalMsg(msg)
+    setErrorModalVisible(true)
+  }
+
   const handleSaveProject = async () => {
     if (!selectedProjectForEdit) return
     const { id, name, location, developer, status, total_area, start_date, end_date, description } = selectedProjectForEdit
     if (!name || !location || !developer || !status || !description) {
-      setMessage({ visible: true, color: 'danger', text: 'Please fill name, location, developer, status, and description before saving.' })
+      triggerErrorModal('Please fill name, location, developer, status, and description before saving.', 'Validation Error')
       return
     }
 
@@ -208,17 +220,16 @@ export default function ProjectsList() {
       if (res.ok) {
         setMessage({ visible: true, color: 'success', text: 'Project updated successfully.' })
         setEditProjectModalVisible(false)
+        setSelectedProjectForEdit(null)
         fetchProjects()
       } else {
-        const errorData = await res.json().catch(() => null)
-        const errMsg = errorData?.message || 'Failed to save project changes.'
-        setMessage({ visible: true, color: 'danger', text: errMsg })
+        const errMsg = await getResponseErrorMessage(res, 'Failed to save project changes.')
+        triggerErrorModal(errMsg, 'Update Project Failed')
       }
     } catch (err) {
-      setMessage({ visible: true, color: 'danger', text: 'Failed to save project changes: ' + err.message })
+      triggerErrorModal(extractErrorMessage(err), 'Update Project Error')
     } finally {
       setSavingProject(false)
-      setSelectedProjectForEdit(null)
     }
   }
 
@@ -258,22 +269,21 @@ export default function ProjectsList() {
     setSavingPlot(true)
     try {
       const success = await updatePlotOnServer(selectedPlot)
-      setPlots((prev) => prev.map((p) => (p.plot_number === selectedPlot.plot_number ? { ...p, ...selectedPlot } : p)))
-      setMessage({
-        visible: true,
-        color: success ? 'success' : 'warning',
-        text: success ? 'Plot updated successfully.' : 'Plot updated locally. Server update endpoint is unavailable.',
-      })
-      setEditPlotModalVisible(false)
-
-      if (selectedProject) {
-        await loadPlotsForProject(selectedProject)
+      if (success) {
+        setPlots((prev) => prev.map((p) => (p.plot_number === selectedPlot.plot_number ? { ...p, ...selectedPlot } : p)))
+        setMessage({ visible: true, color: 'success', text: 'Plot updated successfully.' })
+        setEditPlotModalVisible(false)
+        setSelectedPlot(null)
+        if (selectedProject) {
+          await loadPlotsForProject(selectedProject)
+        }
+      } else {
+        triggerErrorModal('Failed to save plot changes to server.', 'Update Plot Failed')
       }
-    } catch {
-      setMessage({ visible: true, color: 'danger', text: 'Failed to save plot changes.' })
+    } catch (err) {
+      triggerErrorModal(extractErrorMessage(err), 'Update Plot Error')
     } finally {
       setSavingPlot(false)
-      setSelectedPlot(null)
     }
   }
 
@@ -287,17 +297,16 @@ export default function ProjectsList() {
 
     try {
       const deleted = await deletePlotOnServer(selectedPlot)
-      setPlots((prev) => prev.filter((p) => p.plot_number !== selectedPlot.plot_number))
-      setMessage({
-        visible: true,
-        color: deleted ? 'success' : 'warning',
-        text: deleted ? 'Plot deleted successfully.' : 'Plot deleted locally. Server delete endpoint is unavailable.',
-      })
-      setDeletePlotModalVisible(false)
-    } catch {
-      setMessage({ visible: true, color: 'danger', text: 'Failed to delete plot.' })
-    } finally {
-      setSelectedPlot(null)
+      if (deleted) {
+        setPlots((prev) => prev.filter((p) => p.plot_number !== selectedPlot.plot_number))
+        setMessage({ visible: true, color: 'success', text: 'Plot deleted successfully.' })
+        setDeletePlotModalVisible(false)
+        setSelectedPlot(null)
+      } else {
+        triggerErrorModal('Failed to delete plot on server.', 'Delete Plot Failed')
+      }
+    } catch (err) {
+      triggerErrorModal(extractErrorMessage(err), 'Delete Plot Error')
     }
   }
 
@@ -316,25 +325,19 @@ export default function ProjectsList() {
 
       if (res.ok) {
         setProjects((prev) => prev.filter((p) => p.id !== selectedProjectForDelete.id))
-        setMessage({
-          visible: true,
-          color: 'success',
-          text: 'Project deleted successfully.',
-        })
+        setMessage({ visible: true, color: 'success', text: 'Project deleted successfully.' })
+        setDeleteProjectModalVisible(false)
         if (selectedProject && selectedProject.id === selectedProjectForDelete.id) {
           setSelectedProject(null)
           setPlots([])
         }
+        setSelectedProjectForDelete(null)
       } else {
-        const errorData = await res.json().catch(() => null)
-        const errMsg = errorData?.message || 'Failed to delete project.'
-        setMessage({ visible: true, color: 'danger', text: errMsg })
+        const errMsg = await getResponseErrorMessage(res, 'Failed to delete project.')
+        triggerErrorModal(errMsg, 'Delete Project Failed')
       }
     } catch (err) {
-      setMessage({ visible: true, color: 'danger', text: 'Failed to delete project: ' + err.message })
-    } finally {
-      setDeleteProjectModalVisible(false)
-      setSelectedProjectForDelete(null)
+      triggerErrorModal(extractErrorMessage(err), 'Delete Project Error')
     }
   }
 
@@ -560,6 +563,14 @@ export default function ProjectsList() {
           <CButton color="danger" onClick={handleDeleteProject}>Delete</CButton>
         </CModalFooter>
       </CModal>
+
+      {/* Designated Error Modal */}
+      <ErrorModal
+        visible={errorModalVisible}
+        title={errorModalTitle}
+        errorMessage={errorModalMsg}
+        onClose={() => setErrorModalVisible(false)}
+      />
     </CContainer>
   )
 }

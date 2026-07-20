@@ -93,16 +93,16 @@ const navigationConfig = [
       { component: CNavItem, name: 'View All Projects', to: '/newProjects', allowedRoles: [ROLES.ADMIN, ROLES.AGENT, ROLES.CLIENT] },
       { component: CNavItem, name: 'Get Projects', to: '/GetProjects', allowedRoles: [ROLES.ADMIN, ROLES.AGENT] },
       { component: CNavItem, name: 'Add Project', to: '/PostProjects', allowedRoles: [ROLES.ADMIN] },
-    ],
-  },
-  {
-    component: CNavGroup,
-    name: 'Plots',
-    icon: <CIcon icon={cilLocationPin} customClassName="nav-icon" />,
-    allowedRoles: [ROLES.ADMIN, ROLES.AGENT],
-    items: [
-      { component: CNavItem, name: 'Get Plots', to: '/GetPlots', allowedRoles: [ROLES.ADMIN, ROLES.AGENT] },
-      { component: CNavItem, name: 'Add Plot', to: '/PostPlots', allowedRoles: [ROLES.ADMIN] },
+      {
+        component: CNavGroup,
+        name: 'Plots',
+        icon: <CIcon icon={cilLocationPin} customClassName="nav-icon" />,
+        allowedRoles: [ROLES.ADMIN, ROLES.AGENT],
+        items: [
+          { component: CNavItem, name: 'Get Plots', to: '/GetPlots', allowedRoles: [ROLES.ADMIN, ROLES.AGENT] },
+          { component: CNavItem, name: 'Add Plot', to: '/PostPlots', allowedRoles: [ROLES.ADMIN] },
+        ],
+      },
     ],
   },
   {

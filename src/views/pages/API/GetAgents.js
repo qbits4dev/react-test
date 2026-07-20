@@ -41,6 +41,8 @@ import {
   cilSortAlphaDown,
   cilSortAlphaUp,
 } from '@coreui/icons'
+import ErrorModal from '../../../components/ErrorModal'
+import { extractErrorMessage, getResponseErrorMessage } from '../../../utils/errorUtils'
 import { useNavigate } from 'react-router-dom'
 
 // Helper function to format labels
@@ -545,47 +547,52 @@ const GetAgents = () => {
     address: agent.permanentAddress || agent.presentAddress || '',
   })
 
+  const [errorModalVisible, setErrorModalVisible] = useState(false)
+  const [errorModalMsg, setErrorModalMsg] = useState('')
+  const [errorModalTitle, setErrorModalTitle] = useState('')
+
+  const triggerErrorModal = (msg, title = 'Agent Operation Failed') => {
+    setErrorModalTitle(title)
+    setErrorModalMsg(msg)
+    setErrorModalVisible(true)
+  }
+
   const handleSave = async () => {
     if (!selectedAgent) return
 
-    console.log('handleSave initiated with selectedAgent:', selectedAgent)
-
     // Validate before saving
     const isValid = validateEditAll()
-    console.log('validateEditAll result:', isValid, editErrors)
     if (!isValid) {
-      setMessage({ visible: true, color: 'danger', text: 'Please fix the validation errors before saving.' })
+      triggerErrorModal('Please fix the validation errors before saving.', 'Validation Error')
       return
     }
 
     setSavingAgent(true)
     const payload = buildAgentPayload(selectedAgent)
-    console.log('Saving agent payload:', payload)
 
     try {
       const uId = selectedAgent.agentId
       const url = `${globalThis.apiBaseUrl}/users/${uId}`
-      console.log('Hitting PATCH API:', url)
       const res = await fetch(url, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
 
-      console.log('API Response status:', res.status)
-      if (!res.ok) throw new Error('update failed')
-      const updatedFromApi = await res.json().catch(() => null)
-      console.log('API Response JSON:', updatedFromApi)
-
-      setAgents((prev) => prev.map((a) => (a.id === selectedAgent.id ? selectedAgent : a)))
-      setMessage({ visible: true, color: 'success', text: 'Agent updated successfully.' })
-      setEditModalVisible(false)
-      setSelectedAgent(updatedFromApi ? { ...selectedAgent } : null)
+      if (res.ok) {
+        const updatedFromApi = await res.json().catch(() => null)
+        setAgents((prev) => prev.map((a) => (a.id === selectedAgent.id ? selectedAgent : a)))
+        setMessage({ visible: true, color: 'success', text: 'Agent updated successfully.' })
+        setEditModalVisible(false)
+        setSelectedAgent(null)
+      } else {
+        const errDetail = await getResponseErrorMessage(res, 'Failed to update agent.')
+        triggerErrorModal(errDetail, 'Update Agent Failed')
+      }
     } catch (error) {
-      setMessage({ visible: true, color: 'danger', text: 'Failed to update agent. Please try again.' })
+      triggerErrorModal(extractErrorMessage(error), 'Update Agent Error')
     } finally {
       setSavingAgent(false)
-      setSelectedAgent(null)
     }
   }
 
@@ -596,21 +603,20 @@ const GetAgents = () => {
   }
   const confirmDelete = async () => {
     if (!agentToDelete) return
-    console.log('confirmDelete initiated for agent:', agentToDelete)
     try {
       const url = `${globalThis.apiBaseUrl}/users/${agentToDelete.agentId}`
-      console.log('Hitting DELETE API:', url)
       const res = await fetch(url, { method: 'DELETE' })
-      console.log('DELETE API response status:', res.status)
-      if (!res.ok) throw new Error('delete failed')
-      setMessage({ visible: true, color: 'success', text: 'Agent deleted successfully.' })
+      if (res.ok) {
+        setAgents((prev) => prev.filter((a) => a.id !== agentToDelete.id))
+        setMessage({ visible: true, color: 'success', text: 'Agent deleted successfully.' })
+        setDeleteModalVisible(false)
+        setAgentToDelete(null)
+      } else {
+        const errDetail = await getResponseErrorMessage(res, 'Failed to delete agent.')
+        triggerErrorModal(errDetail, 'Delete Agent Failed')
+      }
     } catch (error) {
-      console.error('Failed to delete agent:', error)
-      setMessage({ visible: true, color: 'warning', text: 'Deleted locally. Server delete is unavailable.' })
-    } finally {
-      setAgents((prev) => prev.filter((a) => a.id !== agentToDelete.id))
-      setDeleteModalVisible(false)
-      setAgentToDelete(null)
+      triggerErrorModal(extractErrorMessage(error), 'Delete Agent Error')
     }
   }
 
@@ -1054,6 +1060,14 @@ const GetAgents = () => {
           </CButton>
         </CModalFooter>
       </CModal>
+
+      {/* Designated Error Modal */}
+      <ErrorModal
+        visible={errorModalVisible}
+        title={errorModalTitle}
+        errorMessage={errorModalMsg}
+        onClose={() => setErrorModalVisible(false)}
+      />
     </>
   )
 }

@@ -26,6 +26,8 @@ import {
     CBadge,
 } from '@coreui/react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import ErrorModal from '../../../components/ErrorModal'
+import { extractErrorMessage, getResponseErrorMessage } from '../../../utils/errorUtils'
 
 const normalizeBooking = (b) => {
     if (!b) return b
@@ -206,22 +208,73 @@ export default function BookingsManager() {
                         })
                     }
                 })
-                setUsersList(uniqueUsers)
 
-                // 5. Fetch announcements
+                // Fetch projects
+                try {
+                    const resProj = await fetch(`${globalThis.apiBaseUrl}/projects/`)
+                    if (resProj.ok) {
+                        const dataProj = await resProj.json()
+                        setProjects(Array.isArray(dataProj.data) ? dataProj.data : (dataProj.projects || []))
+                    }
+                } catch (e) {
+                    console.error('Error loading projects:', e)
+                }
+
+                // Fetch customers/clients for dropdown
+                try {
+                    const [resCust, resClients] = await Promise.all([
+                        fetch(`${globalThis.apiBaseUrl}/users/customers`),
+                        fetch(`${globalThis.apiBaseUrl}/users/clients`)
+                    ])
+                    let combinedUsers = []
+                    if (resCust.ok) {
+                        const dataCust = await resCust.json()
+                        combinedUsers = [...combinedUsers, ...(Array.isArray(dataCust) ? dataCust : [])]
+                    }
+                    if (resClients.ok) {
+                        const dataClient = await resClients.json()
+                        combinedUsers = [...combinedUsers, ...(Array.isArray(dataClient) ? dataClient : [])]
+                    }
+                    setUsersList(combinedUsers)
+                } catch (e) {
+                    console.error('Error loading users list:', e)
+                }
+
+                // Fetch bookings
+                const resBook = await fetch(`${globalThis.apiBaseUrl}/bookings/`)
+                if (resBook.ok) {
+                    const dataBook = await resBook.json()
+                    const rawArr = Array.isArray(dataBook) ? dataBook : (dataBook.bookings || [])
+                    setBookings(rawArr.map(normalizeBooking))
+                } else {
+                    const errText = await getResponseErrorMessage(resBook, 'Failed to fetch bookings')
+                    setError(errText)
+                }
+
+                // Fetch all plots (for lookup/labels)
+                try {
+                    const resAllPlots = await fetch(`${globalThis.apiBaseUrl}/projects/plots`)
+                    if (resAllPlots.ok) {
+                        const dataAllPlots = await resAllPlots.json()
+                        setPlots(Array.isArray(dataAllPlots) ? dataAllPlots : (dataAllPlots.plots || []))
+                    }
+                } catch (e) {
+                    console.error('Error loading all plots:', e)
+                }
+
+                // Fetch announcements
                 try {
                     const resAnn = await fetch(`${globalThis.apiBaseUrl}/announcements/`)
                     if (resAnn.ok) {
-                        const annData = await resAnn.json()
-                        const list = Array.isArray(annData) ? annData : (annData?.items || [])
-                        setAnnouncements(list)
+                        const dataAnn = await resAnn.json()
+                        setAnnouncements(Array.isArray(dataAnn) ? dataAnn : [])
                     }
                 } catch (e) {
                     console.error('Error loading announcements:', e)
                 }
 
             } catch (err) {
-                setError(err.message)
+                setError(extractErrorMessage(err))
             } finally {
                 setLoading(false)
             }
@@ -359,17 +412,16 @@ export default function BookingsManager() {
             }
         }
         return {
-            projectName: 'Unknown Project',
-            plotNumber: plotId ? `Plot #${plotId}` : '—'
+            projectName: formProjectName || 'Main Venture',
+            plotNumber: plotId || '—'
         }
     }
 
-    // Helper: find user name by customer_id
+    // Helper: lookup customer name by ID/u_id
     const resolveCustomerName = (customerId) => {
         const found = usersList.find(
-            (u) =>
-                String(u.u_id).toLowerCase() === String(customerId).toLowerCase() ||
-                String(u.id) === String(customerId)
+            u => String(u.u_id).toLowerCase() === String(customerId).toLowerCase() ||
+                String(u.id).toLowerCase() === String(customerId).toLowerCase()
         )
         return found ? found.name : customerId || '—'
     }
@@ -461,7 +513,7 @@ export default function BookingsManager() {
 
     const handleSave = async () => {
         if (!formCustomerId || !formPlotId || !formTotalAmount) {
-            setMessage({ visible: true, color: 'danger', text: 'Please fill in all required fields (Customer, Project, Plot, Total Amount).' })
+            triggerErrorModal('Please fill in all required fields (Customer, Project, Plot, Total Amount).', 'Validation Error')
             return
         }
 
@@ -498,7 +550,8 @@ export default function BookingsManager() {
                     setMessage({ visible: true, color: 'success', text: 'Booking created successfully.' })
                     setModalVisible(false)
                 } else {
-                    throw new Error('Failed to create booking.')
+                    const errDetail = await getResponseErrorMessage(res, 'Failed to create booking.')
+                    triggerErrorModal(errDetail, 'Create Booking Failed')
                 }
             } else {
                 // Edit
@@ -513,11 +566,12 @@ export default function BookingsManager() {
                     setMessage({ visible: true, color: 'success', text: 'Booking updated successfully.' })
                     setModalVisible(false)
                 } else {
-                    throw new Error('Failed to update booking.')
+                    const errDetail = await getResponseErrorMessage(res, 'Failed to update booking.')
+                    triggerErrorModal(errDetail, 'Update Booking Failed')
                 }
             }
         } catch (err) {
-            setMessage({ visible: true, color: 'danger', text: 'Error: ' + err.message })
+            triggerErrorModal(extractErrorMessage(err), 'Booking Network / Request Error')
         } finally {
             setSaving(false)
         }
@@ -541,10 +595,11 @@ export default function BookingsManager() {
                 setMessage({ visible: true, color: 'success', text: 'Booking deleted successfully.' })
                 setDeleteModalVisible(false)
             } else {
-                throw new Error('Failed to delete booking.')
+                const errDetail = await getResponseErrorMessage(res, 'Failed to delete booking.')
+                triggerErrorModal(errDetail, 'Delete Booking Failed')
             }
         } catch (err) {
-            setMessage({ visible: true, color: 'danger', text: 'Error: ' + err.message })
+            triggerErrorModal(extractErrorMessage(err), 'Delete Booking Error')
         } finally {
             setDeleting(false)
             setBookingToDelete(null)
@@ -863,6 +918,14 @@ export default function BookingsManager() {
                     </CButton>
                 </CModalFooter>
             </CModal>
+
+            {/* Designated Error Modal */}
+            <ErrorModal
+                visible={errorModalVisible}
+                title={errorModalTitle}
+                errorMessage={errorModalMsg}
+                onClose={() => setErrorModalVisible(false)}
+            />
         </CContainer>
     )
 }

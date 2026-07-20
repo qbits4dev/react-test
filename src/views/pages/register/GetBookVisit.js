@@ -26,6 +26,8 @@ import {
 } from '@coreui/react'
 
 import { useNavigate } from 'react-router-dom'
+import ErrorModal from '../../../components/ErrorModal'
+import { extractErrorMessage, getResponseErrorMessage } from '../../../utils/errorUtils'
 
 const updateVisitOnServer = async (visit, projectsList = [], plotsList = []) => {
     // Find plot number in projectPlots or visit.plot_data
@@ -371,6 +373,16 @@ export default function SiteVisitsTable() {
         })
     }
 
+    const [errorModalVisible, setErrorModalVisible] = useState(false)
+    const [errorModalMsg, setErrorModalMsg] = useState('')
+    const [errorModalTitle, setErrorModalTitle] = useState('')
+
+    const triggerErrorModal = (msg, title = 'Site Visit Error') => {
+        setErrorModalTitle(title)
+        setErrorModalMsg(msg)
+        setErrorModalVisible(true)
+    }
+
     const handleSave = async () => {
         if (!selectedVisit) return
         setSaving(true)
@@ -381,13 +393,12 @@ export default function SiteVisitsTable() {
                 setMessage({ visible: true, color: 'success', text: 'Site visit updated successfully.' })
                 setEditModalVisible(false)
             } else {
-                setMessage({ visible: true, color: 'danger', text: 'Failed to update site visit.' })
+                triggerErrorModal('Failed to update site visit.', 'Update Site Visit Failed')
             }
         } catch (err) {
-            setMessage({ visible: true, color: 'danger', text: 'Error: ' + err.message })
+            triggerErrorModal(extractErrorMessage(err), 'Update Site Visit Error')
         } finally {
             setSaving(false)
-            setSelectedVisit(null)
         }
     }
 
@@ -406,10 +417,10 @@ export default function SiteVisitsTable() {
                 setMessage({ visible: true, color: 'success', text: 'Site visit deleted successfully.' })
                 setDeleteModalVisible(false)
             } else {
-                setMessage({ visible: true, color: 'danger', text: 'Failed to delete site visit.' })
+                triggerErrorModal('Failed to delete site visit.', 'Delete Site Visit Failed')
             }
         } catch (err) {
-            setMessage({ visible: true, color: 'danger', text: 'Error: ' + err.message })
+            triggerErrorModal(extractErrorMessage(err), 'Delete Site Visit Error')
         } finally {
             setDeleting(false)
             setVisitToDelete(null)
@@ -620,6 +631,14 @@ export default function SiteVisitsTable() {
                     </CButton>
                 </CModalFooter>
             </CModal>
+
+            {/* Designated Error Modal */}
+            <ErrorModal
+                visible={errorModalVisible}
+                title={errorModalTitle}
+                errorMessage={errorModalMsg}
+                onClose={() => setErrorModalVisible(false)}
+            />
         </CContainer>
     )
 }

@@ -14,6 +14,8 @@ import {
   CFormFeedback,
 } from '@coreui/react'
 import { sanitizeNumeric, sanitizeText, sanitizeRestrictedText } from '../../../utils/validation'
+import ErrorModal from '../../../components/ErrorModal'
+import { extractErrorMessage, getResponseErrorMessage } from '../../../utils/errorUtils'
 
 const statusOptions = ['Ongoing', 'Completed', 'Planned', 'On Hold']
 
@@ -142,6 +144,9 @@ export default function ProjectForm() {
     setPhotos((prev) => prev.filter((_, i) => i !== index))
   }
 
+  const [errorModalVisible, setErrorModalVisible] = useState(false)
+  const [errorModalMsg, setErrorModalMsg] = useState('')
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     const nextErrors = {
@@ -166,7 +171,6 @@ export default function ProjectForm() {
 
     try {
       const apiUrl = `${globalThis.apiBaseUrl}/projects/`
-      // console.log('API:', apiUrl, '\nData:', payload)
 
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -174,20 +178,11 @@ export default function ProjectForm() {
         body: JSON.stringify(payload),
       })
 
-      const responseText = await response.text()
       if (!response.ok) {
-        // Try to extract a readable error message
-        let errorMsg = responseText
-        try {
-          const errorObj = JSON.parse(responseText)
-          errorMsg = errorObj.detail || errorObj.message || responseText
-        } catch {
-          errorMsg = responseText
-        }
-        errorMsg = errorMsg.replace(/[{}"]/g, '')
-        setModalMessage(`Error: ${errorMsg}`)
-        setShowModal(true)
-        throw new Error(errorMsg || 'Failed to submit')
+        const errorMsg = await getResponseErrorMessage(response, 'Failed to add project.')
+        setErrorModalMsg(errorMsg)
+        setErrorModalVisible(true)
+        return
       }
 
       setModalMessage('Success: Project added successfully')
@@ -203,8 +198,8 @@ export default function ProjectForm() {
       })
       setPhotos([])
     } catch (err) {
-      setModalMessage(`Error: ${err.message.replace(/[{}"]/g, '')}`)
-      setShowModal(true)
+      setErrorModalMsg(extractErrorMessage(err, 'Failed to submit project.'))
+      setErrorModalVisible(true)
     } finally {
       setLoading(false)
     }
@@ -524,6 +519,14 @@ export default function ProjectForm() {
           </div>
         </div>
       )}
+
+      {/* Designated Error Modal */}
+      <ErrorModal
+        visible={errorModalVisible}
+        title="Project Creation Failed"
+        errorMessage={errorModalMsg}
+        onClose={() => setErrorModalVisible(false)}
+      />
     </div>
   )
 }

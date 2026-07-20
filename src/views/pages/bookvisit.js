@@ -15,6 +15,8 @@ import {
 } from '@coreui/react'
 import { useNavigate } from 'react-router-dom'
 import { sanitizeName, sanitizeNumeric, sanitizeText, validateIndianMobile } from '../../utils/validation'
+import ErrorModal from '../../components/ErrorModal'
+import { extractErrorMessage, getResponseErrorMessage } from '../../utils/errorUtils'
 
 export default function LeadForm() {
   const navigate = useNavigate()
@@ -335,6 +337,16 @@ export default function LeadForm() {
     }
   }
 
+  const [errorModalVisible, setErrorModalVisible] = useState(false)
+  const [errorModalMsg, setErrorModalMsg] = useState('')
+  const [errorModalTitle, setErrorModalTitle] = useState('')
+
+  const triggerErrorModal = (msg, title = 'Site Visit Booking Failed') => {
+    setErrorModalTitle(title)
+    setErrorModalMsg(msg)
+    setErrorModalVisible(true)
+  }
+
   // -------------------- SUBMIT --------------------
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -371,7 +383,6 @@ export default function LeadForm() {
         params.append('interested_plot', plotNumber)
 
         const clientRegisterUrl = `${globalThis.apiBaseUrl}/register/client`
-        console.log('Registering new lead first:', clientRegisterUrl, params.toString())
 
         const leadRes = await fetch(clientRegisterUrl, {
           method: 'POST',
@@ -390,14 +401,13 @@ export default function LeadForm() {
         }
 
         if (!leadRes.ok || !leadId) {
-          const errorMsg = leadResult.message || leadRes.statusText || 'Failed to register client.'
+          const errorMsg = extractErrorMessage(leadResult, leadRes.statusText || 'Failed to register client.')
           throw new Error(errorMsg)
         }
 
         finalCustomerId = leadId
-        console.log('Lead Registered successfully. Client ID:', finalCustomerId)
       } catch (err) {
-        alert('Client creation failed: ' + err.message)
+        triggerErrorModal(extractErrorMessage(err), 'Client Registration Error')
         setLoading(false)
         return
       }
@@ -420,7 +430,6 @@ export default function LeadForm() {
 
     try {
       const postUrl = `${globalThis.apiBaseUrl}/visits/`
-      console.log('Add Visit — payload being sent to POST:', postUrl, apiBody)
 
       const res = await fetch(postUrl, {
         method: 'POST',
@@ -432,17 +441,14 @@ export default function LeadForm() {
       })
 
       if (!res.ok) {
-        const errorText = await res.text()
-        const message = errorText.includes('<html>')
-          ? `Server returned ${res.status} (${res.statusText}). Check API method or URL.`
-          : errorText
-        throw new Error(message)
+        const errorMsg = await getResponseErrorMessage(res, 'Failed to schedule site visit.')
+        throw new Error(errorMsg)
       }
 
       alert('Form Submitted Successfully ✅')
       navigate('/GetBookVisit')
     } catch (err) {
-      alert('Submission failed: ' + err.message)
+      triggerErrorModal(extractErrorMessage(err), 'Site Visit Booking Failed')
     } finally {
       setLoading(false)
     }
@@ -660,6 +666,14 @@ export default function LeadForm() {
             </CForm>
           </CCardBody>
         </CCard>
+
+        {/* Designated Error Modal */}
+        <ErrorModal
+          visible={errorModalVisible}
+          title={errorModalTitle}
+          errorMessage={errorModalMsg}
+          onClose={() => setErrorModalVisible(false)}
+        />
       </CCol>
     </CRow>
   )

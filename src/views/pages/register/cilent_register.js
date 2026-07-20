@@ -6,6 +6,8 @@ import {
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilUser, cilPhone } from '@coreui/icons'
+import ErrorModal from '../../../components/ErrorModal'
+import { extractErrorMessage } from '../../../utils/errorUtils'
 
 const Client_Register = () => {
   const [formData, setFormData] = useState({
@@ -218,6 +220,9 @@ const Client_Register = () => {
     <small className="text-danger d-block mt-1">{errors[field]}</small>
   )
 
+  const [errorModalVisible, setErrorModalVisible] = useState(false)
+  const [errorModalMsg, setErrorModalMsg] = useState('')
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError(null)
@@ -236,9 +241,6 @@ const Client_Register = () => {
     params.append('interested_project', formData.interested_project)
     params.append('interested_plot', formData.interested_plot)
 
-    // Corrected console log to show the payload string
-    console.log('Form data sent:', params.toString())
-
     try {
       const res = await fetch(`${globalThis.apiBaseUrl}/register/client`, {
         method: 'POST',
@@ -251,10 +253,13 @@ const Client_Register = () => {
         alert(`Registration Successful! Your User Code: ${result.u_id}`)
         navigate('/login')
       } else {
-        setError(result.message || res.statusText)
+        const msg = extractErrorMessage(result, res.statusText || 'Registration failed.')
+        setErrorModalMsg(msg)
+        setErrorModalVisible(true)
       }
     } catch (error) {
-      setError('Network Error. Please try again later.')
+      setErrorModalMsg(extractErrorMessage(error, 'Network Error. Please try again later.'))
+      setErrorModalVisible(true)
     }
   }
 
@@ -385,6 +390,14 @@ const Client_Register = () => {
             </CCard>
           </CCol>
         </CRow>
+
+        {/* Designated Error Modal */}
+        <ErrorModal
+          visible={errorModalVisible}
+          title="Client Registration Failed"
+          errorMessage={errorModalMsg}
+          onClose={() => setErrorModalVisible(false)}
+        />
       </CContainer>
     </div>
   )

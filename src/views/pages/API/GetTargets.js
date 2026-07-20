@@ -24,6 +24,8 @@ import {
   CTableHeaderCell,
   CTableRow,
 } from '@coreui/react'
+import ErrorModal from '../../../components/ErrorModal'
+import { extractErrorMessage, getResponseErrorMessage } from '../../../utils/errorUtils'
 
 const editableKeys = [
   'designation',
@@ -141,13 +143,23 @@ const GetTargets = () => {
     return { total, completed, pending, percentage }
   }
 
+  const [errorModalVisible, setErrorModalVisible] = useState(false)
+  const [errorModalMsg, setErrorModalMsg] = useState('')
+  const [errorModalTitle, setErrorModalTitle] = useState('')
+
+  const triggerErrorModal = (msg, title = 'Target Operation Failed') => {
+    setErrorModalTitle(title)
+    setErrorModalMsg(msg)
+    setErrorModalVisible(true)
+  }
+
   const handleSave = async () => {
     if (!selectedTarget) return
 
     const required = ['designation', 'description', 'value', 'stage', 'target_units']
     for (const key of required) {
       if (!String(selectedTarget[key] || '').trim()) {
-        setMessage({ visible: true, color: 'danger', text: `${keyLabel(key)} is required.` })
+        triggerErrorModal(`${keyLabel(key)} is required.`, 'Validation Error')
         return
       }
     }
@@ -155,21 +167,21 @@ const GetTargets = () => {
     setSaving(true)
     try {
       const success = await updateTargetOnServer(selectedTarget)
-      setTargets((prev) =>
-        prev.map((item) => ((item.id || item.target_id) === (selectedTarget.id || selectedTarget.target_id) ? { ...item, ...selectedTarget } : item)),
-      )
-      setMessage({
-        visible: true,
-        color: success ? 'success' : 'warning',
-        text: success ? 'Target updated successfully.' : 'Target updated locally. Server update endpoint is unavailable.',
-      })
-      setEditModalVisible(false)
-      await fetchTargets()
-    } catch {
-      setMessage({ visible: true, color: 'danger', text: 'Failed to update target.' })
+      if (success) {
+        setTargets((prev) =>
+          prev.map((item) => ((item.id || item.target_id) === (selectedTarget.id || selectedTarget.target_id) ? { ...item, ...selectedTarget } : item)),
+        )
+        setMessage({ visible: true, color: 'success', text: 'Target updated successfully.' })
+        setEditModalVisible(false)
+        setSelectedTarget(null)
+        await fetchTargets()
+      } else {
+        triggerErrorModal('Failed to update target on server.', 'Update Target Failed')
+      }
+    } catch (err) {
+      triggerErrorModal(extractErrorMessage(err), 'Update Target Error')
     } finally {
       setSaving(false)
-      setSelectedTarget(null)
     }
   }
 
@@ -323,6 +335,14 @@ const GetTargets = () => {
           </CButton>
         </CModalFooter>
       </CModal>
+
+      {/* Designated Error Modal */}
+      <ErrorModal
+        visible={errorModalVisible}
+        title={errorModalTitle}
+        errorMessage={errorModalMsg}
+        onClose={() => setErrorModalVisible(false)}
+      />
     </CContainer>
   )
 }

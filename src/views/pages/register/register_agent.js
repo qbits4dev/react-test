@@ -17,6 +17,8 @@ import {
   validateAgeRangeFromDob,
   validateStrongPassword,
 } from '../../../utils/validation'
+import ErrorModal from '../../../components/ErrorModal'
+import { extractErrorMessage } from '../../../utils/errorUtils'
 
 export default function RegisterAgentWizard() {
   const navigate = useNavigate()
@@ -444,19 +446,21 @@ export default function RegisterAgentWizard() {
         setShowSuccessModal(true)
         localStorage.removeItem('registerAgentForm')
       } else {
-        setAlert({ visible: true, message: data.message || 'Registration failed.', color: 'danger' })
-        setForm(emptyForm)
-        localStorage.removeItem('registerAgentForm')
+        const errorMsg = extractErrorMessage(data, 'Agent registration failed.')
+        setErrorModalMsg(errorMsg)
+        setErrorModalVisible(true)
       }
     } catch (err) {
       console.error(err)
-      setAlert({ visible: true, message: 'Network error.', color: 'danger' })
-      setForm(emptyForm)
-      localStorage.removeItem('registerAgentForm')
+      setErrorModalMsg(extractErrorMessage(err, 'Network error. Please try again.'))
+      setErrorModalVisible(true)
     } finally {
       setIsSubmitting(false)
     }
   }
+
+  const [errorModalVisible, setErrorModalVisible] = useState(false)
+  const [errorModalMsg, setErrorModalMsg] = useState('')
 
   const handleModalClose = () => {
     localStorage.removeItem('registerAgentForm')
@@ -856,6 +860,14 @@ export default function RegisterAgentWizard() {
         </CModalBody>
         <CModalFooter><CButton color="primary" onClick={handleModalClose}>Go to Dashboard</CButton></CModalFooter>
       </CModal>
+
+      {/* Designated Error Modal */}
+      <ErrorModal
+        visible={errorModalVisible}
+        title="Agent Registration Failed"
+        errorMessage={errorModalMsg}
+        onClose={() => setErrorModalVisible(false)}
+      />
     </CContainer >
   )
 }

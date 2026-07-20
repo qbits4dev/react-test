@@ -15,6 +15,8 @@ import {
   validateAgeRangeFromDob,
   validateStrongPassword,
 } from '../../../utils/validation'
+import ErrorModal from '../../../components/ErrorModal'
+import { extractErrorMessage, getResponseErrorMessage } from '../../../utils/errorUtils'
 
 export default function RegisterClientWizard() {
   const navigate = useNavigate()
@@ -315,18 +317,23 @@ export default function RegisterClientWizard() {
         setModalMessage(isConverting ? 'Success: Client converted to customer successfully' : 'Success: Customer registered successfully')
         setShowModal(true)
       } else {
-        let errorMsg = data.message || 'Registration failed.'
-        errorMsg = errorMsg.replace(/[{}"]/g, '')
-        setModalMessage(`Error: ${errorMsg}`)
-        setShowModal(true)
+        const errorMsg = extractErrorMessage(data, 'Registration failed. Please check form fields.')
+        setErrorModalMsg(errorMsg)
+        setErrorModalTitle(isConverting ? 'Lead Conversion Failed' : 'Customer Registration Failed')
+        setErrorModalVisible(true)
       }
     } catch (err) {
-      setModalMessage('Error: Network error.')
-      setShowModal(true)
+      setErrorModalMsg(extractErrorMessage(err, 'Network error. Please try again.'))
+      setErrorModalTitle('Registration Request Error')
+      setErrorModalVisible(true)
     } finally {
       setIsSubmitting(false)
     }
   }
+
+  const [errorModalVisible, setErrorModalVisible] = useState(false)
+  const [errorModalMsg, setErrorModalMsg] = useState('')
+  const [errorModalTitle, setErrorModalTitle] = useState('')
 
   return (
     <CContainer className="py-5">
@@ -584,6 +591,14 @@ export default function RegisterClientWizard() {
           </div>
         </div>
       )}
+
+      {/* Designated Error Modal */}
+      <ErrorModal
+        visible={errorModalVisible}
+        title={errorModalTitle}
+        errorMessage={errorModalMsg}
+        onClose={() => setErrorModalVisible(false)}
+      />
     </CContainer>
   )
 }
