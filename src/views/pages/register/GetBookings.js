@@ -29,10 +29,21 @@ import { useNavigate, useLocation } from 'react-router-dom'
 
 const normalizeBooking = (b) => {
     if (!b) return b
+    const total = b.total_amount !== undefined ? b.total_amount : (b.total_price !== undefined ? b.total_price : (b.price !== undefined ? b.price : 0))
+    const advance = b.advance_amount !== undefined ? b.advance_amount : (b.amount !== undefined ? b.amount : 0)
+    const amenities = b.amenities_charges !== undefined ? b.amenities_charges : 0
+    const other = b.other_charges !== undefined ? b.other_charges : 0
+    const calculatedBal = Math.max(0, (parseFloat(total) || 0) + (parseFloat(amenities) || 0) + (parseFloat(other) || 0) - (parseFloat(advance) || 0))
+    const balance = b.balance_amount !== undefined ? b.balance_amount : calculatedBal
     return {
         ...b,
         plot_id: b.plot_id || b.plot_number || '',
-        amount: b.amount !== undefined ? b.amount : (b.advance_amount !== undefined ? b.advance_amount : 0)
+        total_amount: total,
+        advance_amount: advance,
+        amenities_charges: amenities,
+        other_charges: other,
+        balance_amount: balance,
+        amount: advance || total
     }
 }
 
@@ -66,9 +77,21 @@ export default function BookingsManager() {
     const [formCustomerId, setFormCustomerId] = useState('')
     const [formProjectName, setFormProjectName] = useState('')
     const [formPlotId, setFormPlotId] = useState('')
-    const [formAmount, setFormAmount] = useState('')
+    const [formTotalAmount, setFormTotalAmount] = useState('')
+    const [formAdvanceAmount, setFormAdvanceAmount] = useState('')
+    const [formAmenitiesCharges, setFormAmenitiesCharges] = useState('')
+    const [formOtherCharges, setFormOtherCharges] = useState('')
     const [formStatus, setFormStatus] = useState('pending')
     const [saving, setSaving] = useState(false)
+
+    // Automatically calculated Balance Amount
+    const formBalanceAmount = Math.max(
+        0,
+        (parseFloat(formTotalAmount) || 0) +
+        (parseFloat(formAmenitiesCharges) || 0) +
+        (parseFloat(formOtherCharges) || 0) -
+        (parseFloat(formAdvanceAmount) || 0)
+    )
 
     // Delete modal
     const [deleteModalVisible, setDeleteModalVisible] = useState(false)
@@ -224,7 +247,10 @@ export default function BookingsManager() {
             } else {
                 setFormCustomerId('')
             }
-            setFormAmount('')
+            setFormTotalAmount('')
+            setFormAdvanceAmount('')
+            setFormAmenitiesCharges('')
+            setFormOtherCharges('')
             setFormStatus('pending')
 
             const fetchProjPlots = async () => {
@@ -233,7 +259,13 @@ export default function BookingsManager() {
                     const res = await fetch(`${globalThis.apiBaseUrl}/projects/plots?project_name=${encodeURIComponent(preselectProject)}`)
                     if (res.ok) {
                         const data = await res.json()
-                        setProjectPlots(Array.isArray(data) ? data : [])
+                        const plotsArr = Array.isArray(data) ? data : []
+                        setProjectPlots(plotsArr)
+                        const selPlot = plotsArr.find(p => String(p.id) === String(preselectPlotId) || String(p.plot_number) === String(preselectPlotId))
+                        if (selPlot) {
+                            const plotPrice = selPlot.price !== undefined ? selPlot.price : (selPlot.amount !== undefined ? selPlot.amount : (selPlot.total_price || ''))
+                            if (plotPrice) setFormTotalAmount(String(plotPrice))
+                        }
                     }
                 } catch (e) {
                     console.error('Failed to load project plots in preselection:', e)
@@ -252,6 +284,7 @@ export default function BookingsManager() {
     const handleProjectChange = async (projectName) => {
         setFormProjectName(projectName)
         setFormPlotId('')
+        setFormTotalAmount('')
         setProjectPlots([])
 
         if (!projectName) return
@@ -261,12 +294,58 @@ export default function BookingsManager() {
             const res = await fetch(`${globalThis.apiBaseUrl}/projects/plots?project_name=${encodeURIComponent(projectName)}`)
             if (res.ok) {
                 const data = await res.json()
-                setProjectPlots(Array.isArray(data) ? data : [])
+                const plotsList = Array.isArray(data) ? data : (data.plots || data.data || [])
+                setProjectPlots(plotsList)
             }
         } catch (err) {
             console.error('Failed to fetch plots:', err)
         } finally {
             setPlotsLoading(false)
+        }
+    }
+
+    // Handle plot selection and auto-populate total amount from plot price
+    const handlePlotChange = async (plotId) => {
+        setFormPlotId(plotId)
+        if (!plotId) {
+            setFormTotalAmount('')
+            return
+        }
+
+        const selectedPlot = projectPlots.find(
+            (p) => String(p.id) === String(plotId) || String(p.plot_number) === String(plotId)
+        )
+
+        let plotPrice = selectedPlot ? (
+            selectedPlot.price !== undefined && selectedPlot.price !== null && selectedPlot.price !== ''
+                ? selectedPlot.price
+                : (selectedPlot.amount !== undefined && selectedPlot.amount !== null && selectedPlot.amount !== ''
+                    ? selectedPlot.amount
+                    : (selectedPlot.total_price || selectedPlot.total_amount || selectedPlot.cost || selectedPlot.rate || ''))
+        ) : ''
+
+        // Fallback if price is not on the in-memory plot object
+        if (selectedPlot && (plotPrice === '' || plotPrice === undefined || plotPrice === null || parseFloat(plotPrice) === 0)) {
+            try {
+                const plotNum = selectedPlot.plot_number || plotId
+                const projName = selectedPlot.project_name || formProjectName
+                const res = await fetch(`${globalThis.apiBaseUrl}/projects/plots?project_name=${encodeURIComponent(projName)}`)
+                if (res.ok) {
+                    const data = await res.json()
+                    const plotsList = Array.isArray(data) ? data : (data.plots || data.data || [])
+                    const match = plotsList.find((p) => String(p.plot_number) === String(plotNum) || String(p.id) === String(plotId))
+                    if (match) {
+                        const pAmt = match.price !== undefined ? match.price : (match.amount !== undefined ? match.amount : (match.total_price || match.total_amount || ''))
+                        if (pAmt) plotPrice = pAmt
+                    }
+                }
+            } catch (err) {
+                console.error('Error fetching plot price fallback:', err)
+            }
+        }
+
+        if (plotPrice !== undefined && plotPrice !== null && plotPrice !== '') {
+            setFormTotalAmount(String(plotPrice))
         }
     }
 
@@ -333,7 +412,10 @@ export default function BookingsManager() {
         setFormCustomerId('')
         setFormProjectName('')
         setFormPlotId('')
-        setFormAmount('')
+        setFormTotalAmount('')
+        setFormAdvanceAmount('')
+        setFormAmenitiesCharges('')
+        setFormOtherCharges('')
         setFormStatus('pending')
         setProjectPlots([])
         setModalVisible(true)
@@ -354,29 +436,51 @@ export default function BookingsManager() {
             fetch(`${globalThis.apiBaseUrl}/projects/plots?project_name=${encodeURIComponent(details.projectName)}`)
                 .then(r => r.json())
                 .then(data => {
-                    setProjectPlots(Array.isArray(data) ? data : [])
+                    const plotsList = Array.isArray(data) ? data : []
+                    setProjectPlots(plotsList)
                     setFormPlotId(booking.plot_id || '')
+                    if (!booking.total_amount && !booking.price) {
+                        const sel = plotsList.find(p => String(p.id) === String(booking.plot_id) || String(p.plot_number) === String(booking.plot_id))
+                        if (sel) {
+                            const pAmt = sel.price !== undefined ? sel.price : (sel.amount !== undefined ? sel.amount : 0)
+                            if (pAmt) setFormTotalAmount(String(pAmt))
+                        }
+                    }
                 })
                 .catch(e => console.error(e))
                 .finally(() => setPlotsLoading(false))
         }
 
-        setFormAmount(booking.amount || '')
+        setFormTotalAmount(booking.total_amount !== undefined && booking.total_amount !== '' ? String(booking.total_amount) : (booking.price ? String(booking.price) : ''))
+        setFormAdvanceAmount(booking.advance_amount !== undefined && booking.advance_amount !== '' ? String(booking.advance_amount) : (booking.amount ? String(booking.amount) : ''))
+        setFormAmenitiesCharges(booking.amenities_charges !== undefined && booking.amenities_charges !== '' ? String(booking.amenities_charges) : '')
+        setFormOtherCharges(booking.other_charges !== undefined && booking.other_charges !== '' ? String(booking.other_charges) : '')
         setFormStatus(booking.status || 'pending')
         setModalVisible(true)
     }
 
     const handleSave = async () => {
-        if (!formCustomerId || !formPlotId || !formAmount) {
-            setMessage({ visible: true, color: 'danger', text: 'Please fill in all required fields.' })
+        if (!formCustomerId || !formPlotId || !formTotalAmount) {
+            setMessage({ visible: true, color: 'danger', text: 'Please fill in all required fields (Customer, Project, Plot, Total Amount).' })
             return
         }
 
         setSaving(true)
+        const total = parseFloat(formTotalAmount) || 0
+        const advance = parseFloat(formAdvanceAmount) || 0
+        const amenities = parseFloat(formAmenitiesCharges) || 0
+        const other = parseFloat(formOtherCharges) || 0
+        const balance = Math.max(0, total + amenities + other - advance)
+
         const payload = {
             customer_id: formCustomerId,
-            plot_number: parseInt(formPlotId, 10),
-            advance_amount: parseFloat(formAmount),
+            plot_number: parseInt(formPlotId, 10) || formPlotId,
+            total_amount: total,
+            advance_amount: advance,
+            amenities_charges: amenities,
+            other_charges: other,
+            balance_amount: balance,
+            amount: advance || total,
             status: formStatus,
             project_name: formProjectName
         }
@@ -494,18 +598,36 @@ export default function BookingsManager() {
                                                                 </CBadge>
                                                             </CCardHeader>
                                                             <CCardBody>
-                                                                <CRow className="mb-3">
-                                                                    <CCol md={4}>
+                                                                <CRow className="mb-3 g-2">
+                                                                    <CCol md={3} sm={6}>
                                                                         <div className="text-muted small">Project Venture</div>
                                                                         <h5 className="text-dark fw-semibold">{details.projectName}</h5>
                                                                     </CCol>
-                                                                    <CCol md={4}>
+                                                                    <CCol md={3} sm={6}>
                                                                         <div className="text-muted small">Plot Number</div>
                                                                         <h5 className="text-dark fw-semibold">Plot {details.plotNumber}</h5>
                                                                     </CCol>
-                                                                    <CCol md={4}>
-                                                                        <div className="text-muted small">Booked Amount</div>
-                                                                        <h5 className="text-primary fw-bold">₹ {parseFloat(booking.amount || 0).toLocaleString('en-IN')}</h5>
+                                                                    <CCol md={3} sm={6}>
+                                                                        <div className="text-muted small">Total Amount</div>
+                                                                        <h6 className="text-dark fw-bold">₹ {parseFloat(booking.total_amount || booking.amount || 0).toLocaleString('en-IN')}</h6>
+                                                                    </CCol>
+                                                                    <CCol md={3} sm={6}>
+                                                                        <div className="text-muted small">Advance Paid</div>
+                                                                        <h6 className="text-success fw-bold">₹ {parseFloat(booking.advance_amount || 0).toLocaleString('en-IN')}</h6>
+                                                                    </CCol>
+                                                                    <CCol md={3} sm={6} className="mt-2">
+                                                                        <div className="text-muted small">Amenities Charges</div>
+                                                                        <span className="fw-semibold">₹ {parseFloat(booking.amenities_charges || 0).toLocaleString('en-IN')}</span>
+                                                                    </CCol>
+                                                                    <CCol md={3} sm={6} className="mt-2">
+                                                                        <div className="text-muted small">Other Charges</div>
+                                                                        <span className="fw-semibold">₹ {parseFloat(booking.other_charges || 0).toLocaleString('en-IN')}</span>
+                                                                    </CCol>
+                                                                    <CCol md={6} sm={12} className="mt-2">
+                                                                        <div className="text-muted small">Balance Amount Due</div>
+                                                                        <h5 className={booking.balance_amount > 0 ? "text-danger fw-bold" : "text-success fw-bold"}>
+                                                                            ₹ {parseFloat(booking.balance_amount || 0).toLocaleString('en-IN')}
+                                                                        </h5>
                                                                     </CCol>
                                                                 </CRow>
 
@@ -569,7 +691,9 @@ export default function BookingsManager() {
                                                     <CTableHeaderCell>Customer ID</CTableHeaderCell>
                                                     <CTableHeaderCell>Project / Venture</CTableHeaderCell>
                                                     <CTableHeaderCell>Plot ID</CTableHeaderCell>
-                                                    <CTableHeaderCell>Amount</CTableHeaderCell>
+                                                    <CTableHeaderCell>Total Amount</CTableHeaderCell>
+                                                    <CTableHeaderCell>Advance Paid</CTableHeaderCell>
+                                                    <CTableHeaderCell>Balance Due</CTableHeaderCell>
                                                     <CTableHeaderCell>Status</CTableHeaderCell>
                                                     <CTableHeaderCell>Actions</CTableHeaderCell>
                                                 </CTableRow>
@@ -584,8 +708,14 @@ export default function BookingsManager() {
                                                             <CTableDataCell>{booking.customer_id || '—'}</CTableDataCell>
                                                             <CTableDataCell>{details.projectName}</CTableDataCell>
                                                             <CTableDataCell>Plot {details.plotNumber}</CTableDataCell>
-                                                            <CTableDataCell className="text-primary fw-bold">
-                                                                ₹ {parseFloat(booking.amount || 0).toLocaleString('en-IN')}
+                                                            <CTableDataCell className="fw-bold text-dark">
+                                                                ₹ {parseFloat(booking.total_amount || 0).toLocaleString('en-IN')}
+                                                            </CTableDataCell>
+                                                            <CTableDataCell className="text-success fw-bold">
+                                                                ₹ {parseFloat(booking.advance_amount || 0).toLocaleString('en-IN')}
+                                                            </CTableDataCell>
+                                                            <CTableDataCell className={booking.balance_amount > 0 ? "text-danger fw-bold" : "text-success fw-bold"}>
+                                                                ₹ {parseFloat(booking.balance_amount || 0).toLocaleString('en-IN')}
                                                             </CTableDataCell>
                                                             <CTableDataCell>
                                                                 <CBadge color={booking.status === 'confirmed' ? 'success' : booking.status === 'pending' ? 'warning' : 'danger'}>
@@ -651,20 +781,53 @@ export default function BookingsManager() {
                         </CCol>
 
                         <CCol md={6}>
-                            <CFormLabel>Plot ID *</CFormLabel>
-                            <CFormSelect value={formPlotId} onChange={(e) => setFormPlotId(e.target.value)} disabled={!formProjectName || plotsLoading}>
+                            <CFormLabel>Plot *</CFormLabel>
+                            <CFormSelect value={formPlotId} onChange={(e) => handlePlotChange(e.target.value)} disabled={!formProjectName || plotsLoading}>
                                 <option value="">{plotsLoading ? 'Loading plots...' : 'Select Plot'}</option>
-                                {projectPlots.map((plot) => (
-                                    <option key={plot.id} value={plot.id}>
-                                        Plot {plot.plot_number} ({plot.status || 'available'})
-                                    </option>
-                                ))}
+                                {projectPlots.map((plot, idx) => {
+                                    const plotVal = (plot.id !== undefined && plot.id !== null && plot.id !== '') ? String(plot.id) : String(plot.plot_number || '')
+                                    const priceVal = plot.price !== undefined && plot.price !== null && plot.price !== ''
+                                        ? plot.price
+                                        : (plot.amount !== undefined && plot.amount !== null && plot.amount !== ''
+                                            ? plot.amount
+                                            : (plot.total_price || plot.total_amount || 0))
+                                    return (
+                                        <option key={plotVal || idx} value={plotVal}>
+                                            Plot {plot.plot_number || plotVal} ({plot.status || 'available'}){priceVal ? ` - ₹ ${parseFloat(priceVal).toLocaleString('en-IN')}` : ''}
+                                        </option>
+                                    )
+                                })}
                             </CFormSelect>
                         </CCol>
 
                         <CCol md={6}>
-                            <CFormLabel>Booking Amount (INR) *</CFormLabel>
-                            <CFormInput type="number" value={formAmount} onChange={(e) => setFormAmount(e.target.value)} placeholder="Enter amount" />
+                            <CFormLabel>Total Amount (INR) *</CFormLabel>
+                            <CFormInput type="number" value={formTotalAmount} onChange={(e) => setFormTotalAmount(e.target.value)} placeholder="Auto-filled from plot price" />
+                        </CCol>
+
+                        <CCol md={6}>
+                            <CFormLabel>Advance Amount (INR)</CFormLabel>
+                            <CFormInput type="number" value={formAdvanceAmount} onChange={(e) => setFormAdvanceAmount(e.target.value)} placeholder="Enter advance amount" />
+                        </CCol>
+
+                        <CCol md={6}>
+                            <CFormLabel>Amenities Charges (INR)</CFormLabel>
+                            <CFormInput type="number" value={formAmenitiesCharges} onChange={(e) => setFormAmenitiesCharges(e.target.value)} placeholder="Enter amenities charges" />
+                        </CCol>
+
+                        <CCol md={6}>
+                            <CFormLabel>Other Charges (INR)</CFormLabel>
+                            <CFormInput type="number" value={formOtherCharges} onChange={(e) => setFormOtherCharges(e.target.value)} placeholder="Enter other charges" />
+                        </CCol>
+
+                        <CCol md={6}>
+                            <CFormLabel>Balance Amount (INR) <small className="text-muted">(Auto-calculated)</small></CFormLabel>
+                            <CFormInput
+                                type="number"
+                                value={formBalanceAmount}
+                                readOnly
+                                style={{ backgroundColor: '#eef2f7', fontWeight: 'bold', color: '#00416a' }}
+                            />
                         </CCol>
 
                         <CCol md={12}>
