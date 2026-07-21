@@ -47,6 +47,7 @@
     "dayjs": "^1.11.18",
     "eslint-plugin-react-compiler": "^19.1.0-rc.2",
     "framer-motion": "^12.23.18",
+    "html2pdf.js": "^0.14.0",
     "prop-types": "^15.8.1",
     "react": "^19.1.0",
     "react-datepicker": "^8.4.0",

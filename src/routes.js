@@ -172,7 +172,7 @@ const routes = [
   { path: '/Profile', name: 'User Profile', element: Profile ,meta:{allowedRoles:["admin","agent"]}},
   { path: '/ClientProfile', name: 'Customer Profile', element: ClientProfile ,meta:{allowedRoles:["admin","agent"]}},
   { path: '/Reports', name: 'Reports', element: Reports,meta:{allowedRoles:["admin","agent"]} },
-  { path: '/Invoice', name: 'Invoice', element: Invoice,meta:{allowedRoles:["admin","agent"]} },
+  { path: '/Invoice', name: 'Invoice', element: Invoice,meta:{allowedRoles:["admin","agent","customer","client"]} },
   { path: '/ForgotUId', name: 'Forgot User ID', element: ForgotUserId ,meta:{allowedRoles:["admin","agent"]}},
   { path: '/ForgotPassword', name: 'Forgot Password', element: ForgotPassword ,meta:{allowedRoles:["admin","agent"]}},
   { path: '/verification', name: 'Verification', element: Verification ,meta:{allowedRoles:["admin","agent"]}},

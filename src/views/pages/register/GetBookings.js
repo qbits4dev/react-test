@@ -28,6 +28,16 @@ import {
 import { useNavigate, useLocation } from 'react-router-dom'
 import ErrorModal from '../../../components/ErrorModal'
 import { extractErrorMessage, getResponseErrorMessage } from '../../../utils/errorUtils'
+import html2pdf from 'html2pdf.js'
+import logoImg from 'src/assets/brand/logo.jpeg'
+import {
+    listInvoices,
+    getPaymentPlan,
+    setupPaymentPlan,
+    getInvoiceHtml,
+    getClientProfile,
+    generatePremiumInvoiceHtml
+} from '../../../services/invoiceService'
 
 const normalizeBooking = (b) => {
     if (!b) return b
@@ -105,6 +115,141 @@ export default function BookingsManager() {
         (parseFloat(formOtherCharges) || 0) -
         (parseFloat(formAdvanceAmount) || 0)
     )
+
+    // Billing Modal states
+    const [billingModalVisible, setBillingModalVisible] = useState(false)
+    const [billingBooking, setBillingBooking] = useState(null)
+    const [bookingInvoices, setBookingInvoices] = useState([])
+    const [bookingPaymentPlan, setBookingPaymentPlan] = useState(null)
+    const [loadingBilling, setLoadingBilling] = useState(false)
+    const [downloadingPdf, setDownloadingPdf] = useState(false)
+
+    // Form inputs for EMI Setup
+    const [formIsEmi, setFormIsEmi] = useState(true)
+    const [formTenureMonths, setFormTenureMonths] = useState("12")
+    const [formInterestRate, setFormInterestRate] = useState("8.5")
+    const [formEmiAmount, setFormEmiAmount] = useState("")
+    const [formPaymentDate, setFormPaymentDate] = useState("")
+    const [formPlanStartDate, setFormPlanStartDate] = useState(new Date().toISOString().split('T')[0])
+    const [savingPaymentPlan, setSavingPaymentPlan] = useState(false)
+
+    const [previewInvoiceModalVisible, setPreviewInvoiceModalVisible] = useState(false)
+    const [previewInvoice, setPreviewInvoice] = useState(null)
+    const [previewInvoiceHtml, setPreviewInvoiceHtml] = useState("")
+    const [loadingInvoicePreview, setLoadingInvoicePreview] = useState(false)
+
+    const openBillingModal = async (booking) => {
+        setBillingBooking(booking)
+        setBillingModalVisible(true)
+        setLoadingBilling(true)
+        setBookingInvoices([])
+        setBookingPaymentPlan(null)
+
+        // Reset plan form with defaults based on booking size
+        setFormIsEmi(true)
+        setFormTenureMonths("12")
+        setFormInterestRate("8.5")
+        setFormEmiAmount(String(Math.round(parseFloat(booking.balance_amount || booking.total_amount || 0) / 12)))
+        setFormPaymentDate("")
+        setFormPlanStartDate(new Date().toISOString().split('T')[0])
+
+        try {
+            // Load invoices for booking
+            const invs = await listInvoices({ booking_id: booking.id })
+            setBookingInvoices(invs)
+
+            // Load payment plan for booking
+            const plan = await getPaymentPlan(booking.id)
+            if (plan) {
+                setBookingPaymentPlan(plan)
+                setFormIsEmi(plan.is_emi)
+                setFormTenureMonths(plan.tenure_months || "12")
+                setFormInterestRate(plan.interest_rate_percent || "8.5")
+                setFormEmiAmount(plan.monthly_emi_amount || "")
+                setFormPaymentDate(plan.monthly_payment_date || "")
+                setFormPlanStartDate(plan.start_date || "")
+            }
+        } catch (err) {
+            console.error("Error loading billing details:", err)
+        } finally {
+            setLoadingBilling(false)
+        }
+    }
+
+    const handleSetupPaymentPlanSubmit = async (e) => {
+        e && e.preventDefault()
+        setSavingPaymentPlan(true)
+        try {
+            const payload = {
+                is_emi: formIsEmi,
+                tenure_months: formTenureMonths,
+                interest_rate_percent: formInterestRate,
+                monthly_emi_amount: formEmiAmount,
+                monthly_payment_date: formPaymentDate,
+                start_date: formPlanStartDate
+            }
+            const plan = await setupPaymentPlan(billingBooking.id, payload)
+            setBookingPaymentPlan(plan)
+            setMessage({ visible: true, color: 'success', text: 'Payment plan configured successfully.' })
+        } catch (err) {
+            console.error("Setup plan error:", err)
+            triggerErrorModal(extractErrorMessage(err) || "Failed to set up payment plan", "Payment Plan Error")
+        } finally {
+            setSavingPaymentPlan(false)
+        }
+    }
+
+    const handlePreviewInvoice = async (invoice) => {
+        setPreviewInvoice(invoice)
+        setPreviewInvoiceModalVisible(true)
+        setLoadingInvoicePreview(true)
+        setPreviewInvoiceHtml("")
+        try {
+            let profile = null
+            try {
+                profile = await getClientProfile(invoice.client_id)
+            } catch (errProfile) {
+                console.error("Failed to load client profile details:", errProfile)
+            }
+            const html = generatePremiumInvoiceHtml(invoice, profile, logoImg)
+            setPreviewInvoiceHtml(html)
+        } catch (err) {
+            console.error("Error generating invoice preview:", err)
+            setPreviewInvoiceHtml(`<div style="padding: 20px; color: red;">Failed to load invoice preview: ${err.message}</div>`)
+        } finally {
+            setLoadingInvoicePreview(false)
+        }
+    }
+
+    const handleDownloadPdf = async (invoice) => {
+        setDownloadingPdf(true)
+        try {
+            let profile = null
+            try {
+                profile = await getClientProfile(invoice.client_id)
+            } catch (errProfile) {
+                console.error("Failed to load client profile details:", errProfile)
+            }
+            const html = generatePremiumInvoiceHtml(invoice, profile, logoImg)
+
+            const opt = {
+                margin: [8, 8, 8, 8],
+                filename: `${invoice.invoice_number || `INV-${invoice.id}`}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, logging: false },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak: { mode: ['avoid-all', 'css'] }
+            }
+
+            await html2pdf().set(opt).from(html).save()
+            setMessage({ visible: true, color: 'success', text: 'PDF downloaded successfully!' })
+        } catch (err) {
+            console.error("PDF generation failed:", err)
+            triggerErrorModal("Failed to download PDF: " + err.message, "PDF Download Error")
+        } finally {
+            setDownloadingPdf(false)
+        }
+    }
 
     // Delete modal
     const [deleteModalVisible, setDeleteModalVisible] = useState(false)
@@ -679,6 +824,21 @@ export default function BookingsManager() {
                                                                             ₹ {parseFloat(booking.balance_amount || 0).toLocaleString('en-IN')}
                                                                         </h5>
                                                                     </CCol>
+                                                                    <CCol xs={12} className="mt-3">
+                                                                        <div className="d-flex justify-content-between align-items-center bg-light p-3 rounded shadow-sm">
+                                                                            <div>
+                                                                                <span className="fw-bold text-dark d-block">Invoices & Payment Schedules</span>
+                                                                                <small className="text-muted">Track payments, download A4 invoices & check configured EMIs</small>
+                                                                            </div>
+                                                                            <CButton 
+                                                                                color="primary" 
+                                                                                size="sm" 
+                                                                                onClick={() => openBillingModal(booking)}
+                                                                            >
+                                                                                Manage Billing
+                                                                            </CButton>
+                                                                        </div>
+                                                                    </CCol>
                                                                 </CRow>
 
                                                                 <hr />
@@ -774,6 +934,9 @@ export default function BookingsManager() {
                                                             </CTableDataCell>
                                                             <CTableDataCell>
                                                                 <div className="d-flex gap-2 justify-content-center">
+                                                                    <CButton color="success" size="sm" variant="outline" onClick={() => openBillingModal(booking)}>
+                                                                        Billing
+                                                                    </CButton>
                                                                     <CButton color="info" size="sm" variant="outline" onClick={() => openEditModal(booking)}>
                                                                         Edit
                                                                     </CButton>
@@ -921,6 +1084,210 @@ export default function BookingsManager() {
                 errorMessage={errorModalMsg}
                 onClose={() => setErrorModalVisible(false)}
             />
+
+            {/* Billing Details Modal */}
+            <CModal visible={billingModalVisible} onClose={() => setBillingModalVisible(false)} size="lg" backdrop="static" scrollable>
+                <CModalHeader style={{ background: '#1e3a8a', color: 'white' }}>
+                    <CModalTitle>Billing & Payment Plan — Booking #{billingBooking?.id}</CModalTitle>
+                </CModalHeader>
+                <CModalBody className="p-4">
+                    {loadingBilling ? (
+                        <div className="text-center py-5">
+                            <CSpinner color="primary" /> <span className="ms-2">Loading financial statements...</span>
+                        </div>
+                    ) : (
+                        <div>
+                            {/* Summary Cards */}
+                            <CRow className="g-3 mb-4">
+                                <CCol xs={6} md={3}>
+                                    <div className="p-2 border rounded bg-light text-center">
+                                        <small className="text-muted d-block">Total Value</small>
+                                        <span className="fw-bold text-dark">₹ {parseFloat(billingBooking?.total_amount || 0).toLocaleString('en-IN')}</span>
+                                    </div>
+                                </CCol>
+                                <CCol xs={6} md={3}>
+                                    <div className="p-2 border rounded bg-light text-center">
+                                        <small className="text-muted d-block">Advance Paid</small>
+                                        <span className="fw-bold text-success">₹ {parseFloat(billingBooking?.advance_amount || 0).toLocaleString('en-IN')}</span>
+                                    </div>
+                                </CCol>
+                                <CCol xs={6} md={3}>
+                                    <div className="p-2 border rounded bg-light text-center">
+                                        <small className="text-muted d-block">Balance Due</small>
+                                        <span className="fw-bold text-danger">₹ {parseFloat(billingBooking?.balance_amount || 0).toLocaleString('en-IN')}</span>
+                                    </div>
+                                </CCol>
+                                <CCol xs={6} md={3}>
+                                    <div className="p-2 border rounded bg-light text-center">
+                                        <small className="text-muted d-block">Status</small>
+                                        <span className="fw-bold text-uppercase badge bg-info">{billingBooking?.status}</span>
+                                    </div>
+                                </CCol>
+                            </CRow>
+
+                            {/* Section 1: Payment Plan (EMI Structure) */}
+                            <h5 className="border-bottom pb-2 mb-3 text-primary fw-bold">Payment Plan / EMI Configuration</h5>
+                            {bookingPaymentPlan ? (
+                                <CCard className="mb-4 border-info">
+                                    <CCardBody className="bg-light">
+                                        <CRow className="g-3">
+                                            <CCol xs={6} md={4}>
+                                                <small className="text-muted d-block">Plan Type</small>
+                                                <span className="fw-semibold">{bookingPaymentPlan.is_emi ? "EMI Plan (Installments)" : "Direct / Cash Plan"}</span>
+                                            </CCol>
+                                            <CCol xs={6} md={4}>
+                                                <small className="text-muted d-block">Tenure / Months</small>
+                                                <span className="fw-bold">{bookingPaymentPlan.tenure_months || "—"} Installments</span>
+                                            </CCol>
+                                            <CCol xs={6} md={4}>
+                                                <small className="text-muted d-block">Interest Rate (p.a.)</small>
+                                                <span className="fw-semibold">{bookingPaymentPlan.interest_rate_percent || "0"}%</span>
+                                            </CCol>
+                                            <CCol xs={6} md={4}>
+                                                <small className="text-muted d-block">Monthly EMI Amount</small>
+                                                <span className="fw-bold text-primary">₹ {parseFloat(bookingPaymentPlan.monthly_emi_amount || 0).toLocaleString('en-IN')} / month</span>
+                                            </CCol>
+                                            <CCol xs={6} md={4}>
+                                                <small className="text-muted d-block">Monthly Payment Date</small>
+                                                <span className="fw-semibold">{bookingPaymentPlan.monthly_payment_date || "—"}</span>
+                                            </CCol>
+                                            <CCol xs={6} md={4}>
+                                                <small className="text-muted d-block">Plan Start Date</small>
+                                                <span className="fw-semibold">{bookingPaymentPlan.start_date || "—"}</span>
+                                            </CCol>
+                                        </CRow>
+                                    </CCardBody>
+                                </CCard>
+                            ) : (
+                                <div className="mb-4">
+                                    {isAdmin ? (
+                                        <form onSubmit={handleSetupPaymentPlanSubmit}>
+                                            <CCard className="p-3 border-warning">
+                                                <div className="fw-semibold text-warning mb-2">No Payment Plan Set Up Yet. Configure Plan:</div>
+                                                <CRow className="g-3">
+                                                    <CCol md={6}>
+                                                        <CFormLabel>EMI Enable</CFormLabel>
+                                                        <CFormSelect value={formIsEmi ? "yes" : "no"} onChange={(e) => setFormIsEmi(e.target.value === "yes")}>
+                                                            <option value="yes">Enable EMI (Installments)</option>
+                                                            <option value="no">Disable EMI (Direct Payments)</option>
+                                                        </CFormSelect>
+                                                    </CCol>
+                                                    <CCol md={6}>
+                                                        <CFormLabel>Tenure (Months) *</CFormLabel>
+                                                        <CFormInput type="number" value={formTenureMonths} onChange={(e) => {
+                                                            setFormTenureMonths(e.target.value)
+                                                            const t = parseInt(e.target.value) || 1
+                                                            setFormEmiAmount(String(Math.round(parseFloat(billingBooking.balance_amount || 0) / t)))
+                                                        }} required />
+                                                    </CCol>
+                                                    <CCol md={6}>
+                                                        <CFormLabel>Interest Rate (% p.a.)</CFormLabel>
+                                                        <CFormInput type="text" value={formInterestRate} onChange={(e) => setFormInterestRate(e.target.value)} />
+                                                    </CCol>
+                                                    <CCol md={6}>
+                                                        <CFormLabel>Monthly EMI Amount (INR) *</CFormLabel>
+                                                        <CFormInput type="number" value={formEmiAmount} onChange={(e) => setFormEmiAmount(e.target.value)} required />
+                                                    </CCol>
+                                                    <CCol md={6}>
+                                                        <CFormLabel>Monthly Pay Day (Date/String)</CFormLabel>
+                                                        <CFormInput type="text" placeholder="e.g. 5th of every month" value={formPaymentDate} onChange={(e) => setFormPaymentDate(e.target.value)} />
+                                                    </CCol>
+                                                    <CCol md={6}>
+                                                        <CFormLabel>Start Date</CFormLabel>
+                                                        <CFormInput type="date" value={formPlanStartDate} onChange={(e) => setFormPlanStartDate(e.target.value)} />
+                                                    </CCol>
+                                                    <CCol xs={12} className="text-end">
+                                                        <CButton type="submit" color="primary" disabled={savingPaymentPlan}>
+                                                            {savingPaymentPlan ? 'Configuring...' : 'Initialize Payment Plan'}
+                                                        </CButton>
+                                                    </CCol>
+                                                </CRow>
+                                            </CCard>
+                                        </form>
+                                    ) : (
+                                        <CAlert color="warning">No payment or EMI schedule configured by Admin for this booking yet.</CAlert>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Section 2: Booking Invoices */}
+                            <h5 className="border-bottom pb-2 mb-3 text-primary fw-bold">Invoices Generated for Booking</h5>
+                            {bookingInvoices.length === 0 ? (
+                                <div className="text-muted small py-3 text-center">No invoices issued for this booking yet.</div>
+                            ) : (
+                                <div className="table-responsive">
+                                    <CTable hover align="middle" className="mb-0 text-center text-nowrap">
+                                        <CTableHead color="light">
+                                            <CTableRow>
+                                                <CTableHeaderCell>Invoice No.</CTableHeaderCell>
+                                                <CTableHeaderCell>Type</CTableHeaderCell>
+                                                <CTableHeaderCell>Date</CTableHeaderCell>
+                                                <CTableHeaderCell>Total Amount</CTableHeaderCell>
+                                                <CTableHeaderCell>Status</CTableHeaderCell>
+                                                <CTableHeaderCell>Actions</CTableHeaderCell>
+                                            </CTableRow>
+                                        </CTableHead>
+                                        <CTableBody>
+                                            {bookingInvoices.map((inv) => (
+                                                <CTableRow key={inv.id}>
+                                                    <CTableDataCell className="fw-semibold text-primary">{inv.invoice_number || `INV-${inv.id}`}</CTableDataCell>
+                                                    <CTableDataCell className="text-capitalize">{inv.invoice_type || 'Standard'}</CTableDataCell>
+                                                    <CTableDataCell>{new Date(inv.invoice_date).toLocaleDateString('en-IN')}</CTableDataCell>
+                                                    <CTableDataCell className="fw-bold">₹ {parseFloat(inv.total_amount || 0).toLocaleString('en-IN')}</CTableDataCell>
+                                                    <CTableDataCell>
+                                                        <span className={`badge bg-${inv.status === 'paid' ? 'success' : inv.status === 'partially_paid' ? 'warning' : 'danger'}`}>
+                                                            {inv.status}
+                                                        </span>
+                                                    </CTableDataCell>
+                                                    <CTableDataCell>
+                                                        <div className="d-flex gap-2 justify-content-center">
+                                                            <CButton color="info" size="sm" variant="outline" onClick={() => handlePreviewInvoice(inv)}>
+                                                                Preview
+                                                            </CButton>
+                                                            <CButton color="primary" size="sm" variant="outline" onClick={() => handleDownloadPdf(inv)}>
+                                                                PDF
+                                                            </CButton>
+                                                        </div>
+                                                    </CTableDataCell>
+                                                </CTableRow>
+                                            ))}
+                                        </CTableBody>
+                                    </CTable>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </CModalBody>
+                <CModalFooter>
+                    <CButton color="secondary" variant="ghost" onClick={() => setBillingModalVisible(false)}>Close</CButton>
+                </CModalFooter>
+            </CModal>
+
+            {/* Invoice HTML Preview Modal */}
+            <CModal visible={previewInvoiceModalVisible} onClose={() => setPreviewInvoiceModalVisible(false)} size="lg" backdrop="static" scrollable>
+                <CModalHeader style={{ background: '#1e3a8a', color: 'white' }}>
+                    <CModalTitle>Invoice Preview — {previewInvoice?.invoice_number || `SAD-INV-${previewInvoice?.id}`}</CModalTitle>
+                </CModalHeader>
+                <CModalBody className="p-0 bg-light" style={{ minHeight: '400px', display: 'flex', flexDirection: 'column' }}>
+                    {loadingInvoicePreview ? (
+                        <div className="text-center my-auto py-5">
+                            <CSpinner color="primary" /> <p className="mt-2 text-muted">Compiling invoice document...</p>
+                        </div>
+                    ) : (
+                        <iframe
+                            srcDoc={previewInvoiceHtml}
+                            title="Invoice Document Frame"
+                            style={{ width: '100%', height: '500px', border: 'none', backgroundColor: 'white' }}
+                        />
+                    )}
+                </CModalBody>
+                <CModalFooter>
+                    <CButton color="secondary" variant="ghost" onClick={() => setPreviewInvoiceModalVisible(false)}>Close</CButton>
+                    <CButton color="primary" onClick={() => handleDownloadPdf(previewInvoice)} disabled={downloadingPdf || loadingInvoicePreview}>
+                        {downloadingPdf ? 'Downloading...' : 'Download PDF'}
+                    </CButton>
+                </CModalFooter>
+            </CModal>
         </CContainer>
     )
 }
