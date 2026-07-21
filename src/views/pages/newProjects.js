@@ -15,6 +15,7 @@ import {
     CFormInput,
     CFormLabel,
     CFormFeedback,
+    CFormTextarea,
     CButton,
     CInputGroup,
     CSpinner,
@@ -28,6 +29,9 @@ import {
 } from "@coreui/react"
 import { cilLocationPin, cilFilter, cilSortAlphaDown, cilSortNumericDown } from "@coreui/icons"
 import CIcon from "@coreui/icons-react"
+
+import { sanitizeNumeric, sanitizeText, sanitizeRestrictedText } from "../../utils/validation"
+import { extractErrorMessage, getResponseErrorMessage } from "../../utils/errorUtils"
 
 import image1 from './../../assets/images/projects/images.jpeg'
 
@@ -151,6 +155,21 @@ export default function AvailableProjects() {
     const [addingPlot, setAddingPlot] = useState(false)
     const [addPlotError, setAddPlotError] = useState(null)
 
+    // Add Project form states
+    const [addProjectModalVisible, setAddProjectModalVisible] = useState(false)
+    const [projectForm, setProjectForm] = useState({
+        name: '',
+        description: '',
+        location: '',
+        start_date: '',
+        end_date: '',
+        status: '',
+        total_area: '',
+    })
+    const [projectErrors, setProjectErrors] = useState({})
+    const [addingProject, setAddingProject] = useState(false)
+    const [addProjectError, setAddProjectError] = useState(null)
+
     // Plot Details & Booking Details states
     const [detailsPlot, setDetailsPlot] = useState(null)
     const [bookingDetails, setBookingDetails] = useState(null)
@@ -161,6 +180,227 @@ export default function AvailableProjects() {
     const user = JSON.parse(localStorage.getItem('user') || '{}')
     const userRole = user?.role?.toLowerCase()
     const canManagePlots = userRole === 'admin' || userRole === 'agent'
+    const canManageProjects = userRole === 'admin'
+
+    const fetchData = async () => {
+        try {
+            setLoading(true)
+            setError(null)
+
+            // 1. Fetch projects
+            const projectsRes = await fetch(`${globalThis.apiBaseUrl}/projects/`)
+            if (!projectsRes.ok) throw new Error("Failed to fetch projects list from server")
+            const projectsJson = await projectsRes.json()
+            const rawProjects = Array.isArray(projectsJson.data) ? projectsJson.data : []
+
+            // 2. Fetch plots
+            const plotsRes = await fetch(`${globalThis.apiBaseUrl}/projects/plots`)
+            if (!plotsRes.ok) throw new Error("Failed to fetch plots list from server")
+            const plotsJson = await plotsRes.json()
+            const rawPlots = Array.isArray(plotsJson) ? plotsJson : plotsJson.plots || []
+            setAllPlots(rawPlots)
+
+            // 3. Compile projects with images & plot counts
+            const compiled = await Promise.all(
+                rawProjects.map(async (proj) => {
+                    const matchedPlots = rawPlots.filter(
+                        (pl) => pl.project_name?.toLowerCase() === proj.name?.toLowerCase()
+                    )
+                    const totalPlots = matchedPlots.length
+                    const availablePlots = matchedPlots.filter(
+                        (pl) => pl.status?.toLowerCase() === "available"
+                    ).length
+
+                    // Fetch project image
+                    let imgUrl = image1
+                    try {
+                        const imgRes = await fetch(`${globalThis.apiBaseUrl}/project/images?project_id=${proj.id}`)
+                        if (imgRes.ok) {
+                            const imgData = await imgRes.json()
+                            if (Array.isArray(imgData) && imgData.length > 0) {
+                                const first = imgData[0]
+                                imgUrl = typeof first === "string" ? first : first.image_url || first.url || first.image || first.image_path || image1
+                            } else if (imgData && typeof imgData === "object") {
+                                imgUrl = imgData.image_url || imgData.url || imgData.image || imgData.image_path || image1
+                            }
+                        }
+                    } catch (e) {
+                        console.error(`Error fetching project image for ${proj.id}:`, e)
+                    }
+
+                    return {
+                        id: proj.id,
+                        image: imgUrl,
+                        title: proj.name,
+                        location: proj.location || "Unknown",
+                        total: totalPlots,
+                        available: availablePlots,
+                        description: proj.description || "",
+                    }
+                })
+            )
+
+            setProjects(compiled)
+        } catch (err) {
+            console.error(err)
+            setError(err.message)
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    useEffect(() => {
+        fetchData()
+    }, [])
+
+    const validateProjectField = (name, value, currentFormState = projectForm) => {
+        const v = String(value || '').trim()
+        if (name === 'name' && !v) return 'Project Name is required'
+        if (name === 'location' && !v) return 'Location is required'
+        
+        if (name === 'description') {
+            if (!v) return 'Description is required'
+            if (v.length < 10) return 'Description must be at least 10 characters'
+            if (v.length > 500) return 'Description cannot exceed 500 characters'
+            if (/[^A-Za-z0-9 .,\-()\/]/.test(v)) {
+                return 'Description contains invalid characters. Only letters, numbers, spaces, and . , - ( ) / are allowed.'
+            }
+        }
+        
+        if (name === 'total_area') {
+            if (!v) return 'Total Area is required'
+            if (Number(v) <= 0) return 'Total Area must be greater than 0'
+        }
+        
+        if (name === 'start_date') {
+            if (!v) return 'Start Date is required'
+            const tenYearsAgo = new Date()
+            tenYearsAgo.setFullYear(tenYearsAgo.getFullYear() - 10)
+            tenYearsAgo.setHours(0, 0, 0, 0)
+            const selectedStart = new Date(v)
+            if (selectedStart < tenYearsAgo) {
+                return 'Start Date cannot be older than 10 years'
+            }
+            if (currentFormState.end_date && new Date(currentFormState.end_date) <= selectedStart) {
+                return 'Start Date must be before the End Date'
+            }
+        }
+        
+        if (name === 'end_date') {
+            if (!v) return 'End Date is required'
+            const selectedEnd = new Date(v)
+            if (currentFormState.start_date) {
+                const selectedStart = new Date(currentFormState.start_date)
+                if (selectedEnd <= selectedStart) {
+                    return 'End Date must be after the Start Date'
+                }
+            } else {
+                const tenYearsAgo = new Date()
+                tenYearsAgo.setFullYear(tenYearsAgo.getFullYear() - 10)
+                tenYearsAgo.setHours(0, 0, 0, 0)
+                if (selectedEnd < tenYearsAgo) {
+                    return 'End Date cannot be older than 10 years'
+                }
+            }
+        }
+        
+        if (name === 'status' && !v) return 'Status is required'
+        
+        return ''
+    }
+
+    const handleProjectChange = (e) => {
+        const { name, value } = e.target
+        let nextValue = value
+        if (name === 'total_area') {
+            nextValue = sanitizeNumeric(value, 10)
+        } else if (['name', 'location'].includes(name)) {
+            nextValue = sanitizeRestrictedText(value, 120)
+        } else if (name === 'description') {
+            nextValue = value.replace(/[^A-Za-z0-9 .,\-()\/]/g, '').slice(0, 500)
+        } else {
+            nextValue = sanitizeText(value, 120)
+        }
+
+        setProjectForm((prev) => {
+            const updatedForm = { ...prev, [name]: nextValue }
+            
+            setProjectErrors((prevErrors) => {
+                const newErrors = { ...prevErrors }
+                newErrors[name] = validateProjectField(name, nextValue, updatedForm)
+                
+                if (name === 'start_date' && updatedForm.end_date) {
+                    newErrors.end_date = validateProjectField('end_date', updatedForm.end_date, updatedForm)
+                }
+                if (name === 'end_date' && updatedForm.start_date) {
+                    newErrors.start_date = validateProjectField('start_date', updatedForm.start_date, updatedForm)
+                }
+                
+                return newErrors
+            })
+            
+            return updatedForm
+        })
+    }
+
+    const handleProjectSubmit = async (e) => {
+        e.preventDefault()
+        const nextErrors = {
+            name: validateProjectField('name', projectForm.name),
+            description: validateProjectField('description', projectForm.description),
+            location: validateProjectField('location', projectForm.location),
+            start_date: validateProjectField('start_date', projectForm.start_date),
+            end_date: validateProjectField('end_date', projectForm.end_date),
+            status: validateProjectField('status', projectForm.status),
+            total_area: validateProjectField('total_area', projectForm.total_area),
+        }
+        setProjectErrors(nextErrors)
+        if (Object.values(nextErrors).some(Boolean)) return
+
+        setAddingProject(true)
+        setAddProjectError(null)
+
+        const payload = {
+            ...projectForm,
+            status: projectForm.status.toLowerCase(),
+            total_area: Number(projectForm.total_area),
+        }
+
+        try {
+            const apiUrl = `${globalThis.apiBaseUrl}/projects/`
+            const res = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            })
+
+            if (!res.ok) {
+                const errorMsg = await getResponseErrorMessage(res, 'Failed to add project.')
+                setAddProjectError(errorMsg)
+                return
+            }
+
+            // Success: refresh list
+            await fetchData()
+
+            // Close and reset form
+            setAddProjectModalVisible(false)
+            setProjectForm({
+                name: '',
+                description: '',
+                location: '',
+                start_date: '',
+                end_date: '',
+                status: '',
+                total_area: '',
+            })
+            setProjectErrors({})
+        } catch (err) {
+            setAddProjectError(extractErrorMessage(err, 'Failed to submit project.'))
+        } finally {
+            setAddingProject(false)
+        }
+    }
 
     const handleViewPlotDetails = async (plot) => {
         setDetailsPlot(plot)
@@ -242,77 +482,6 @@ export default function AvailableProjects() {
         }
     }
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                setLoading(true)
-                setError(null)
-
-                // 1. Fetch projects
-                const projectsRes = await fetch(`${globalThis.apiBaseUrl}/projects/`)
-                if (!projectsRes.ok) throw new Error("Failed to fetch projects list from server")
-                const projectsJson = await projectsRes.json()
-                const rawProjects = Array.isArray(projectsJson.data) ? projectsJson.data : []
-
-                // 2. Fetch plots
-                const plotsRes = await fetch(`${globalThis.apiBaseUrl}/projects/plots`)
-                if (!plotsRes.ok) throw new Error("Failed to fetch plots list from server")
-                const plotsJson = await plotsRes.json()
-                const rawPlots = Array.isArray(plotsJson) ? plotsJson : plotsJson.plots || []
-                setAllPlots(rawPlots)
-
-                // 3. Compile projects with images & plot counts
-                const compiled = await Promise.all(
-                    rawProjects.map(async (proj) => {
-                        const matchedPlots = rawPlots.filter(
-                            (pl) => pl.project_name?.toLowerCase() === proj.name?.toLowerCase()
-                        )
-                        const totalPlots = matchedPlots.length
-                        const availablePlots = matchedPlots.filter(
-                            (pl) => pl.status?.toLowerCase() === "available"
-                        ).length
-
-                        // Fetch project image
-                        let imgUrl = image1
-                        try {
-                            const imgRes = await fetch(`${globalThis.apiBaseUrl}/project/images?project_id=${proj.id}`)
-                            if (imgRes.ok) {
-                                const imgData = await imgRes.json()
-                                if (Array.isArray(imgData) && imgData.length > 0) {
-                                    const first = imgData[0]
-                                    imgUrl = typeof first === "string" ? first : first.image_url || first.url || first.image || first.image_path || image1
-                                } else if (imgData && typeof imgData === "object") {
-                                    imgUrl = imgData.image_url || imgData.url || imgData.image || imgData.image_path || image1
-                                }
-                            }
-                        } catch (e) {
-                            console.error(`Error fetching project image for ${proj.id}:`, e)
-                        }
-
-                        return {
-                            id: proj.id,
-                            image: imgUrl,
-                            title: proj.name,
-                            location: proj.location || "Unknown",
-                            total: totalPlots,
-                            available: availablePlots,
-                            description: proj.description || "",
-                        }
-                    })
-                )
-
-                setProjects(compiled)
-            } catch (err) {
-                console.error(err)
-                setError(err.message)
-            } finally {
-                setLoading(false)
-            }
-        }
-
-        fetchData()
-    }, [])
-
     // Filter and sort display items
     const displayedProjects = useMemo(() => {
         let processed = [...projects]
@@ -368,8 +537,23 @@ export default function AvailableProjects() {
     return (
         <CContainer className="py-5">
             <CCard className="p-4 shadow-sm mb-4" style={styles.mainCard}>
-                <CCardHeader className="text-center text-white" style={styles.header}>
-                    Available Plots
+                <CCardHeader className="text-white d-flex justify-content-between align-items-center" style={styles.header}>
+                    <div style={{ flexGrow: 1, textAlign: 'center', marginLeft: canManageProjects ? '120px' : '0' }}>
+                        Available Plots
+                    </div>
+                    {canManageProjects && (
+                        <CButton
+                            color="light"
+                            className="fw-bold text-primary px-3 py-2"
+                            style={{ borderRadius: '8px' }}
+                            onClick={() => {
+                                setAddProjectError(null)
+                                setAddProjectModalVisible(true)
+                            }}
+                        >
+                            + Add Project
+                        </CButton>
+                    )}
                 </CCardHeader>
 
                 <CCardBody>
@@ -751,6 +935,148 @@ export default function AvailableProjects() {
                         Close
                     </CButton>
                 </CModalFooter>
+            </CModal>
+            {/* Add Project Modal */}
+            <CModal
+                visible={addProjectModalVisible}
+                onClose={() => setAddProjectModalVisible(false)}
+                backdrop="static"
+                size="lg"
+                centered
+            >
+                <CModalHeader style={{ background: "linear-gradient(135deg, #6a11cb, #2575fc)", color: "#fff" }}>
+                    <CModalTitle>Create a New Project</CModalTitle>
+                </CModalHeader>
+                <form onSubmit={handleProjectSubmit}>
+                    <CModalBody className="p-4" style={{ backgroundColor: "#f8f9fa" }}>
+                        {addProjectError && (
+                            <CAlert color="danger" className="py-2">
+                                {addProjectError}
+                            </CAlert>
+                        )}
+                        <CRow className="g-3 mb-3">
+                            <CCol md={6}>
+                                <CFormLabel htmlFor="project_name" className="fw-semibold">Project Name *</CFormLabel>
+                                <CFormInput
+                                    id="project_name"
+                                    name="name"
+                                    type="text"
+                                    placeholder="Enter project name"
+                                    value={projectForm.name}
+                                    onChange={handleProjectChange}
+                                    invalid={!!projectErrors.name}
+                                    required
+                                />
+                                {projectErrors.name && <CFormFeedback className="d-block">{projectErrors.name}</CFormFeedback>}
+                            </CCol>
+                            <CCol md={6}>
+                                <CFormLabel htmlFor="project_location" className="fw-semibold">Location *</CFormLabel>
+                                <CFormInput
+                                    id="project_location"
+                                    name="location"
+                                    type="text"
+                                    placeholder="Enter location"
+                                    value={projectForm.location}
+                                    onChange={handleProjectChange}
+                                    invalid={!!projectErrors.location}
+                                    required
+                                />
+                                {projectErrors.location && <CFormFeedback className="d-block">{projectErrors.location}</CFormFeedback>}
+                            </CCol>
+                        </CRow>
+
+                        <CRow className="g-3 mb-3">
+                            <CCol md={6}>
+                                <CFormLabel htmlFor="project_total_area" className="fw-semibold">Total Area (sq. ft) *</CFormLabel>
+                                <CFormInput
+                                    id="project_total_area"
+                                    name="total_area"
+                                    type="number"
+                                    placeholder="e.g. 50000"
+                                    value={projectForm.total_area}
+                                    onChange={handleProjectChange}
+                                    invalid={!!projectErrors.total_area}
+                                    required
+                                />
+                                {projectErrors.total_area && <CFormFeedback className="d-block">{projectErrors.total_area}</CFormFeedback>}
+                            </CCol>
+                            <CCol md={6}>
+                                <CFormLabel htmlFor="project_status" className="fw-semibold">Project Status *</CFormLabel>
+                                <CFormSelect
+                                    id="project_status"
+                                    name="status"
+                                    value={projectForm.status}
+                                    onChange={handleProjectChange}
+                                    invalid={!!projectErrors.status}
+                                    required
+                                >
+                                    <option value="">Select status</option>
+                                    <option value="Ongoing">Ongoing</option>
+                                    <option value="Completed">Completed</option>
+                                    <option value="Planned">Planned</option>
+                                    <option value="On Hold">On Hold</option>
+                                </CFormSelect>
+                                {projectErrors.status && <CFormFeedback className="d-block">{projectErrors.status}</CFormFeedback>}
+                            </CCol>
+                        </CRow>
+
+                        <CRow className="g-3 mb-3">
+                            <CCol md={6}>
+                                <CFormLabel htmlFor="project_start_date" className="fw-semibold">Start Date *</CFormLabel>
+                                <CFormInput
+                                    id="project_start_date"
+                                    name="start_date"
+                                    type="date"
+                                    value={projectForm.start_date}
+                                    onChange={handleProjectChange}
+                                    invalid={!!projectErrors.start_date}
+                                    required
+                                />
+                                {projectErrors.start_date && <CFormFeedback className="d-block">{projectErrors.start_date}</CFormFeedback>}
+                            </CCol>
+                            <CCol md={6}>
+                                <CFormLabel htmlFor="project_end_date" className="fw-semibold">End Date *</CFormLabel>
+                                <CFormInput
+                                    id="project_end_date"
+                                    name="end_date"
+                                    type="date"
+                                    value={projectForm.end_date}
+                                    onChange={handleProjectChange}
+                                    invalid={!!projectErrors.end_date}
+                                    required
+                                />
+                                {projectErrors.end_date && <CFormFeedback className="d-block">{projectErrors.end_date}</CFormFeedback>}
+                            </CCol>
+                        </CRow>
+
+                        <div className="mb-3">
+                            <CFormLabel htmlFor="project_description" className="fw-semibold">Project Description *</CFormLabel>
+                            <CFormTextarea
+                                id="project_description"
+                                name="description"
+                                placeholder="Enter description"
+                                value={projectForm.description}
+                                onChange={handleProjectChange}
+                                rows={4}
+                                invalid={!!projectErrors.description}
+                                required
+                            />
+                            {projectErrors.description && <CFormFeedback className="d-block">{projectErrors.description}</CFormFeedback>}
+                        </div>
+                    </CModalBody>
+                    <CModalFooter>
+                        <CButton color="secondary" variant="ghost" onClick={() => setAddProjectModalVisible(false)}>
+                            Cancel
+                        </CButton>
+                        <CButton type="submit" color="primary" disabled={addingProject} style={{ background: "linear-gradient(135deg, #6a11cb, #2575fc)", border: "none" }}>
+                            {addingProject ? (
+                                <>
+                                    <CSpinner size="sm" className="me-2" /> Submitting...
+                                </>
+                            ) : "Add Project"}
+                        </CButton>
+                    </CModalFooter>
+                </form>
             </CModal>
         </CContainer>
     )
