@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   CCard,
   CCardBody,
@@ -18,6 +19,7 @@ import { extractErrorMessage, getResponseErrorMessage } from '../../../utils/err
 const plotStatusOptions = ['available', 'sold', 'reserved', 'on hold'];
 
 export default function PlotForm() {
+  const location = useLocation();
   const [form, setForm] = useState({
     project_name: '',
     plot_number: '',
@@ -25,6 +27,14 @@ export default function PlotForm() {
     price: '',
     status: '',
   });
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const projName = params.get('project_name');
+    if (projName) {
+      setForm(prev => ({ ...prev, project_name: projName }));
+    }
+  }, [location.search]);
 
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
