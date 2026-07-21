@@ -170,6 +170,15 @@ export default function AvailableProjects() {
     const [addingProject, setAddingProject] = useState(false)
     const [addProjectError, setAddProjectError] = useState(null)
 
+    // Initial Plot Details during Project Creation
+    const [includeInitialPlot, setIncludeInitialPlot] = useState(false)
+    const [projectPlotForm, setProjectPlotForm] = useState({
+        plot_number: '',
+        size: '',
+        price: '',
+        status: 'available'
+    })
+
     // Plot Details & Booking Details states
     const [detailsPlot, setDetailsPlot] = useState(null)
     const [bookingDetails, setBookingDetails] = useState(null)
@@ -357,6 +366,13 @@ export default function AvailableProjects() {
         setProjectErrors(nextErrors)
         if (Object.values(nextErrors).some(Boolean)) return
 
+        if (includeInitialPlot) {
+            if (!projectPlotForm.plot_number || !projectPlotForm.size || !projectPlotForm.price) {
+                setAddProjectError("Please fill in all initial plot fields.")
+                return
+            }
+        }
+
         setAddingProject(true)
         setAddProjectError(null)
 
@@ -380,6 +396,27 @@ export default function AvailableProjects() {
                 return
             }
 
+            // Optional: add initial plot if switch is on
+            if (includeInitialPlot) {
+                const plotPayload = {
+                    project_name: projectForm.name,
+                    plot_number: projectPlotForm.plot_number,
+                    size: Number(projectPlotForm.size),
+                    price: Number(projectPlotForm.price),
+                    status: projectPlotForm.status.toLowerCase(),
+                }
+                const plotRes = await fetch(`${globalThis.apiBaseUrl}/projects/plots`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(plotPayload),
+                })
+                if (!plotRes.ok) {
+                    const plotErrorMsg = await plotRes.text()
+                    console.error("Failed to add initial plot during project creation:", plotErrorMsg)
+                    alert(`Project created successfully, but initial plot creation failed: ${plotErrorMsg}`)
+                }
+            }
+
             // Success: refresh list
             await fetchData()
 
@@ -395,6 +432,13 @@ export default function AvailableProjects() {
                 total_area: '',
             })
             setProjectErrors({})
+            setIncludeInitialPlot(false)
+            setProjectPlotForm({
+                plot_number: '',
+                size: '',
+                price: '',
+                status: 'available'
+            })
         } catch (err) {
             setAddProjectError(extractErrorMessage(err, 'Failed to submit project.'))
         } finally {
@@ -1062,6 +1106,75 @@ export default function AvailableProjects() {
                                 required
                             />
                             {projectErrors.description && <CFormFeedback className="d-block">{projectErrors.description}</CFormFeedback>}
+                        </div>
+
+                        {/* Optional initial plot addition fields */}
+                        <div className="mb-3 border-top pt-3">
+                            <div className="form-check form-switch mb-3">
+                                <input 
+                                    className="form-check-input" 
+                                    type="checkbox" 
+                                    id="includePlotSwitch" 
+                                    checked={includeInitialPlot} 
+                                    onChange={(e) => setIncludeInitialPlot(e.target.checked)} 
+                                />
+                                <label className="form-check-label fw-semibold" htmlFor="includePlotSwitch">
+                                    Add an initial plot to this project now
+                                </label>
+                            </div>
+                            
+                            {includeInitialPlot && (
+                                <div className="bg-light p-3 rounded" style={{ border: '1px dashed #cbd5e1' }}>
+                                    <h6 className="fw-bold mb-3 text-primary">Initial Plot Details</h6>
+                                    <CRow className="g-3">
+                                        <CCol md={6}>
+                                            <CFormLabel htmlFor="initPlotNo" className="fw-semibold">Plot Number *</CFormLabel>
+                                            <CFormInput 
+                                                type="text" 
+                                                id="initPlotNo" 
+                                                value={projectPlotForm.plot_number} 
+                                                onChange={(e) => setProjectPlotForm(prev => ({...prev, plot_number: e.target.value}))} 
+                                                placeholder="e.g. 101" 
+                                                required={includeInitialPlot}
+                                            />
+                                        </CCol>
+                                        <CCol md={6}>
+                                            <CFormLabel htmlFor="initPlotSize" className="fw-semibold">Plot Size (sq.ft) *</CFormLabel>
+                                            <CFormInput 
+                                                type="number" 
+                                                id="initPlotSize" 
+                                                value={projectPlotForm.size} 
+                                                onChange={(e) => setProjectPlotForm(prev => ({...prev, size: e.target.value}))} 
+                                                placeholder="e.g. 1200" 
+                                                required={includeInitialPlot}
+                                            />
+                                        </CCol>
+                                        <CCol md={6}>
+                                            <CFormLabel htmlFor="initPlotPrice" className="fw-semibold">Plot Price (₹) *</CFormLabel>
+                                            <CFormInput 
+                                                type="number" 
+                                                id="initPlotPrice" 
+                                                value={projectPlotForm.price} 
+                                                onChange={(e) => setProjectPlotForm(prev => ({...prev, price: e.target.value}))} 
+                                                placeholder="e.g. 600000" 
+                                                required={includeInitialPlot}
+                                            />
+                                        </CCol>
+                                        <CCol md={6}>
+                                            <CFormLabel htmlFor="initPlotStatus" className="fw-semibold">Status</CFormLabel>
+                                            <CFormSelect 
+                                                id="initPlotStatus" 
+                                                value={projectPlotForm.status} 
+                                                onChange={(e) => setProjectPlotForm(prev => ({...prev, status: e.target.value}))}
+                                            >
+                                                <option value="available">Available</option>
+                                                <option value="reserved">Reserved</option>
+                                                <option value="sold">Sold</option>
+                                            </CFormSelect>
+                                        </CCol>
+                                    </CRow>
+                                </div>
+                            )}
                         </div>
                     </CModalBody>
                     <CModalFooter>

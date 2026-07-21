@@ -673,7 +673,7 @@ export default function BookingsManager() {
             other_charges: other,
             balance_amount: balance,
             amount: advance || total,
-            status: formStatus,
+            status: modalMode === 'add' ? 'pending' : formStatus,
             project_name: formProjectName
         }
 
@@ -686,8 +686,54 @@ export default function BookingsManager() {
                 })
                 if (res.ok) {
                     const newBook = await res.json()
-                    setBookings(prev => [...prev, normalizeBooking(newBook)])
-                    setMessage({ visible: true, color: 'success', text: 'Booking created successfully.' })
+                    
+                    // Create payment payload matching the schema
+                    const paymentPayload = {
+                        invoice_id: parseInt(newBook.invoice_id || 0, 10),
+                        booking_id: parseInt(newBook.id, 10),
+                        client_id: String(newBook.customer_id || formCustomerId),
+                        agent_id: String(newBook.agent_id || (isAgent ? userUid : '')),
+                        amount_paid: parseFloat(newBook.advance_amount) || 0,
+                        payment_date: new Date().toISOString(),
+                        payment_mode: 'cash',
+                        transaction_reference: `INIT-BK-${newBook.id}`,
+                        notes: 'Initial Booking Payment',
+                        status: 'pending'
+                    }
+
+                    // POST request to /payments/
+                    const payRes = await fetch(`${globalThis.apiBaseUrl}/payments/`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(paymentPayload)
+                    })
+
+                    if (payRes.ok) {
+                        // Success: Update booking to confirmed status
+                        const updatePayload = {
+                            ...payload,
+                            status: 'confirmed'
+                        }
+                        const confirmRes = await fetch(`${globalThis.apiBaseUrl}/bookings/${newBook.id}/`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(updatePayload)
+                        })
+
+                        if (confirmRes.ok) {
+                            const confirmedBook = await confirmRes.json()
+                            setBookings(prev => [...prev, normalizeBooking(confirmedBook)])
+                            setMessage({ visible: true, color: 'success', text: 'Booking created and confirmed with initial payment.' })
+                        } else {
+                            const errConfirm = await getResponseErrorMessage(confirmRes, 'Payment registered, but failed to confirm booking status.')
+                            triggerErrorModal(errConfirm, 'Booking Confirmation Failed')
+                            setBookings(prev => [...prev, normalizeBooking(newBook)])
+                        }
+                    } else {
+                        const errPay = await getResponseErrorMessage(payRes, 'Booking created, but payment registration failed.')
+                        triggerErrorModal(errPay, 'Payment Creation Failed')
+                        setBookings(prev => [...prev, normalizeBooking(newBook)])
+                    }
                     setModalVisible(false)
                 } else {
                     const errDetail = await getResponseErrorMessage(res, 'Failed to create booking.')
