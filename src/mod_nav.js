@@ -117,7 +117,7 @@ const navigationConfig = [
     name: 'Bookings',
     to: '/GetBookings',
     icon: <CIcon icon={cilChartLine} customClassName="nav-icon" />,
-    allowedRoles: [ROLES.ADMIN, ROLES.AGENT, ROLES.CLIENT],
+    allowedRoles: [ROLES.ADMIN, ROLES.AGENT, ROLES.CLIENT, 'client'],
   },
 
   // CATEGORY 4: TARGETS & GOALS (ADMIN & AGENT)
@@ -164,41 +164,11 @@ const navigationConfig = [
     allowedRoles: [ROLES.ADMIN, ROLES.AGENT, ROLES.CLIENT],
     items: [
       { component: CNavItem, name: 'Profile', to: '/Profile', allowedRoles: [ROLES.ADMIN, ROLES.AGENT, ROLES.CLIENT] },
-      { component: CNavItem, name: 'Customer Profile', to: '/ClientProfile', allowedRoles: [ROLES.ADMIN, ROLES.AGENT, ROLES.CLIENT] },
       { component: CNavItem, name: 'Forgot User ID', to: '/ForgotUID', allowedRoles: [ROLES.ADMIN] },
       { component: CNavItem, name: 'Forgot Password', to: '/ForgotPassword', allowedRoles: [ROLES.ADMIN, ROLES.AGENT, ROLES.CLIENT] },
     ],
   },
 
-  // CATEGORY 7: AUTHENTICATION (ADMIN ONLY)
-  {
-    component: CNavTitle,
-    name: 'Authentication',
-    allowedRoles: [ROLES.ADMIN],
-  },
-  {
-    component: CNavGroup,
-    name: 'Auth Pages',
-    icon: <CIcon icon={cilLockLocked} customClassName="nav-icon" />,
-    allowedRoles: [ROLES.ADMIN],
-    items: [
-      { component: CNavItem, name: 'Login', to: '/login', allowedRoles: [ROLES.ADMIN] },
-      { component: CNavItem, name: 'Register', to: '/register', allowedRoles: [ROLES.ADMIN] },
-      { component: CNavItem, name: 'Universal Register', to: '/ARegister', allowedRoles: [ROLES.ADMIN] },
-    ],
-  },
-
-  // CATEGORY 8: ERROR PAGES (ADMIN ONLY)
-  {
-    component: CNavGroup,
-    name: 'Error Pages',
-    icon: <CIcon icon={cilStar} customClassName="nav-icon" />,
-    allowedRoles: [ROLES.ADMIN],
-    items: [
-      { component: CNavItem, name: 'Error 404', to: '/404', allowedRoles: [ROLES.ADMIN] },
-      { component: CNavItem, name: 'Error 500', to: '/500', allowedRoles: [ROLES.ADMIN] },
-    ],
-  },
 ]
 
 // ==================== FILTER NAVIGATION BASED ON ROLE ====================

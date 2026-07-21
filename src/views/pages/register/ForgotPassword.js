@@ -8,6 +8,7 @@ import {
   CContainer,
   CForm,
   CFormInput,
+  CFormLabel,
   CInputGroup,
   CInputGroupText,
   CProgress,
@@ -133,45 +134,51 @@ export default function ForgotPassword() {
                 </CAlert>
               )}
               <CForm onSubmit={handleSubmit}>
-                <CFormInput
-                  type="text"
-                  name="uid"
-                  label="UID"
-                  placeholder="Enter your 8-character UID"
-                  value={formData.uid}
-                  onChange={handleChange}
-                  invalid={!!errors.uid}
-                  disabled={isSubmitting}
-                  maxLength={8}
-                  required
-                />
-                {errors.uid && <CFormFeedback className="d-block">{errors.uid}</CFormFeedback>}
-
-                <CInputGroup>
+                <div className="mb-3">
+                  <CFormLabel htmlFor="uid">UID</CFormLabel>
                   <CFormInput
-                    type={showPassword ? 'text' : 'password'}
-                    name="new_password"
-                    label="New Password"
-                    placeholder="Enter new password (8-32 characters)"
-                    value={formData.new_password}
+                    id="uid"
+                    type="text"
+                    name="uid"
+                    placeholder="Enter your 8-character UID"
+                    value={formData.uid}
                     onChange={handleChange}
-                    invalid={!!errors.new_password}
+                    invalid={!!errors.uid}
                     disabled={isSubmitting}
+                    maxLength={8}
                     required
-                    minLength={8}
-                    maxLength={32}
                   />
-                  <CInputGroupText onClick={() => setShowPassword((s) => !s)} style={{ cursor: 'pointer' }}>
-                    {showPassword ? 'Hide' : 'Show'}
-                  </CInputGroupText>
-                </CInputGroup>
-                {formData.new_password && !errors.new_password && (
-                  <div className="mt-2">
-                    <small className="text-body-secondary">Password strength: {getPasswordStrength(formData.new_password).label}</small>
-                    <CProgress thin color={getPasswordStrength(formData.new_password).color} value={getPasswordStrength(formData.new_password).value} />
-                  </div>
-                )}
-                {errors.new_password && <CFormFeedback className="d-block">{errors.new_password}</CFormFeedback>}
+                  {errors.uid && <CFormFeedback className="d-block">{errors.uid}</CFormFeedback>}
+                </div>
+
+                <div className="mb-3">
+                  <CFormLabel htmlFor="new_password">New Password</CFormLabel>
+                  <CInputGroup>
+                    <CFormInput
+                      id="new_password"
+                      type={showPassword ? 'text' : 'password'}
+                      name="new_password"
+                      placeholder="Enter new password (8-32 characters)"
+                      value={formData.new_password}
+                      onChange={handleChange}
+                      invalid={!!errors.new_password}
+                      disabled={isSubmitting}
+                      required
+                      minLength={8}
+                      maxLength={32}
+                    />
+                    <CInputGroupText onClick={() => setShowPassword((s) => !s)} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                      {showPassword ? 'Hide' : 'Show'}
+                    </CInputGroupText>
+                  </CInputGroup>
+                  {formData.new_password && !errors.new_password && (
+                    <div className="mt-2">
+                      <small className="text-body-secondary">Password strength: {getPasswordStrength(formData.new_password).label}</small>
+                      <CProgress thin color={getPasswordStrength(formData.new_password).color} value={getPasswordStrength(getPasswordStrength(formData.new_password).label === 'Strong' ? 100 : getPasswordStrength(formData.new_password).label === 'Medium' ? 60 : 30)} />
+                    </div>
+                  )}
+                  {errors.new_password && <CFormFeedback className="d-block">{errors.new_password}</CFormFeedback>}
+                </div>
 
                 <div className="d-grid gap-2 mt-4">
                   <CButton type="submit" color="primary" size="lg" disabled={isSubmitting}>

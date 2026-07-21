@@ -106,7 +106,7 @@ const Widgets = React.lazy(() => import('./views/widgets/Widgets'))
 const routes = [
   // { path: '/', exact: true, name: 'Home',meta:{allowedRoles:["admin","agent"]} },
   { path: '/dashboard', name: 'Dashboard', element: Dashboard ,meta:{allowedRoles:["admin","agent"]}},
-  { path: '/announcements', name: 'Announcements & Updates', element: AnnouncementsHub, meta:{allowedRoles:["admin","agent","customer"]}},
+  { path: '/announcements', name: 'Announcements & Updates', element: AnnouncementsHub, meta:{allowedRoles:["admin","agent","customer","client"]}},
   { path: '/Clientdashboard', name: 'Dashboard', element: ClientDashboard ,meta:{allowedRoles:["admin","customer"]}},
   { path: '/Admindashboard', name: 'Dashboard', element: AdminDashboard,meta:{allowedRoles:["admin"]} },
   { path: '/Agentdashboard', name: 'Dashboard', element: AgentDashboard,meta:{allowedRoles:["agent"]} },
@@ -182,7 +182,7 @@ const routes = [
   { path: '/register_client', name: 'Customer Register', element: ClientRegister ,meta:{allowedRoles:["admin","agent"]}},
   { path: '/Targets', name: 'Targets', element: Targets ,meta:{allowedRoles:["admin","agent"]}},
   { path: '/GetBookVisit', name: 'Get Book Visit', element: GetBookVisit ,meta:{allowedRoles:["admin","agent"]}},
-  { path: '/GetBookings', name: 'Bookings', element: GetBookings, meta: { allowedRoles: ["admin", "agent", "customer"] } },
+  { path: '/GetBookings', name: 'Bookings', element: GetBookings, meta: { allowedRoles: ["admin", "agent", "customer", "client"] } },
   { path: '/VisitCalender', name: 'Visit Calender', element: VisitCalender ,meta:{allowedRoles:["admin","agent"]}},
   { path: '/privacy', name: 'Privacy Policy', element: PrivacyStatic },
   { path: '/privacy/*', name: 'Privacy Policy (trailing slash)', element: PrivacyStatic },

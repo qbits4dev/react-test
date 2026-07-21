@@ -457,6 +457,17 @@ const AnnouncementsHub = () => {
   const [message, setMessage] = useState({ visible: false, color: 'success', text: '' })
   const [errors, setErrors] = useState({})
 
+  // Error modal state
+  const [errorModalVisible, setErrorModalVisible] = useState(false)
+  const [errorModalTitle, setErrorModalTitle] = useState('')
+  const [errorModalMsg, setErrorModalMsg] = useState('')
+
+  const triggerErrorModal = (msg, title = 'Announcement Error') => {
+    setErrorModalTitle(title)
+    setErrorModalMsg(msg)
+    setErrorModalVisible(true)
+  }
+
   const load = async () => {
     setLoading(true)
     try {

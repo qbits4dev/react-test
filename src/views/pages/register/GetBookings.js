@@ -58,7 +58,7 @@ export default function BookingsManager() {
 
     const isAdmin = userRole === 'admin'
     const isAgent = userRole === 'agent'
-    const isCustomer = userRole === 'customer'
+    const isCustomer = userRole === 'customer' || userRole === 'client'
 
     const [bookings, setBookings] = useState([])
     const [usersList, setUsersList] = useState([]) // For mapping customer IDs to names
@@ -69,6 +69,17 @@ export default function BookingsManager() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
     const [message, setMessage] = useState({ visible: false, color: 'success', text: '' })
+
+    // Error modal state
+    const [errorModalVisible, setErrorModalVisible] = useState(false)
+    const [errorModalTitle, setErrorModalTitle] = useState('')
+    const [errorModalMsg, setErrorModalMsg] = useState('')
+
+    const triggerErrorModal = (msg, title = 'Booking Error') => {
+        setErrorModalTitle(title)
+        setErrorModalMsg(msg)
+        setErrorModalVisible(true)
+    }
 
     // Modal state
     const [modalVisible, setModalVisible] = useState(false)
@@ -108,34 +119,59 @@ export default function BookingsManager() {
     useEffect(() => {
         const loadAllData = async () => {
             setLoading(true)
+            setError(null)
             try {
                 // 1. Fetch bookings
-                const resBookings = await fetch(`${globalThis.apiBaseUrl}/bookings/`)
-                let bookingsData = []
-                if (resBookings.ok) {
-                    bookingsData = await resBookings.json()
+                let bookingsList = []
+                try {
+                    const resBookings = await fetch(`${globalThis.apiBaseUrl}/bookings/`)
+                    if (resBookings.ok) {
+                        const bookingsData = await resBookings.json()
+                        bookingsList = Array.isArray(bookingsData) ? bookingsData : (bookingsData.bookings || bookingsData.data || [])
+                    } else {
+                        const errText = await getResponseErrorMessage(resBookings, 'Failed to fetch bookings')
+                        console.error('Bookings API error:', errText)
+                    }
+                } catch (e) {
+                    console.error('Fetch bookings error:', e)
                 }
-                const list = Array.isArray(bookingsData) ? bookingsData : []
-                setBookings(list.map(normalizeBooking))
+                setBookings(bookingsList.map(normalizeBooking))
 
                 // 2. Fetch projects
-                const resProjects = await fetch(`${globalThis.apiBaseUrl}/projects/`)
                 let projectsData = []
-                if (resProjects.ok) {
-                    const parsed = await resProjects.json()
-                    projectsData = Array.isArray(parsed?.data) ? parsed.data : (Array.isArray(parsed) ? parsed : [])
+                try {
+                    const resProjects = await fetch(`${globalThis.apiBaseUrl}/projects/`)
+                    if (resProjects.ok) {
+                        const parsed = await resProjects.json()
+                        projectsData = Array.isArray(parsed?.data) ? parsed.data : (Array.isArray(parsed) ? parsed : [])
+                    }
+                } catch (e) {
+                    console.error('Fetch projects error:', e)
                 }
                 setProjects(projectsData)
 
-                // 3. Fetch all plots flat map for resolution
-                const allPlots = []
-                for (const proj of projectsData) {
-                    try {
-                        const resPlots = await fetch(`${globalThis.apiBaseUrl}/projects/plots?project_name=${encodeURIComponent(proj.name)}/`)
-                        if (resPlots.ok) {
-                            const plotsList = await resPlots.json()
-                            if (Array.isArray(plotsList)) {
-                                plotsList.forEach(p => {
+                // 3. Fetch all plots
+                let allPlots = []
+                try {
+                    const resAllPlots = await fetch(`${globalThis.apiBaseUrl}/projects/plots`)
+                    if (resAllPlots.ok) {
+                        const dataAllPlots = await resAllPlots.json()
+                        allPlots = Array.isArray(dataAllPlots) ? dataAllPlots : (dataAllPlots.plots || dataAllPlots.data || [])
+                    }
+                } catch (e) {
+                    console.error('Fetch all plots error:', e)
+                }
+
+                // Fallback: If flat plots API didn't return plots, query per project
+                if (allPlots.length === 0 && projectsData.length > 0) {
+                    for (const proj of projectsData) {
+                        if (!proj || !proj.name) continue
+                        try {
+                            const resPlots = await fetch(`${globalThis.apiBaseUrl}/projects/plots?project_name=${encodeURIComponent(proj.name)}`)
+                            if (resPlots.ok) {
+                                const plotsList = await resPlots.json()
+                                const arr = Array.isArray(plotsList) ? plotsList : (plotsList.plots || plotsList.data || [])
+                                arr.forEach(p => {
                                     allPlots.push({
                                         ...p,
                                         projectName: proj.name,
@@ -143,131 +179,87 @@ export default function BookingsManager() {
                                     })
                                 })
                             }
+                        } catch (e) {
+                            console.error('Error fetching plots for project ' + proj.name, e)
                         }
-                    } catch (e) {
-                        console.error('Error fetching plots for project ' + proj.name, e)
                     }
                 }
                 setPlots(allPlots)
 
-                // 4. Fetch all customers & clients (leads) for IDs resolving and select dropdown
+                // 4. Fetch users/customers & clients for dropdown mapping
                 const resolvedUsers = []
-                const parseUsersResponse = async (res) => {
-                    if (!res.ok) return []
-                    const listData = await res.json()
-                    let items = []
-                    if (Array.isArray(listData)) {
-                        items = listData
-                    } else if (listData && typeof listData === 'object') {
-                        items = listData.users || listData.clients || listData.customers || listData.data || []
-                    }
-
-                    if (!Array.isArray(items) || items.length === 0) return []
-
-                    // Check if it is an array of IDs or detailed objects
-                    if (typeof items[0] === 'string' || typeof items[0] === 'number') {
-                        const detailed = await Promise.all(
-                            items.map(async (uId) => {
-                                try {
-                                    const r = await fetch(`${globalThis.apiBaseUrl}/users/${uId}`)
-                                    if (r.ok) return await r.json()
-                                } catch (e) {
-                                    console.error(e)
-                                }
-                                return null
-                            })
-                        )
-                        return detailed.filter(Boolean)
-                    } else {
-                        return items
-                    }
-                }
-
                 try {
-                    const customersList = await parseUsersResponse(await fetch(`${globalThis.apiBaseUrl}/users/customers`))
-                    customersList.forEach(d => resolvedUsers.push(d))
+                    const [resCust, resClients] = await Promise.all([
+                        fetch(`${globalThis.apiBaseUrl}/users/customers`).catch(() => null),
+                        fetch(`${globalThis.apiBaseUrl}/users/clients`).catch(() => null)
+                    ])
 
-                    const clientsList = await parseUsersResponse(await fetch(`${globalThis.apiBaseUrl}/users/clients`))
-                    clientsList.forEach(d => resolvedUsers.push(d))
+                    const parseList = async (res) => {
+                        if (!res || !res.ok) return []
+                        try {
+                            const listData = await res.json()
+                            let items = []
+                            if (Array.isArray(listData)) items = listData
+                            else if (listData && typeof listData === 'object') {
+                                items = listData.users || listData.clients || listData.customers || listData.data || []
+                            }
+                            if (!Array.isArray(items) || items.length === 0) return []
+
+                            if (typeof items[0] === 'string' || typeof items[0] === 'number') {
+                                const detailed = await Promise.all(
+                                    items.map(async (uId) => {
+                                        try {
+                                            const r = await fetch(`${globalThis.apiBaseUrl}/users/${uId}`)
+                                            if (r.ok) return await r.json()
+                                        } catch (e) {
+                                            console.error(e)
+                                        }
+                                        return { id: uId, u_id: uId, name: String(uId) }
+                                    })
+                                )
+                                return detailed.filter(Boolean)
+                            }
+                            return items
+                        } catch (e) {
+                            return []
+                        }
+                    }
+
+                    if (resCust) {
+                        const cList = await parseList(resCust)
+                        cList.forEach(d => resolvedUsers.push(d))
+                    }
+                    if (resClients) {
+                        const clList = await parseList(resClients)
+                        clList.forEach(d => resolvedUsers.push(d))
+                    }
                 } catch (e) {
                     console.error('Error fetching users lists:', e)
                 }
 
-                // De-duplicate users by u_id
                 const uniqueUsers = []
                 const seenUids = new Set()
                 resolvedUsers.forEach(u => {
+                    if (!u) return
                     const uidStr = u.u_id || u.id
-                    if (uidStr && !seenUids.has(uidStr)) {
-                        seenUids.add(uidStr)
+                    if (uidStr && !seenUids.has(String(uidStr))) {
+                        seenUids.add(String(uidStr))
                         uniqueUsers.push({
-                            id: u.id,
-                            u_id: uidStr,
-                            name: `${u.first_name || ''} ${u.last_name || ''}`.trim() || uidStr,
+                            id: u.id || uidStr,
+                            u_id: String(uidStr),
+                            name: `${u.first_name || ''} ${u.last_name || ''}`.trim() || u.name || String(uidStr),
                             role: u.role || 'customer'
                         })
                     }
                 })
+                setUsersList(uniqueUsers)
 
-                // Fetch projects
-                try {
-                    const resProj = await fetch(`${globalThis.apiBaseUrl}/projects/`)
-                    if (resProj.ok) {
-                        const dataProj = await resProj.json()
-                        setProjects(Array.isArray(dataProj.data) ? dataProj.data : (dataProj.projects || []))
-                    }
-                } catch (e) {
-                    console.error('Error loading projects:', e)
-                }
-
-                // Fetch customers/clients for dropdown
-                try {
-                    const [resCust, resClients] = await Promise.all([
-                        fetch(`${globalThis.apiBaseUrl}/users/customers`),
-                        fetch(`${globalThis.apiBaseUrl}/users/clients`)
-                    ])
-                    let combinedUsers = []
-                    if (resCust.ok) {
-                        const dataCust = await resCust.json()
-                        combinedUsers = [...combinedUsers, ...(Array.isArray(dataCust) ? dataCust : [])]
-                    }
-                    if (resClients.ok) {
-                        const dataClient = await resClients.json()
-                        combinedUsers = [...combinedUsers, ...(Array.isArray(dataClient) ? dataClient : [])]
-                    }
-                    setUsersList(combinedUsers)
-                } catch (e) {
-                    console.error('Error loading users list:', e)
-                }
-
-                // Fetch bookings
-                const resBook = await fetch(`${globalThis.apiBaseUrl}/bookings/`)
-                if (resBook.ok) {
-                    const dataBook = await resBook.json()
-                    const rawArr = Array.isArray(dataBook) ? dataBook : (dataBook.bookings || [])
-                    setBookings(rawArr.map(normalizeBooking))
-                } else {
-                    const errText = await getResponseErrorMessage(resBook, 'Failed to fetch bookings')
-                    setError(errText)
-                }
-
-                // Fetch all plots (for lookup/labels)
-                try {
-                    const resAllPlots = await fetch(`${globalThis.apiBaseUrl}/projects/plots`)
-                    if (resAllPlots.ok) {
-                        const dataAllPlots = await resAllPlots.json()
-                        setPlots(Array.isArray(dataAllPlots) ? dataAllPlots : (dataAllPlots.plots || []))
-                    }
-                } catch (e) {
-                    console.error('Error loading all plots:', e)
-                }
-
-                // Fetch announcements
+                // 5. Fetch announcements
                 try {
                     const resAnn = await fetch(`${globalThis.apiBaseUrl}/announcements/`)
                     if (resAnn.ok) {
                         const dataAnn = await resAnn.json()
-                        setAnnouncements(Array.isArray(dataAnn) ? dataAnn : [])
+                        setAnnouncements(Array.isArray(dataAnn) ? dataAnn : (dataAnn.announcements || dataAnn.data || []))
                     }
                 } catch (e) {
                     console.error('Error loading announcements:', e)
@@ -404,11 +396,12 @@ export default function BookingsManager() {
 
     // Helper: find project and plot names for a plot_id
     const resolvePlotDetails = (plotId) => {
-        const found = plots.find(p => String(p.id) === String(plotId))
+        if (!plotId) return { projectName: formProjectName || 'Main Venture', plotNumber: '—' }
+        const found = plots.find(p => p && (String(p.id) === String(plotId) || String(p.plot_number) === String(plotId)))
         if (found) {
             return {
-                projectName: found.projectName,
-                plotNumber: found.plot_number
+                projectName: found.projectName || found.project_name || formProjectName || 'Main Venture',
+                plotNumber: found.plot_number || found.id || plotId
             }
         }
         return {
@@ -419,22 +412,24 @@ export default function BookingsManager() {
 
     // Helper: lookup customer name by ID/u_id
     const resolveCustomerName = (customerId) => {
+        if (!customerId) return '—'
         const found = usersList.find(
-            u => String(u.u_id).toLowerCase() === String(customerId).toLowerCase() ||
-                String(u.id).toLowerCase() === String(customerId).toLowerCase()
+            u => u && (String(u.u_id || '').toLowerCase() === String(customerId).toLowerCase() ||
+                String(u.id || '').toLowerCase() === String(customerId).toLowerCase())
         )
         return found ? found.name : customerId || '—'
     }
 
     // Find the logged-in client's integer ID if they are a customer
-    const loggedInUserObj = usersList.find(u => String(u.u_id).toLowerCase() === String(userUid).toLowerCase())
+    const loggedInUserObj = usersList.find(u => u && String(u.u_id || u.id || '').toLowerCase() === String(userUid || '').toLowerCase())
     const loggedInIntegerId = loggedInUserObj ? loggedInUserObj.id : null
 
     // Adapt bookings list for customers
     const displayBookings = bookings.filter(b => {
+        if (!b) return false
         if (isCustomer) {
             return (loggedInIntegerId && String(b.customer_id) === String(loggedInIntegerId)) ||
-                String(b.customer_id).toLowerCase() === String(userUid).toLowerCase()
+                String(b.customer_id || '').toLowerCase() === String(userUid || '').toLowerCase()
         }
         return true
     })

@@ -136,7 +136,10 @@ const isExpired = (item, at = new Date()) => {
 }
 
 const roleMatchesVisibility = (item, role, user) => {
-  const normalizedRole = String(role || '').toLowerCase()
+  let normalizedRole = String(role || '').toLowerCase()
+  if (normalizedRole === 'client') {
+    normalizedRole = 'customer'
+  }
   const userTeam = String(user?.agent_team || '').toLowerCase()
   const userDesignation = String(user?.designation || '').toLowerCase()
   const uidValue = String(user?.u_id || '').toLowerCase()
