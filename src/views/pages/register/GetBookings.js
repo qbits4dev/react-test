@@ -91,6 +91,57 @@ export default function BookingsManager() {
         setErrorModalVisible(true)
     }
 
+    const syncPlotStatus = async (projectName, plotNumberOrId, newStatus) => {
+        if (!projectName || !plotNumberOrId) return false
+        try {
+            const res = await fetch(`${globalThis.apiBaseUrl}/projects/plots?project_name=${encodeURIComponent(projectName)}`)
+            if (!res.ok) return false
+
+            const plots = await res.json()
+            const plotsList = Array.isArray(plots) ? plots : (plots.plots || plots.data || [])
+            const plot = plotsList.find(p => String(p.id) === String(plotNumberOrId) || String(p.plot_number) === String(plotNumberOrId))
+
+            if (!plot) return false
+
+            const payload = {
+                project_name: plot.project_name || projectName,
+                plot_number: plot.plot_number || plotNumberOrId,
+                size: Number(plot.size || 0),
+                price: Number(plot.price || 0),
+                status: String(newStatus).toLowerCase()
+            }
+
+            const plotId = plot.id || plot.plot_number || plotNumberOrId
+            const urls = [
+                `${globalThis.apiBaseUrl}/projects/${encodeURIComponent(payload.project_name)}/plots/${encodeURIComponent(payload.plot_number)}`,
+                `${globalThis.apiBaseUrl}/projects/plots/${encodeURIComponent(plotId)}`,
+                `${globalThis.apiBaseUrl}/projects/plots/${encodeURIComponent(payload.plot_number)}`,
+                `${globalThis.apiBaseUrl}/projects/plots`
+            ]
+
+            for (const url of urls) {
+                for (const method of ['PUT', 'PATCH']) {
+                    try {
+                        const updateRes = await fetch(url, {
+                            method,
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        })
+                        if (updateRes.ok) {
+                            console.log(`Plot status successfully updated to ${newStatus} using ${method} on ${url}`)
+                            return true
+                        }
+                    } catch (e) {
+                        console.error(`Error updating plot status at ${url} via ${method}:`, e)
+                    }
+                }
+            }
+        } catch (err) {
+            console.error("Error in syncPlotStatus:", err)
+        }
+        return false
+    }
+
     // Modal state
     const [modalVisible, setModalVisible] = useState(false)
     const [modalMode, setModalMode] = useState('add') // 'add' or 'edit'
@@ -116,13 +167,21 @@ export default function BookingsManager() {
         (parseFloat(formAdvanceAmount) || 0)
     )
 
-    // Billing Modal states
+    // Billing Modal states (re-used for Payment Recording)
     const [billingModalVisible, setBillingModalVisible] = useState(false)
     const [billingBooking, setBillingBooking] = useState(null)
     const [bookingInvoices, setBookingInvoices] = useState([])
     const [bookingPaymentPlan, setBookingPaymentPlan] = useState(null)
     const [loadingBilling, setLoadingBilling] = useState(false)
     const [downloadingPdf, setDownloadingPdf] = useState(false)
+
+    // Record Payment Form states
+    const [formAmountPaid, setFormAmountPaid] = useState('')
+    const [formPaymentMode, setFormPaymentMode] = useState('cash')
+    const [formPaymentNotes, setFormPaymentNotes] = useState('Subsequent Payment')
+    const [formPaymentRef, setFormPaymentRef] = useState('')
+    const [recordingPayment, setRecordingPayment] = useState(false)
+    const [paymentError, setPaymentError] = useState(null)
 
     // Form inputs for EMI Setup
     const [formIsEmi, setFormIsEmi] = useState(true)
@@ -138,64 +197,72 @@ export default function BookingsManager() {
     const [previewInvoiceHtml, setPreviewInvoiceHtml] = useState("")
     const [loadingInvoicePreview, setLoadingInvoicePreview] = useState(false)
 
-    const openBillingModal = async (booking) => {
+    const openBillingModal = (booking) => {
         setBillingBooking(booking)
+        setFormAmountPaid(String(booking.balance_amount || ''))
+        setFormPaymentRef('')
+        setFormPaymentNotes('Subsequent Payment')
+        setFormPaymentMode('cash')
+        setPaymentError(null)
         setBillingModalVisible(true)
-        setLoadingBilling(true)
-        setBookingInvoices([])
-        setBookingPaymentPlan(null)
-
-        // Reset plan form with defaults based on booking size
-        setFormIsEmi(true)
-        setFormTenureMonths("12")
-        setFormInterestRate("8.5")
-        setFormEmiAmount(String(Math.round(parseFloat(booking.balance_amount || booking.total_amount || 0) / 12)))
-        setFormPaymentDate("")
-        setFormPlanStartDate(new Date().toISOString().split('T')[0])
-
-        try {
-            // Load invoices for booking
-            const invs = await listInvoices({ booking_id: booking.id })
-            setBookingInvoices(invs)
-
-            // Load payment plan for booking
-            const plan = await getPaymentPlan(booking.id)
-            if (plan) {
-                setBookingPaymentPlan(plan)
-                setFormIsEmi(plan.is_emi)
-                setFormTenureMonths(plan.tenure_months || "12")
-                setFormInterestRate(plan.interest_rate_percent || "8.5")
-                setFormEmiAmount(plan.monthly_emi_amount || "")
-                setFormPaymentDate(plan.monthly_payment_date || "")
-                setFormPlanStartDate(plan.start_date || "")
-            }
-        } catch (err) {
-            console.error("Error loading billing details:", err)
-        } finally {
-            setLoadingBilling(false)
-        }
     }
 
-    const handleSetupPaymentPlanSubmit = async (e) => {
+    const handleRecordPaymentSubmit = async (e) => {
         e && e.preventDefault()
-        setSavingPaymentPlan(true)
+        if (!formAmountPaid || parseFloat(formAmountPaid) <= 0) {
+            setPaymentError('Please enter a valid amount paid.')
+            return
+        }
+
+        setRecordingPayment(true)
+        setPaymentError(null)
         try {
             const payload = {
-                is_emi: formIsEmi,
-                tenure_months: formTenureMonths,
-                interest_rate_percent: formInterestRate,
-                monthly_emi_amount: formEmiAmount,
-                monthly_payment_date: formPaymentDate,
-                start_date: formPlanStartDate
+                booking_id: parseInt(billingBooking.id, 10),
+                client_id: String(billingBooking.customer_id),
+                agent_id: String(billingBooking.agent_id || (isAgent ? userUid : '')),
+                amount_paid: parseFloat(formAmountPaid) || 0,
+                payment_type: 'collection',
+                payment_date: new Date().toISOString(),
+                payment_mode: formPaymentMode || 'cash',
+                transaction_reference: formPaymentRef || `PAY-BK-${billingBooking.id}-${Date.now()}`,
+                notes: formPaymentNotes || 'Subsequent Payment',
+                status: 'success'
             }
-            const plan = await setupPaymentPlan(billingBooking.id, payload)
-            setBookingPaymentPlan(plan)
-            setMessage({ visible: true, color: 'success', text: 'Payment plan configured successfully.' })
+
+            console.log('Record Payment payload:', payload)
+
+            const res = await fetch(`${globalThis.apiBaseUrl}/payments/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+
+            if (res.ok) {
+                // Fetch the updated bookings list to show the updated balance/advance immediately
+                const bookingsRes = await fetch(`${globalThis.apiBaseUrl}/bookings/`)
+                if (bookingsRes.ok) {
+                    const bookingsData = await bookingsRes.json()
+                    const bookingsList = Array.isArray(bookingsData) ? bookingsData : (bookingsData.bookings || bookingsData.data || [])
+                    setBookings(bookingsList.map(normalizeBooking))
+                }
+
+                setMessage({ visible: true, color: 'success', text: 'Payment recorded successfully.' })
+                setBillingModalVisible(false)
+                
+                // Clear payment inputs
+                setFormAmountPaid('')
+                setFormPaymentRef('')
+                setFormPaymentNotes('Subsequent Payment')
+                setFormPaymentMode('cash')
+            } else {
+                const text = await res.text()
+                setPaymentError(text || 'Failed to record payment.')
+            }
         } catch (err) {
-            console.error("Setup plan error:", err)
-            triggerErrorModal(extractErrorMessage(err) || "Failed to set up payment plan", "Payment Plan Error")
+            setPaymentError(err.message || 'Failed to submit payment.')
         } finally {
-            setSavingPaymentPlan(false)
+            setRecordingPayment(false)
         }
     }
 
@@ -393,7 +460,8 @@ export default function BookingsManager() {
                             id: u.id || uidStr,
                             u_id: String(uidStr),
                             name: `${u.first_name || ''} ${u.last_name || ''}`.trim() || u.name || String(uidStr),
-                            role: u.role || 'customer'
+                            role: u.role || 'customer',
+                            agent_id: u.agent_id || u.agent || ''
                         })
                     }
                 })
@@ -427,9 +495,12 @@ export default function BookingsManager() {
 
         const queryParams = new URLSearchParams(location.search)
         const preselectProject = queryParams.get('project_name')
-        const preselectPlotId = queryParams.get('plot_id')
+        let preselectPlotId = queryParams.get('plot_id')
+        if (preselectPlotId === 'undefined' || preselectPlotId === 'null') {
+            preselectPlotId = null
+        }
 
-        if (preselectProject && preselectPlotId) {
+        if (preselectProject) {
             setModalMode('add')
             setFormProjectName(preselectProject)
             if (isCustomer) {
@@ -451,17 +522,19 @@ export default function BookingsManager() {
                         const data = await res.json()
                         const plotsArr = Array.isArray(data) ? data : []
                         setProjectPlots(plotsArr)
-                        const selPlot = plotsArr.find(p => String(p.id) === String(preselectPlotId) || String(p.plot_number) === String(preselectPlotId))
-                        if (selPlot) {
-                            const plotPrice = selPlot.price !== undefined ? selPlot.price : (selPlot.amount !== undefined ? selPlot.amount : (selPlot.total_price || ''))
-                            if (plotPrice) setFormTotalAmount(String(plotPrice))
+                        if (preselectPlotId) {
+                            const selPlot = plotsArr.find(p => String(p.id) === String(preselectPlotId) || String(p.plot_number) === String(preselectPlotId))
+                            if (selPlot) {
+                                const plotPrice = selPlot.price !== undefined ? selPlot.price : (selPlot.amount !== undefined ? selPlot.amount : (selPlot.total_price || ''))
+                                if (plotPrice) setFormTotalAmount(String(plotPrice))
+                            }
                         }
                     }
                 } catch (e) {
                     console.error('Failed to load project plots in preselection:', e)
                 } finally {
                     setPlotsLoading(false)
-                    setFormPlotId(preselectPlotId)
+                    setFormPlotId(preselectPlotId || '')
                     setModalVisible(true)
                 }
             }
@@ -652,8 +725,25 @@ export default function BookingsManager() {
     }
 
     const handleSave = async () => {
-        if (!formCustomerId || !formPlotId || !formTotalAmount) {
-            triggerErrorModal('Please fill in all required fields (Customer, Project, Plot, Total Amount).', 'Validation Error')
+        console.log('SAVE BOOKING - Clicked. Form Input Values:', {
+            formCustomerId,
+            formProjectName,
+            formPlotId,
+            formTotalAmount,
+            formAdvanceAmount,
+            formAmenitiesCharges,
+            formOtherCharges,
+            formStatus
+        })
+
+        const missingFields = []
+        if (!formCustomerId) missingFields.push('Customer / Client')
+        if (!formProjectName) missingFields.push('Venture Project')
+        if (!formPlotId) missingFields.push('Plot')
+        if (!formTotalAmount) missingFields.push('Total Amount')
+
+        if (missingFields.length > 0) {
+            triggerErrorModal(`Please fill in all required fields. Missing: ${missingFields.join(', ')}`, 'Validation Error')
             return
         }
 
@@ -664,9 +754,13 @@ export default function BookingsManager() {
         const other = parseFloat(formOtherCharges) || 0
         const balance = Math.max(0, total + amenities + other - advance)
 
+        const selectedCustomer = usersList.find(u => String(u.u_id) === String(formCustomerId))
+        const customerAgentId = selectedCustomer ? selectedCustomer.agent_id : ''
+
         const payload = {
             customer_id: formCustomerId,
             plot_number: parseInt(formPlotId, 10) || formPlotId,
+            agent_id: isAgent ? userUid : (customerAgentId || ''),
             total_amount: total,
             advance_amount: advance,
             amenities_charges: amenities,
@@ -676,6 +770,13 @@ export default function BookingsManager() {
             status: modalMode === 'add' ? 'pending' : formStatus,
             project_name: formProjectName
         }
+
+        console.log('SAVE BOOKING - API Details:', {
+            url: modalMode === 'add' ? `${globalThis.apiBaseUrl}/bookings/` : `${globalThis.apiBaseUrl}/bookings/${selectedBooking.id}`,
+            method: modalMode === 'add' ? 'POST' : 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            payload: payload
+        })
 
         try {
             if (modalMode === 'add') {
@@ -689,17 +790,25 @@ export default function BookingsManager() {
                     
                     // Create payment payload matching the schema
                     const paymentPayload = {
-                        invoice_id: parseInt(newBook.invoice_id || 0, 10),
+                        invoice_id: newBook.invoice_id ? parseInt(newBook.invoice_id, 10) : null,
                         booking_id: parseInt(newBook.id, 10),
                         client_id: String(newBook.customer_id || formCustomerId),
                         agent_id: String(newBook.agent_id || (isAgent ? userUid : '')),
                         amount_paid: parseFloat(newBook.advance_amount) || 0,
+                        payment_type: 'collection',
                         payment_date: new Date().toISOString(),
                         payment_mode: 'cash',
                         transaction_reference: `INIT-BK-${newBook.id}`,
                         notes: 'Initial Booking Payment',
-                        status: 'pending'
+                        status: 'completed'
                     }
+
+                    console.log('SAVE BOOKING - Payment API Details:', {
+                        url: `${globalThis.apiBaseUrl}/payments/`,
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        payload: paymentPayload
+                    })
 
                     // POST request to /payments/
                     const payRes = await fetch(`${globalThis.apiBaseUrl}/payments/`, {
@@ -709,30 +818,31 @@ export default function BookingsManager() {
                     })
 
                     if (payRes.ok) {
-                        // Success: Update booking to confirmed status
-                        const updatePayload = {
-                            ...payload,
-                            status: 'confirmed'
+                        // The backend automatically confirms the booking when payment is successful.
+                        // We fetch the updated booking state from the server, or fall back to confirmed.
+                        let confirmedBook = { ...newBook, status: 'confirmed' }
+                        try {
+                            const getRes = await fetch(`${globalThis.apiBaseUrl}/bookings/${newBook.id}`)
+                            if (getRes.ok) {
+                                confirmedBook = await getRes.json()
+                            }
+                        } catch (e) {
+                            console.error('Failed to fetch updated booking:', e)
                         }
-                        const confirmRes = await fetch(`${globalThis.apiBaseUrl}/bookings/${newBook.id}/`, {
-                            method: 'PUT',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(updatePayload)
-                        })
 
-                        if (confirmRes.ok) {
-                            const confirmedBook = await confirmRes.json()
-                            setBookings(prev => [...prev, normalizeBooking(confirmedBook)])
-                            setMessage({ visible: true, color: 'success', text: 'Booking created and confirmed with initial payment.' })
-                        } else {
-                            const errConfirm = await getResponseErrorMessage(confirmRes, 'Payment registered, but failed to confirm booking status.')
-                            triggerErrorModal(errConfirm, 'Booking Confirmation Failed')
-                            setBookings(prev => [...prev, normalizeBooking(newBook)])
-                        }
+                        setBookings(prev => [...prev, normalizeBooking(confirmedBook)])
+                        
+                        // Mark plot status as 'sold'
+                        await syncPlotStatus(formProjectName, formPlotId, 'sold')
+
+                        setMessage({ visible: true, color: 'success', text: 'Booking created and confirmed with initial payment.' })
                     } else {
                         const errPay = await getResponseErrorMessage(payRes, 'Booking created, but payment registration failed.')
                         triggerErrorModal(errPay, 'Payment Creation Failed')
                         setBookings(prev => [...prev, normalizeBooking(newBook)])
+                        
+                        // Fallback mark plot status as 'reserved'
+                        await syncPlotStatus(formProjectName, formPlotId, 'reserved')
                     }
                     setModalVisible(false)
                 } else {
@@ -741,14 +851,46 @@ export default function BookingsManager() {
                 }
             } else {
                 // Edit
-                const res = await fetch(`${globalThis.apiBaseUrl}/bookings/${selectedBooking.id}/`, {
+                const editPayload = { ...payload }
+                delete editPayload.status
+
+                console.log('SAVE BOOKING - Edit API Details:', {
+                    url: `${globalThis.apiBaseUrl}/bookings/${selectedBooking.id}`,
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    payload: editPayload
+                })
+
+                const res = await fetch(`${globalThis.apiBaseUrl}/bookings/${selectedBooking.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(editPayload)
                 })
                 if (res.ok) {
                     const updatedBook = await res.json()
                     setBookings(prev => prev.map(b => b.id === selectedBooking.id ? normalizeBooking(updatedBook) : b))
+
+                    // Sync plot status
+                    const oldPlotId = selectedBooking.plot_id
+                    const oldProjectName = selectedBooking.project_name
+                    const newPlotId = formPlotId
+                    const newProjectName = formProjectName
+                    const newBookingStatus = formStatus
+
+                    let newPlotStatus = 'sold'
+                    if (newBookingStatus === 'cancelled') {
+                        newPlotStatus = 'available'
+                    } else if (newBookingStatus === 'pending') {
+                        newPlotStatus = 'reserved'
+                    }
+
+                    if (String(oldPlotId) !== String(newPlotId) || oldProjectName !== newProjectName) {
+                        await syncPlotStatus(oldProjectName, oldPlotId, 'available')
+                        await syncPlotStatus(newProjectName, newPlotId, newPlotStatus)
+                    } else {
+                        await syncPlotStatus(newProjectName, newPlotId, newPlotStatus)
+                    }
+
                     setMessage({ visible: true, color: 'success', text: 'Booking updated successfully.' })
                     setModalVisible(false)
                 } else {
@@ -773,11 +915,15 @@ export default function BookingsManager() {
         setDeleting(true)
 
         try {
-            const res = await fetch(`${globalThis.apiBaseUrl}/bookings/${bookingToDelete.id}/`, {
+            const res = await fetch(`${globalThis.apiBaseUrl}/bookings/${bookingToDelete.id}`, {
                 method: 'DELETE'
             })
             if (res.ok) {
                 setBookings(prev => prev.filter(b => b.id !== bookingToDelete.id))
+                
+                // Release plot back to available
+                await syncPlotStatus(bookingToDelete.project_name, bookingToDelete.plot_id, 'available')
+
                 setMessage({ visible: true, color: 'success', text: 'Booking deleted successfully.' })
                 setDeleteModalVisible(false)
             } else {
@@ -980,8 +1126,14 @@ export default function BookingsManager() {
                                                             </CTableDataCell>
                                                             <CTableDataCell>
                                                                 <div className="d-flex gap-2 justify-content-center">
-                                                                    <CButton color="success" size="sm" variant="outline" onClick={() => openBillingModal(booking)}>
-                                                                        Billing
+                                                                    <CButton 
+                                                                        color="success" 
+                                                                        size="sm" 
+                                                                        variant="outline" 
+                                                                        onClick={() => openBillingModal(booking)}
+                                                                        disabled={booking.status === 'cancelled'}
+                                                                    >
+                                                                        Payment
                                                                     </CButton>
                                                                     <CButton color="info" size="sm" variant="outline" onClick={() => openEditModal(booking)}>
                                                                         Edit
@@ -1017,14 +1169,23 @@ export default function BookingsManager() {
                     <CRow className="g-3">
                         <CCol md={6}>
                             <CFormLabel>Customer / Client *</CFormLabel>
-                            <CFormSelect value={formCustomerId} onChange={(e) => setFormCustomerId(e.target.value)}>
-                                <option value="">Select Customer / Client</option>
-                                {usersList.map((c) => (
-                                    <option key={c.u_id} value={c.u_id}>
-                                        {c.name} ({c.u_id})
-                                    </option>
-                                ))}
-                            </CFormSelect>
+                            {usersList.length > 0 ? (
+                                <CFormSelect value={formCustomerId} onChange={(e) => setFormCustomerId(e.target.value)}>
+                                    <option value="">Select Customer / Client</option>
+                                    {usersList.map((c) => (
+                                        <option key={c.u_id} value={c.u_id}>
+                                            {c.name} ({c.u_id})
+                                        </option>
+                                    ))}
+                                </CFormSelect>
+                            ) : (
+                                <CFormInput
+                                    type="text"
+                                    value={formCustomerId}
+                                    onChange={(e) => setFormCustomerId(e.target.value)}
+                                    placeholder="Enter Customer ID manually (e.g. cu000010)"
+                                />
+                            )}
                         </CCol>
 
                         <CCol md={6}>
@@ -1041,22 +1202,32 @@ export default function BookingsManager() {
 
                         <CCol md={6}>
                             <CFormLabel>Plot *</CFormLabel>
-                            <CFormSelect value={formPlotId} onChange={(e) => handlePlotChange(e.target.value)} disabled={!formProjectName || plotsLoading}>
-                                <option value="">{plotsLoading ? 'Loading plots...' : 'Select Plot'}</option>
-                                {projectPlots.map((plot, idx) => {
-                                    const plotVal = (plot.id !== undefined && plot.id !== null && plot.id !== '') ? String(plot.id) : String(plot.plot_number || '')
-                                    const priceVal = plot.price !== undefined && plot.price !== null && plot.price !== ''
-                                        ? plot.price
-                                        : (plot.amount !== undefined && plot.amount !== null && plot.amount !== ''
-                                            ? plot.amount
-                                            : (plot.total_price || plot.total_amount || 0))
-                                    return (
-                                        <option key={plotVal || idx} value={plotVal}>
-                                            Plot {plot.plot_number || plotVal} ({plot.status || 'available'}){priceVal ? ` - ₹ ${parseFloat(priceVal).toLocaleString('en-IN')}` : ''}
-                                        </option>
-                                    )
-                                })}
-                            </CFormSelect>
+                            {projectPlots.length > 0 ? (
+                                <CFormSelect value={formPlotId} onChange={(e) => handlePlotChange(e.target.value)} disabled={!formProjectName || plotsLoading}>
+                                    <option value="">{plotsLoading ? 'Loading plots...' : 'Select Plot'}</option>
+                                    {projectPlots.map((plot, idx) => {
+                                        const plotVal = (plot.id !== undefined && plot.id !== null && plot.id !== '') ? String(plot.id) : String(plot.plot_number || '')
+                                        const priceVal = plot.price !== undefined && plot.price !== null && plot.price !== ''
+                                            ? plot.price
+                                            : (plot.amount !== undefined && plot.amount !== null && plot.amount !== ''
+                                                ? plot.amount
+                                                : (plot.total_price || plot.total_amount || 0))
+                                        return (
+                                            <option key={plotVal || idx} value={plotVal}>
+                                                Plot {plot.plot_number || plotVal} ({plot.status || 'available'}){priceVal ? ` - ₹ ${parseFloat(priceVal).toLocaleString('en-IN')}` : ''}
+                                            </option>
+                                        )
+                                    })}
+                                </CFormSelect>
+                            ) : (
+                                <CFormInput
+                                    type="text"
+                                    value={formPlotId}
+                                    onChange={(e) => setFormPlotId(e.target.value)}
+                                    placeholder="Enter Plot ID / Number manually"
+                                    disabled={!formProjectName}
+                                />
+                            )}
                         </CCol>
 
                         <CCol md={6}>
@@ -1132,181 +1303,95 @@ export default function BookingsManager() {
             />
 
             {/* Billing Details Modal */}
-            <CModal visible={billingModalVisible} onClose={() => setBillingModalVisible(false)} size="lg" backdrop="static" scrollable>
+            {/* Record Payment Modal */}
+            <CModal visible={billingModalVisible} onClose={() => setBillingModalVisible(false)} size="lg" backdrop="static">
                 <CModalHeader style={{ background: '#1e3a8a', color: 'white' }}>
-                    <CModalTitle>Billing & Payment Plan — Booking #{billingBooking?.id}</CModalTitle>
+                    <CModalTitle>Record Payment — Booking #{billingBooking?.id}</CModalTitle>
                 </CModalHeader>
-                <CModalBody className="p-4">
-                    {loadingBilling ? (
-                        <div className="text-center py-5">
-                            <CSpinner color="primary" /> <span className="ms-2">Loading financial statements...</span>
-                        </div>
-                    ) : (
-                        <div>
-                            {/* Summary Cards */}
-                            <CRow className="g-3 mb-4">
-                                <CCol xs={6} md={3}>
-                                    <div className="p-2 border rounded bg-light text-center">
-                                        <small className="text-muted d-block">Total Value</small>
-                                        <span className="fw-bold text-dark">₹ {parseFloat(billingBooking?.total_amount || 0).toLocaleString('en-IN')}</span>
-                                    </div>
-                                </CCol>
-                                <CCol xs={6} md={3}>
-                                    <div className="p-2 border rounded bg-light text-center">
-                                        <small className="text-muted d-block">Advance Paid</small>
-                                        <span className="fw-bold text-success">₹ {parseFloat(billingBooking?.advance_amount || 0).toLocaleString('en-IN')}</span>
-                                    </div>
-                                </CCol>
-                                <CCol xs={6} md={3}>
-                                    <div className="p-2 border rounded bg-light text-center">
-                                        <small className="text-muted d-block">Balance Due</small>
-                                        <span className="fw-bold text-danger">₹ {parseFloat(billingBooking?.balance_amount || 0).toLocaleString('en-IN')}</span>
-                                    </div>
-                                </CCol>
-                                <CCol xs={6} md={3}>
-                                    <div className="p-2 border rounded bg-light text-center">
-                                        <small className="text-muted d-block">Status</small>
-                                        <span className="fw-bold text-uppercase badge bg-info">{billingBooking?.status}</span>
-                                    </div>
-                                </CCol>
-                            </CRow>
+                <form onSubmit={handleRecordPaymentSubmit}>
+                    <CModalBody className="p-4">
+                        {paymentError && (
+                            <CAlert color="danger" className="py-2">
+                                {paymentError}
+                            </CAlert>
+                        )}
+                        <CRow className="g-3">
+                            <CCol md={6}>
+                                <CFormLabel className="fw-semibold">Booking ID</CFormLabel>
+                                <CFormInput type="text" value={`#${billingBooking?.id || ''}`} readOnly style={{ backgroundColor: '#eef2f7' }} />
+                            </CCol>
+                            <CCol md={6}>
+                                <CFormLabel className="fw-semibold">Client ID</CFormLabel>
+                                <CFormInput type="text" value={billingBooking?.customer_id || ''} readOnly style={{ backgroundColor: '#eef2f7' }} />
+                            </CCol>
+                            <CCol md={6}>
+                                <CFormLabel className="fw-semibold">Total Amount</CFormLabel>
+                                <CFormInput type="text" value={`₹ ${parseFloat(billingBooking?.total_amount || 0).toLocaleString('en-IN')}`} readOnly style={{ backgroundColor: '#eef2f7' }} />
+                            </CCol>
+                            <CCol md={6}>
+                                <CFormLabel className="fw-semibold">Current Balance Due</CFormLabel>
+                                <CFormInput type="text" value={`₹ ${parseFloat(billingBooking?.balance_amount || 0).toLocaleString('en-IN')}`} readOnly style={{ backgroundColor: '#eef2f7', color: '#dc3545', fontWeight: 'bold' }} />
+                            </CCol>
+                            
+                            <hr className="my-3" />
+                            <h5 className="text-primary fw-bold mb-1">New Payment Transaction</h5>
 
-                            {/* Section 1: Payment Plan (EMI Structure) */}
-                            <h5 className="border-bottom pb-2 mb-3 text-primary fw-bold">Payment Plan / EMI Configuration</h5>
-                            {bookingPaymentPlan ? (
-                                <CCard className="mb-4 border-info">
-                                    <CCardBody className="bg-light">
-                                        <CRow className="g-3">
-                                            <CCol xs={6} md={4}>
-                                                <small className="text-muted d-block">Plan Type</small>
-                                                <span className="fw-semibold">{bookingPaymentPlan.is_emi ? "EMI Plan (Installments)" : "Direct / Cash Plan"}</span>
-                                            </CCol>
-                                            <CCol xs={6} md={4}>
-                                                <small className="text-muted d-block">Tenure / Months</small>
-                                                <span className="fw-bold">{bookingPaymentPlan.tenure_months || "—"} Installments</span>
-                                            </CCol>
-                                            <CCol xs={6} md={4}>
-                                                <small className="text-muted d-block">Interest Rate (p.a.)</small>
-                                                <span className="fw-semibold">{bookingPaymentPlan.interest_rate_percent || "0"}%</span>
-                                            </CCol>
-                                            <CCol xs={6} md={4}>
-                                                <small className="text-muted d-block">Monthly EMI Amount</small>
-                                                <span className="fw-bold text-primary">₹ {parseFloat(bookingPaymentPlan.monthly_emi_amount || 0).toLocaleString('en-IN')} / month</span>
-                                            </CCol>
-                                            <CCol xs={6} md={4}>
-                                                <small className="text-muted d-block">Monthly Payment Date</small>
-                                                <span className="fw-semibold">{bookingPaymentPlan.monthly_payment_date || "—"}</span>
-                                            </CCol>
-                                            <CCol xs={6} md={4}>
-                                                <small className="text-muted d-block">Plan Start Date</small>
-                                                <span className="fw-semibold">{bookingPaymentPlan.start_date || "—"}</span>
-                                            </CCol>
-                                        </CRow>
-                                    </CCardBody>
-                                </CCard>
-                            ) : (
-                                <div className="mb-4">
-                                    {isAdmin ? (
-                                        <form onSubmit={handleSetupPaymentPlanSubmit}>
-                                            <CCard className="p-3 border-warning">
-                                                <div className="fw-semibold text-warning mb-2">No Payment Plan Set Up Yet. Configure Plan:</div>
-                                                <CRow className="g-3">
-                                                    <CCol md={6}>
-                                                        <CFormLabel>EMI Enable</CFormLabel>
-                                                        <CFormSelect value={formIsEmi ? "yes" : "no"} onChange={(e) => setFormIsEmi(e.target.value === "yes")}>
-                                                            <option value="yes">Enable EMI (Installments)</option>
-                                                            <option value="no">Disable EMI (Direct Payments)</option>
-                                                        </CFormSelect>
-                                                    </CCol>
-                                                    <CCol md={6}>
-                                                        <CFormLabel>Tenure (Months) *</CFormLabel>
-                                                        <CFormInput type="number" value={formTenureMonths} onChange={(e) => {
-                                                            setFormTenureMonths(e.target.value)
-                                                            const t = parseInt(e.target.value) || 1
-                                                            setFormEmiAmount(String(Math.round(parseFloat(billingBooking.balance_amount || 0) / t)))
-                                                        }} required />
-                                                    </CCol>
-                                                    <CCol md={6}>
-                                                        <CFormLabel>Interest Rate (% p.a.)</CFormLabel>
-                                                        <CFormInput type="text" value={formInterestRate} onChange={(e) => setFormInterestRate(e.target.value)} />
-                                                    </CCol>
-                                                    <CCol md={6}>
-                                                        <CFormLabel>Monthly EMI Amount (INR) *</CFormLabel>
-                                                        <CFormInput type="number" value={formEmiAmount} onChange={(e) => setFormEmiAmount(e.target.value)} required />
-                                                    </CCol>
-                                                    <CCol md={6}>
-                                                        <CFormLabel>Monthly Pay Day (Date/String)</CFormLabel>
-                                                        <CFormInput type="text" placeholder="e.g. 5th of every month" value={formPaymentDate} onChange={(e) => setFormPaymentDate(e.target.value)} />
-                                                    </CCol>
-                                                    <CCol md={6}>
-                                                        <CFormLabel>Start Date</CFormLabel>
-                                                        <CFormInput type="date" value={formPlanStartDate} onChange={(e) => setFormPlanStartDate(e.target.value)} />
-                                                    </CCol>
-                                                    <CCol xs={12} className="text-end">
-                                                        <CButton type="submit" color="primary" disabled={savingPaymentPlan}>
-                                                            {savingPaymentPlan ? 'Configuring...' : 'Initialize Payment Plan'}
-                                                        </CButton>
-                                                    </CCol>
-                                                </CRow>
-                                            </CCard>
-                                        </form>
-                                    ) : (
-                                        <CAlert color="warning">No payment or EMI schedule configured by Admin for this booking yet.</CAlert>
-                                    )}
-                                </div>
-                            )}
-
-                            {/* Section 2: Booking Invoices */}
-                            <h5 className="border-bottom pb-2 mb-3 text-primary fw-bold">Invoices Generated for Booking</h5>
-                            {bookingInvoices.length === 0 ? (
-                                <div className="text-muted small py-3 text-center">No invoices issued for this booking yet.</div>
-                            ) : (
-                                <div className="table-responsive">
-                                    <CTable hover align="middle" className="mb-0 text-center text-nowrap">
-                                        <CTableHead color="light">
-                                            <CTableRow>
-                                                <CTableHeaderCell>Invoice No.</CTableHeaderCell>
-                                                <CTableHeaderCell>Type</CTableHeaderCell>
-                                                <CTableHeaderCell>Date</CTableHeaderCell>
-                                                <CTableHeaderCell>Total Amount</CTableHeaderCell>
-                                                <CTableHeaderCell>Status</CTableHeaderCell>
-                                                <CTableHeaderCell>Actions</CTableHeaderCell>
-                                            </CTableRow>
-                                        </CTableHead>
-                                        <CTableBody>
-                                            {bookingInvoices.map((inv) => (
-                                                <CTableRow key={inv.id}>
-                                                    <CTableDataCell className="fw-semibold text-primary">{inv.invoice_number || `INV-${inv.id}`}</CTableDataCell>
-                                                    <CTableDataCell className="text-capitalize">{inv.invoice_type || 'Standard'}</CTableDataCell>
-                                                    <CTableDataCell>{new Date(inv.invoice_date).toLocaleDateString('en-IN')}</CTableDataCell>
-                                                    <CTableDataCell className="fw-bold">₹ {parseFloat(inv.total_amount || 0).toLocaleString('en-IN')}</CTableDataCell>
-                                                    <CTableDataCell>
-                                                        <span className={`badge bg-${inv.status === 'paid' ? 'success' : inv.status === 'partially_paid' ? 'warning' : 'danger'}`}>
-                                                            {inv.status}
-                                                        </span>
-                                                    </CTableDataCell>
-                                                    <CTableDataCell>
-                                                        <div className="d-flex gap-2 justify-content-center">
-                                                            <CButton color="info" size="sm" variant="outline" onClick={() => handlePreviewInvoice(inv)}>
-                                                                Preview
-                                                            </CButton>
-                                                            <CButton color="primary" size="sm" variant="outline" onClick={() => handleDownloadPdf(inv)}>
-                                                                PDF
-                                                            </CButton>
-                                                        </div>
-                                                    </CTableDataCell>
-                                                </CTableRow>
-                                            ))}
-                                        </CTableBody>
-                                    </CTable>
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </CModalBody>
-                <CModalFooter>
-                    <CButton color="secondary" variant="ghost" onClick={() => setBillingModalVisible(false)}>Close</CButton>
-                </CModalFooter>
+                            <CCol md={6}>
+                                <CFormLabel htmlFor="pay_amount" className="fw-semibold">Amount to Pay (INR) *</CFormLabel>
+                                <CFormInput
+                                    id="pay_amount"
+                                    type="number"
+                                    placeholder="Enter amount paid"
+                                    value={formAmountPaid}
+                                    onChange={(e) => setFormAmountPaid(e.target.value)}
+                                    required
+                                />
+                            </CCol>
+                            <CCol md={6}>
+                                <CFormLabel htmlFor="pay_mode" className="fw-semibold">Payment Mode *</CFormLabel>
+                                <CFormSelect
+                                    id="pay_mode"
+                                    value={formPaymentMode}
+                                    onChange={(e) => setFormPaymentMode(e.target.value)}
+                                    required
+                                >
+                                    <option value="cash">Cash</option>
+                                    <option value="bank_transfer">Bank Transfer</option>
+                                    <option value="cheque">Cheque</option>
+                                    <option value="online">Online / UPI</option>
+                                </CFormSelect>
+                            </CCol>
+                            <CCol md={6}>
+                                <CFormLabel htmlFor="pay_ref" className="fw-semibold">Transaction Reference / Cheque No.</CFormLabel>
+                                <CFormInput
+                                    id="pay_ref"
+                                    type="text"
+                                    placeholder="e.g. TXN123456789"
+                                    value={formPaymentRef}
+                                    onChange={(e) => setFormPaymentRef(e.target.value)}
+                                />
+                            </CCol>
+                            <CCol md={6}>
+                                <CFormLabel htmlFor="pay_notes" className="fw-semibold">Notes / Description</CFormLabel>
+                                <CFormInput
+                                    id="pay_notes"
+                                    type="text"
+                                    placeholder="e.g. Installment payment"
+                                    value={formPaymentNotes}
+                                    onChange={(e) => setFormPaymentNotes(e.target.value)}
+                                />
+                            </CCol>
+                        </CRow>
+                    </CModalBody>
+                    <CModalFooter>
+                        <CButton color="secondary" variant="ghost" onClick={() => setBillingModalVisible(false)}>
+                            Cancel
+                        </CButton>
+                        <CButton type="submit" color="primary" disabled={recordingPayment}>
+                            {recordingPayment ? 'Recording...' : 'Record Payment'}
+                        </CButton>
+                    </CModalFooter>
+                </form>
             </CModal>
 
             {/* Invoice HTML Preview Modal */}

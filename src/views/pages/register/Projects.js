@@ -115,7 +115,7 @@ const PlotCard = ({ plot }) => {
                         style={{ borderRadius: "8px", fontWeight: "600" }}
                         onClick={(e) => {
                             e.stopPropagation()
-                            navigate(`/GetBookings?project_name=${encodeURIComponent(plot.project_name)}&plot_id=${encodeURIComponent(plot.id)}`)
+                            navigate(`/GetBookings?project_name=${encodeURIComponent(plot.project_name)}&plot_id=${encodeURIComponent(plot.id || plot.plot_number)}`)
                         }}
                     >
                         Book Plot

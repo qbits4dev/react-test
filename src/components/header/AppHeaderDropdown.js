@@ -164,7 +164,7 @@ const AppHeaderDropdown = () => {
   return (
     <CDropdown variant="nav-item">
       <CDropdownToggle placement="bottom-end" className="py-0 pe-0" caret={false}>
-        <CAvatar src={profilePhoto || avatar8} size="md" />
+        <CAvatar src={profilePhoto || avatar8} size="md" className="header-avatar" />
       </CDropdownToggle>
       <CDropdownMenu className="pt-0" placement="bottom-end">
         <CDropdownItem onClick={handleLogoutClick} style={{ cursor: 'pointer' }}>

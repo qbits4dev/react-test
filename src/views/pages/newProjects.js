@@ -43,7 +43,7 @@ const getAvailabilityColor = (percentage) => {
 }
 
 // Sub-component to fetch and render each plot card in the modal on-demand
-const PlotCard = ({ plot, onViewDetails }) => {
+const PlotCard = ({ plot, onViewDetails, canManagePlots, onEditPlot }) => {
     const navigate = useNavigate()
     const [plotImage, setPlotImage] = useState(null)
     const [loadingImg, setLoadingImg] = useState(true)
@@ -109,7 +109,23 @@ const PlotCard = ({ plot, onViewDetails }) => {
                     </CBadge>
                 </div>
                 <CCardBody className="p-3">
-                    <h6 className="fw-bold mb-1" style={{ color: "#4e73df" }}>Plot No: {plot.plot_number}</h6>
+                    <div className="d-flex justify-content-between align-items-center mb-1">
+                        <h6 className="fw-bold mb-0" style={{ color: "#4e73df" }}>Plot No: {plot.plot_number}</h6>
+                        {canManagePlots && (
+                            <CButton
+                                color="warning"
+                                size="sm"
+                                className="text-white px-2 py-0"
+                                style={{ borderRadius: '6px', fontSize: '0.75rem', fontWeight: 'bold', zIndex: 10 }}
+                                onClick={(e) => {
+                                    e.stopPropagation() // Prevent opening detail modal
+                                    onEditPlot && onEditPlot(plot)
+                                }}
+                            >
+                                Edit
+                            </CButton>
+                        )}
+                    </div>
                     <p className="text-muted mb-1" style={{ fontSize: "0.85rem" }}>Size: {plot.size} sq. ft</p>
                     <p className="fw-semibold text-dark mb-0" style={{ fontSize: "0.95rem" }}>
                         Price: {new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(plot.price)}
@@ -186,6 +202,36 @@ export default function AvailableProjects() {
     const [customerDetails, setCustomerDetails] = useState(null)
     const [plotDetailsModalVisible, setPlotDetailsModalVisible] = useState(false)
 
+    // Edit Project form states
+    const [editProjectModalVisible, setEditProjectModalVisible] = useState(false)
+    const [selectedProjectForEdit, setSelectedProjectForEdit] = useState(null)
+    const [editProjectForm, setEditProjectForm] = useState({
+        name: '',
+        description: '',
+        location: '',
+        developer: '',
+        start_date: '',
+        end_date: '',
+        status: '',
+        total_area: '',
+    })
+    const [editProjectErrors, setEditProjectErrors] = useState({})
+    const [savingProject, setSavingProject] = useState(false)
+    const [editProjectError, setEditProjectError] = useState(null)
+
+    // Edit Plot form states
+    const [editPlotModalVisible, setEditPlotModalVisible] = useState(false)
+    const [selectedPlotForEdit, setSelectedPlotForEdit] = useState(null)
+    const [editPlotForm, setEditPlotForm] = useState({
+        plot_number: '',
+        size: '',
+        price: '',
+        status: 'available',
+        project_name: ''
+    })
+    const [editingPlot, setEditingPlot] = useState(false)
+    const [editPlotError, setEditPlotError] = useState(null)
+
     const user = JSON.parse(localStorage.getItem('user') || '{}')
     const userRole = user?.role?.toLowerCase()
     const canManagePlots = userRole === 'admin' || userRole === 'agent'
@@ -245,6 +291,12 @@ export default function AvailableProjects() {
                         total: totalPlots,
                         available: availablePlots,
                         description: proj.description || "",
+                        developer: proj.developer || "",
+                        start_date: proj.start_date || "",
+                        end_date: proj.end_date || "",
+                        status: proj.status || "",
+                        total_area: proj.total_area || "",
+                        rawProject: proj
                     }
                 })
             )
@@ -444,6 +496,172 @@ export default function AvailableProjects() {
         } finally {
             setAddingProject(false)
         }
+    }
+
+    const openEditProjectModal = (project) => {
+        setSelectedProjectForEdit(project)
+        setEditProjectForm({
+            name: project.title || '',
+            description: project.description || '',
+            location: project.location || '',
+            developer: project.developer || '',
+            start_date: project.start_date ? project.start_date.split('T')[0] : '',
+            end_date: project.end_date ? project.end_date.split('T')[0] : '',
+            status: project.status || '',
+            total_area: project.total_area || '',
+        })
+        setEditProjectErrors({})
+        setEditProjectError(null)
+        setEditProjectModalVisible(true)
+    }
+
+    const handleEditProjectChange = (e) => {
+        const { name, value } = e.target
+        const err = validateProjectField(name, value, editProjectForm)
+        setEditProjectErrors(prev => ({
+            ...prev,
+            [name]: err
+        }))
+        setEditProjectForm(prev => ({
+            ...prev,
+            [name]: value
+        }))
+    }
+
+    const handleEditProjectSubmit = async (e) => {
+        e.preventDefault()
+        const errs = {}
+        Object.keys(editProjectForm).forEach(k => {
+            const err = validateProjectField(k, editProjectForm[k], editProjectForm)
+            if (err) errs[k] = err
+        })
+        if (Object.keys(errs).length > 0) {
+            setEditProjectErrors(errs)
+            return
+        }
+
+        setSavingProject(true)
+        setEditProjectError(null)
+        try {
+            const payload = {
+                name: editProjectForm.name,
+                description: editProjectForm.description,
+                location: editProjectForm.location,
+                developer: editProjectForm.developer,
+                status: editProjectForm.status,
+                total_area: Number(editProjectForm.total_area) || 0,
+                start_date: editProjectForm.start_date || null,
+                end_date: editProjectForm.end_date || null
+            }
+
+            const res = await fetch(`${globalThis.apiBaseUrl}/projects/${selectedProjectForEdit.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+
+            if (res.ok) {
+                setEditProjectModalVisible(false)
+                setSelectedProjectForEdit(null)
+                fetchData() // Refresh list
+            } else {
+                const text = await res.text()
+                setEditProjectError(text || 'Failed to update project.')
+            }
+        } catch (err) {
+            setEditProjectError(err.message || 'Failed to submit project changes.')
+        } finally {
+            setSavingProject(false)
+        }
+    }
+
+    const openEditPlotModal = (plot) => {
+        setSelectedPlotForEdit(plot)
+        setEditPlotForm({
+            plot_number: plot.plot_number || '',
+            size: plot.size || '',
+            price: plot.price || '',
+            status: plot.status || 'available',
+            project_name: plot.project_name || selectedProject?.title || ''
+        })
+        setEditPlotError(null)
+        setEditPlotModalVisible(true)
+    }
+
+    const handleEditPlotSubmit = async (e) => {
+        e.preventDefault()
+        setEditingPlot(true)
+        setEditPlotError(null)
+        try {
+            const plotObj = {
+                ...selectedPlotForEdit,
+                plot_number: editPlotForm.plot_number,
+                size: Number(editPlotForm.size) || 0,
+                price: Number(editPlotForm.price) || 0,
+                status: editPlotForm.status,
+                project_name: editPlotForm.project_name
+            }
+
+            const success = await updatePlotOnServer(plotObj)
+            if (success) {
+                setEditPlotModalVisible(false)
+                setSelectedPlotForEdit(null)
+                
+                // Refresh plots list
+                const plotsRes = await fetch(`${globalThis.apiBaseUrl}/projects/plots`)
+                if (plotsRes.ok) {
+                    const plotsJson = await plotsRes.json()
+                    const rawPlots = Array.isArray(plotsJson) ? plotsJson : plotsJson.plots || []
+                    setAllPlots(rawPlots)
+                }
+
+                if (detailsPlot && String(detailsPlot.id || detailsPlot.plot_number) === String(plotObj.id || plotObj.plot_number)) {
+                    setDetailsPlot(plotObj)
+                }
+            } else {
+                setEditPlotError('Failed to update plot details on server.')
+            }
+        } catch (err) {
+            setEditPlotError(err.message || 'Failed to submit plot updates.')
+        } finally {
+            setEditingPlot(false)
+        }
+    }
+
+    const updatePlotOnServer = async (plot) => {
+        const payload = {
+            project_name: plot.project_name,
+            plot_number: plot.plot_number,
+            size: Number(plot.size),
+            price: Number(plot.price),
+            status: String(plot.status || '').toLowerCase(),
+        }
+
+        const plotId = plot.id || plot.plot_number
+        const urls = [
+            `${globalThis.apiBaseUrl}/projects/${encodeURIComponent(plot.project_name)}/plots/${encodeURIComponent(plot.plot_number)}`,
+            `${globalThis.apiBaseUrl}/projects/plots/${encodeURIComponent(plotId)}`,
+            `${globalThis.apiBaseUrl}/projects/plots/${encodeURIComponent(plot.plot_number)}`,
+            `${globalThis.apiBaseUrl}/projects/plots`,
+        ]
+
+        for (const url of urls) {
+            for (const method of ['PUT', 'PATCH']) {
+                try {
+                    console.log('Edit Plot — payload being sent to PUT/PATCH:', url, method, payload)
+                    const res = await fetch(url, {
+                        method,
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload),
+                    })
+                    if (res.ok) return true
+                } catch (e) {
+                    console.error('Error attempting plot update at ' + url, e)
+                }
+            }
+        }
+
+        return false
     }
 
     const handleViewPlotDetails = async (plot) => {
@@ -685,9 +903,25 @@ export default function AvailableProjects() {
                                             />
 
                                             <div className="flex-grow-1 w-100">
-                                                <CCardTitle as="h5" style={styles.projectTitle}>
-                                                    {p.title}
-                                                </CCardTitle>
+                                                <div className="d-flex justify-content-between align-items-center mb-1">
+                                                    <CCardTitle as="h5" style={styles.projectTitle}>
+                                                        {p.title}
+                                                    </CCardTitle>
+                                                    {canManageProjects && (
+                                                        <CButton
+                                                            color="warning"
+                                                            size="sm"
+                                                            className="text-white fw-bold px-3 py-1"
+                                                            style={{ borderRadius: '8px', zIndex: 10 }}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation() // Prevent opening the plots grid modal
+                                                                openEditProjectModal(p)
+                                                            }}
+                                                        >
+                                                            Edit
+                                                        </CButton>
+                                                    )}
+                                                </div>
                                                 <CCardText className="text-muted" style={styles.projectLocation}>
                                                     <CIcon icon={cilLocationPin} className="me-1" style={{ color: "#C2185B" }} />
                                                     {p.location}
@@ -758,7 +992,12 @@ export default function AvailableProjects() {
                                 <CRow className="g-4">
                                     {selectedProjectPlots.map((plot) => (
                                         <CCol key={plot.id} xs={12} sm={6} md={4} lg={3}>
-                                            <PlotCard plot={plot} onViewDetails={handleViewPlotDetails} />
+                                            <PlotCard 
+                                                plot={plot} 
+                                                onViewDetails={handleViewPlotDetails} 
+                                                canManagePlots={canManagePlots}
+                                                onEditPlot={openEditPlotModal}
+                                            />
                                         </CCol>
                                     ))}
                                 </CRow>
@@ -889,14 +1128,28 @@ export default function AvailableProjects() {
                                 </CCol>
                                 <CCol sm={12} className="mt-2">
                                     <div className="text-muted small">Status</div>
-                                    <div>
+                                    <div className="d-flex justify-content-between align-items-center mt-1">
                                         <CBadge color={
                                             detailsPlot.status === "available" ? "success" :
                                             detailsPlot.status === "sold" ? "danger" :
                                             detailsPlot.status === "reserved" ? "warning" : "secondary"
-                                        } className="fs-6 py-2 px-3 mt-1">
+                                        } className="fs-6 py-2 px-3">
                                             {String(detailsPlot.status).toUpperCase()}
                                         </CBadge>
+                                        {canManagePlots && (
+                                            <CButton
+                                                color="warning"
+                                                size="sm"
+                                                className="text-white fw-bold px-3 py-2"
+                                                style={{ borderRadius: '8px' }}
+                                                onClick={() => {
+                                                    setPlotDetailsModalVisible(false)
+                                                    openEditPlotModal(detailsPlot)
+                                                }}
+                                            >
+                                                Edit Plot
+                                            </CButton>
+                                        )}
                                     </div>
                                 </CCol>
                             </CRow>
@@ -1187,6 +1440,231 @@ export default function AvailableProjects() {
                                     <CSpinner size="sm" className="me-2" /> Submitting...
                                 </>
                             ) : "Add Project"}
+                        </CButton>
+                    </CModalFooter>
+                </form>
+            </CModal>
+
+            {/* Edit Project Modal */}
+            <CModal
+                visible={editProjectModalVisible}
+                onClose={() => setEditProjectModalVisible(false)}
+                backdrop="static"
+                size="lg"
+                centered
+            >
+                <CModalHeader style={{ background: "linear-gradient(135deg, #f59e0b, #eab308)", color: "#fff" }}>
+                    <CModalTitle>Edit Project</CModalTitle>
+                </CModalHeader>
+                <form onSubmit={handleEditProjectSubmit}>
+                    <CModalBody className="p-4" style={{ backgroundColor: "#f8f9fa" }}>
+                        {editProjectError && (
+                            <CAlert color="danger" className="py-2">
+                                {editProjectError}
+                            </CAlert>
+                        )}
+                        <CRow className="g-3 mb-3">
+                            <CCol md={6}>
+                                <CFormLabel htmlFor="edit_project_name" className="fw-semibold">Project Name *</CFormLabel>
+                                <CFormInput
+                                    id="edit_project_name"
+                                    name="name"
+                                    type="text"
+                                    placeholder="Enter project name"
+                                    value={editProjectForm.name}
+                                    onChange={handleEditProjectChange}
+                                    invalid={!!editProjectErrors.name}
+                                    required
+                                />
+                                {editProjectErrors.name && <CFormFeedback className="d-block">{editProjectErrors.name}</CFormFeedback>}
+                            </CCol>
+                            <CCol md={6}>
+                                <CFormLabel htmlFor="edit_project_location" className="fw-semibold">Location *</CFormLabel>
+                                <CFormInput
+                                    id="edit_project_location"
+                                    name="location"
+                                    type="text"
+                                    placeholder="Enter location"
+                                    value={editProjectForm.location}
+                                    onChange={handleEditProjectChange}
+                                    invalid={!!editProjectErrors.location}
+                                    required
+                                />
+                                {editProjectErrors.location && <CFormFeedback className="d-block">{editProjectErrors.location}</CFormFeedback>}
+                            </CCol>
+                        </CRow>
+
+                        <CRow className="g-3 mb-3">
+                            <CCol md={6}>
+                                <CFormLabel htmlFor="edit_project_total_area" className="fw-semibold">Total Area (sq. ft) *</CFormLabel>
+                                <CFormInput
+                                    id="edit_project_total_area"
+                                    name="total_area"
+                                    type="number"
+                                    placeholder="e.g. 50000"
+                                    value={editProjectForm.total_area}
+                                    onChange={handleEditProjectChange}
+                                    invalid={!!editProjectErrors.total_area}
+                                    required
+                                />
+                                {editProjectErrors.total_area && <CFormFeedback className="d-block">{editProjectErrors.total_area}</CFormFeedback>}
+                            </CCol>
+                            <CCol md={6}>
+                                <CFormLabel htmlFor="edit_project_status" className="fw-semibold">Project Status *</CFormLabel>
+                                <CFormSelect
+                                    id="edit_project_status"
+                                    name="status"
+                                    value={editProjectForm.status}
+                                    onChange={handleEditProjectChange}
+                                    invalid={!!editProjectErrors.status}
+                                    required
+                                >
+                                    <option value="">Select status</option>
+                                    <option value="Ongoing">Ongoing</option>
+                                    <option value="Completed">Completed</option>
+                                    <option value="Planned">Planned</option>
+                                    <option value="On Hold">On Hold</option>
+                                </CFormSelect>
+                                {editProjectErrors.status && <CFormFeedback className="d-block">{editProjectErrors.status}</CFormFeedback>}
+                            </CCol>
+                        </CRow>
+
+                        <CRow className="g-3 mb-3">
+                            <CCol md={6}>
+                                <CFormLabel htmlFor="edit_project_start_date" className="fw-semibold">Start Date</CFormLabel>
+                                <CFormInput
+                                    id="edit_project_start_date"
+                                    name="start_date"
+                                    type="date"
+                                    value={editProjectForm.start_date}
+                                    onChange={handleEditProjectChange}
+                                />
+                            </CCol>
+                            <CCol md={6}>
+                                <CFormLabel htmlFor="edit_project_end_date" className="fw-semibold">End Date</CFormLabel>
+                                <CFormInput
+                                    id="edit_project_end_date"
+                                    name="end_date"
+                                    type="date"
+                                    value={editProjectForm.end_date}
+                                    onChange={handleEditProjectChange}
+                                />
+                            </CCol>
+                        </CRow>
+
+                        <div className="mb-3">
+                            <CFormLabel htmlFor="edit_project_developer" className="fw-semibold">Developer</CFormLabel>
+                            <CFormInput
+                                id="edit_project_developer"
+                                name="developer"
+                                type="text"
+                                placeholder="Enter developer name"
+                                value={editProjectForm.developer}
+                                onChange={handleEditProjectChange}
+                            />
+                        </div>
+
+                        <div className="mb-3">
+                            <CFormLabel htmlFor="edit_project_description" className="fw-semibold">Project Description *</CFormLabel>
+                            <CFormTextarea
+                                id="edit_project_description"
+                                name="description"
+                                rows={3}
+                                placeholder="Enter project description..."
+                                value={editProjectForm.description}
+                                onChange={handleEditProjectChange}
+                                invalid={!!editProjectErrors.description}
+                                required
+                            />
+                            {editProjectErrors.description && <CFormFeedback className="d-block">{editProjectErrors.description}</CFormFeedback>}
+                        </div>
+                    </CModalBody>
+                    <CModalFooter>
+                        <CButton color="secondary" variant="ghost" onClick={() => setEditProjectModalVisible(false)}>
+                            Cancel
+                        </CButton>
+                        <CButton type="submit" color="warning" disabled={savingProject} className="text-white" style={{ background: "linear-gradient(135deg, #f59e0b, #eab308)", border: "none" }}>
+                            {savingProject ? (
+                                <>
+                                    <CSpinner size="sm" className="me-2" /> Saving...
+                                </>
+                            ) : "Save Changes"}
+                        </CButton>
+                    </CModalFooter>
+                </form>
+            </CModal>
+
+            {/* Edit Plot Modal */}
+            <CModal
+                visible={editPlotModalVisible}
+                onClose={() => setEditPlotModalVisible(false)}
+                backdrop="static"
+                centered
+            >
+                <CModalHeader style={{ background: "#f59e0b", color: "#fff" }}>
+                    <CModalTitle>Edit Plot {selectedPlotForEdit?.plot_number}</CModalTitle>
+                </CModalHeader>
+                <form onSubmit={handleEditPlotSubmit}>
+                    <CModalBody className="p-4">
+                        {editPlotError && (
+                            <CAlert color="danger" className="py-2">
+                                {editPlotError}
+                            </CAlert>
+                        )}
+                        <div className="mb-3">
+                            <CFormLabel htmlFor="edit_plot_number">Plot Number *</CFormLabel>
+                            <CFormInput
+                                id="edit_plot_number"
+                                type="text"
+                                placeholder="e.g. 101, 102A"
+                                value={editPlotForm.plot_number}
+                                onChange={(e) => setEditPlotForm(prev => ({...prev, plot_number: e.target.value}))}
+                                required
+                            />
+                        </div>
+                        <div className="mb-3">
+                            <CFormLabel htmlFor="edit_plot_size">Size (sq. ft) *</CFormLabel>
+                            <CFormInput
+                                id="edit_plot_size"
+                                type="number"
+                                placeholder="e.g. 1200"
+                                value={editPlotForm.size}
+                                onChange={(e) => setEditPlotForm(prev => ({...prev, size: e.target.value}))}
+                                required
+                            />
+                        </div>
+                        <div className="mb-3">
+                            <CFormLabel htmlFor="edit_plot_price">Price (INR) *</CFormLabel>
+                            <CFormInput
+                                id="edit_plot_price"
+                                type="number"
+                                placeholder="e.g. 1500000"
+                                value={editPlotForm.price}
+                                onChange={(e) => setEditPlotForm(prev => ({...prev, price: e.target.value}))}
+                                required
+                            />
+                        </div>
+                        <div className="mb-3">
+                            <CFormLabel htmlFor="edit_plot_status">Status *</CFormLabel>
+                            <CFormSelect
+                                id="edit_plot_status"
+                                value={editPlotForm.status}
+                                onChange={(e) => setEditPlotForm(prev => ({...prev, status: e.target.value}))}
+                                required
+                            >
+                                <option value="available">Available</option>
+                                <option value="reserved">Reserved</option>
+                                <option value="sold">Sold</option>
+                                <option value="on hold">On Hold</option>
+                            </CFormSelect>
+                        </div>
+                    </CModalBody>
+                    <CModalFooter>
+                        <CButton color="secondary" variant="ghost" onClick={() => setEditPlotModalVisible(false)}>
+                            Cancel
+                        </CButton>
+                        <CButton type="submit" color="warning" className="text-white" disabled={editingPlot}>
+                            {editingPlot ? "Saving..." : "Save Plot"}
                         </CButton>
                     </CModalFooter>
                 </form>

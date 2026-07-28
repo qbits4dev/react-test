@@ -281,6 +281,7 @@ export default function UserProfile() {
                                 src={profile.photoUrl}
                                 alt="Profile"
                                 className="rounded-circle shadow-sm mb-3"
+                                style={{ objectFit: 'cover' }}
                                 width={150}
                                 height={150}
                             />
