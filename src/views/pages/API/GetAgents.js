@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import {
   CAvatar,
+  CAlert,
   CCard,
   CCardHeader,
   CCardBody,
@@ -40,6 +41,8 @@ import {
   cilSortAlphaDown,
   cilSortAlphaUp,
 } from '@coreui/icons'
+import ErrorModal from '../../../components/ErrorModal'
+import { extractErrorMessage, getResponseErrorMessage } from '../../../utils/errorUtils'
 import { useNavigate } from 'react-router-dom'
 
 // Helper function to format labels
@@ -61,7 +64,17 @@ const GetAgents = () => {
   const [teamFilter, setTeamFilter] = useState('')
   const [sortConfig, setSortConfig] = useState({ key: 'firstName', direction: 'ascending' })
   const [currentPage, setCurrentPage] = useState(1)
+  const [designations, setDesignations] = useState([])
+  const [loadingDesignations, setLoadingDesignations] = useState(true)
+  const [designationError, setDesignationError] = useState('')
+  const [savingAgent, setSavingAgent] = useState(false)
+  const [message, setMessage] = useState({ visible: false, color: 'success', text: '' })
+  const [editErrors, setEditErrors] = useState({})
   const itemsPerPage = 5
+
+  const today = new Date()
+  const maxDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate()).toISOString().split('T')[0]
+  const minDate = new Date(today.getFullYear() - 80, today.getMonth(), today.getDate()).toISOString().split('T')[0]
 
   // Fields groups for edit modal
   const personalFields = ['firstName', 'lastName', 'fatherName', 'dob', 'gender', 'maritalStatus']
@@ -108,30 +121,30 @@ const GetAgents = () => {
             .filter((u) => u.success)
             .map((u) => ({
               id: u.id,
-              agentId: u.u_id,
-              firstName: u.first_name,
-              lastName: u.last_name,
-              fatherName: u.father_name,
-              maritalStatus: u.marital_status,
-              dob: u.dob,
-              gender: u.gender,
-              email: u.email,
-              phone: u.mobile,
-              occupation: u.occupation,
-              education: u.education,
-              designation: u.designation,
-              referenceAgent: u.reference_agent,
-              agentTeam: u.agent_team,
-              workLocation: u.work_location,
-              bankName: u.bank_name,
-              branch: u.branch,
-              accountNumber: u.account_number,
-              ifscCode: u.ifsc_code,
-              nomineeName: u.nominiee || 'no value',
-              nomineeRelation: u.relationship || 'no value',
-              nomineeMobile: u.nominee_mobile || 'no value',
-              permanentAddress: u.address,
-              presentAddress: u.address,
+              agentId: u.u_id || '',
+              firstName: u.first_name || '',
+              lastName: u.last_name || '',
+              fatherName: u.father_name || '',
+              maritalStatus: u.marital_status || '',
+              dob: u.dob || '',
+              gender: u.gender || '',
+              email: u.email || '',
+              phone: u.mobile || '',
+              occupation: u.occupation || '',
+              education: u.education || '',
+              designation: u.designation || '',
+              referenceAgent: u.reference_agent || '',
+              agentTeam: u.agent_team || '',
+              workLocation: u.work_location || '',
+              bankName: u.bank_name || '',
+              branch: u.branch || '',
+              accountNumber: u.account_number || '',
+              ifscCode: u.ifsc_code || '',
+              nomineeName: u.nominiee || '',
+              nomineeRelation: u.relationship || '',
+              nomineeMobile: u.nominee_mobile || '',
+              permanentAddress: u.address || '',
+              presentAddress: u.address || '',
               avatar: null,
             }));
           if (isMounted) setAgents(filteredAgents);
@@ -259,7 +272,22 @@ const GetAgents = () => {
     return () => {
       isMounted = false;
     };
-  }, [userRole, userId]);
+  }, []);
+
+  useEffect(() => {
+    fetch(`${globalThis.apiBaseUrl}/register/?key=designation`, { headers: { accept: 'application/json' } })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.status === 'ok' && Array.isArray(data.designation)) {
+          setDesignations(data.designation)
+          setDesignationError('')
+        } else {
+          setDesignationError('No designations found')
+        }
+      })
+      .catch(() => setDesignationError('Failed to fetch designations'))
+      .finally(() => setLoadingDesignations(false))
+  }, [])
   
 
   // Filtering, sorting logic
@@ -331,17 +359,240 @@ const GetAgents = () => {
   // Edit modal handlers
   const handleEdit = (agent) => {
     setSelectedAgent({ ...agent })
+    setEditErrors({})
     setEditModalVisible(true)
   }
-  const handleChange = (e) => {
-    const { name, value } = e.target
-    setSelectedAgent({ ...selectedAgent, [name]: value })
+
+  // ── Field config: maxLength, input filter, validation per column name ──
+  const FIELD_CONFIG = {
+    firstName:       { max: 50,  filter: /[^A-Za-z ]/g,  label: 'First Name' },
+    lastName:        { max: 50,  filter: /[^A-Za-z ]/g,  label: 'Last Name' },
+    fatherName:      { max: 50,  filter: /[^A-Za-z ]/g,  label: "Father's Name" },
+    dob:             { label: 'Date of Birth' },
+    gender:          { label: 'Gender' },
+    maritalStatus:   { label: 'Marital Status' },
+    email:           { max: 100, filter: /[^A-Za-z0-9.@_\-+]/g, label: 'Email' },
+    phone:           { max: 10,  filter: /[^0-9]/g,      label: 'Phone' },
+    permanentAddress:{ max: 200, filter: /[^A-Za-z0-9 ,\-\/.#]/g, label: 'Permanent Address' },
+    presentAddress:  { max: 200, filter: /[^A-Za-z0-9 ,\-\/.#]/g, label: 'Present Address' },
+    agentId:         { label: 'Agent ID' },
+    occupation:      { max: 80,  filter: /[^A-Za-z ,\-\/]/g,  label: 'Occupation' },
+    education:       { max: 80,  filter: /[^A-Za-z0-9 ,\-\/]/g,  label: 'Education' },
+    designation:     { label: 'Designation' },
+    agentTeam:       { max: 30,  filter: /[^A-Za-z0-9 \-_]/g,    label: 'Agent Team' },
+    workLocation:    { max: 80,  filter: /[^A-Za-z0-9 ,\-\/]/g,  label: 'Work Location' },
+    bankName:        { max: 80,  filter: /[^A-Za-z0-9 ,\-\/]/g,  label: 'Bank Name' },
+    branch:          { max: 80,  filter: /[^A-Za-z0-9 ,\-\/]/g,  label: 'Branch' },
+    accountNumber:   { max: 18,  filter: /[^0-9]/g,      label: 'Account Number' },
+    ifscCode:        { max: 11,  filter: /[^A-Z0-9]/g,   label: 'IFSC Code', upper: true },
+    nomineeName:     { max: 60,  filter: /[^A-Za-z ]/g,  label: 'Nominee Name' },
+    nomineeRelation: { max: 60,  filter: /[^A-Za-z ]/g,  label: 'Nominee Relation' },
+    nomineeMobile:   { max: 10,  filter: /[^0-9]/g,      label: 'Nominee Mobile' },
   }
-  const handleSave = () => {
-    if (selectedAgent) {
-      setAgents((prev) => prev.map((a) => (a.id === selectedAgent.id ? selectedAgent : a)))
-      setEditModalVisible(false)
-      setSelectedAgent(null)
+
+  // ── Per-field validation for edit modal ──
+  const validateEditField = (name, value) => {
+    const v = typeof value === 'string' ? value.trim() : (value || '')
+    const cfg = FIELD_CONFIG[name] || {}
+    const label = cfg.label || formatLabel(name)
+
+    switch (name) {
+      case 'firstName':
+      case 'lastName':
+      case 'fatherName':
+        if (!v) return `${label} is required`
+        if (v.length < 2) return `${label} must be at least 2 characters`
+        if (v.length > 50) return `${label} must not exceed 50 characters`
+        if (!/^[A-Za-z ]+$/.test(v)) return `${label} must contain only letters`
+        break
+      case 'email':
+        if (!v) return 'Email is required'
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return 'Enter a valid email (e.g. name@example.com)'
+        if (v.length > 100) return 'Email must not exceed 100 characters'
+        break
+      case 'phone':
+        if (!v) return 'Phone is required'
+        if (!/^[6-9][0-9]{9}$/.test(v)) return 'Phone must be a valid 10-digit number starting with 6-9'
+        break
+      case 'dob': {
+        if (!v) return 'Date of Birth is required'
+        const bd = new Date(v)
+        const td = new Date()
+        let age = td.getFullYear() - bd.getFullYear()
+        const m = td.getMonth() - bd.getMonth()
+        if (m < 0 || (m === 0 && td.getDate() < bd.getDate())) age--
+        if (age < 18 || age > 80) return 'Age must be between 18 and 80 years old'
+        break
+      }
+      case 'gender':
+        if (!v) return 'Gender is required'
+        break
+      case 'maritalStatus':
+        if (!v) return 'Marital Status is required'
+        break
+      case 'occupation':
+        if (v && v.length > 80) return 'Occupation must not exceed 80 characters'
+        break
+      case 'education':
+        if (v && v.length > 80) return 'Education must not exceed 80 characters'
+        break
+      case 'designation':
+        if (!v) return 'Designation is required'
+        break
+      case 'agentTeam':
+        if (v && v.length > 30) return 'Agent Team must not exceed 30 characters'
+        break
+      case 'workLocation':
+        if (v && v.length > 80) return 'Work Location must not exceed 80 characters'
+        break
+      case 'bankName':
+        if (v && v.length < 2) return 'Bank Name must be at least 2 characters'
+        if (v && v.length > 80) return 'Bank Name must not exceed 80 characters'
+        break
+      case 'branch':
+        if (v && v.length > 80) return 'Branch must not exceed 80 characters'
+        break
+      case 'accountNumber':
+        if (v && !/^[0-9]{9,18}$/.test(v)) return 'Account Number must be 9–18 digits'
+        break
+      case 'ifscCode':
+        if (v && !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(v)) return 'IFSC must be in format: ABCD0123456'
+        break
+      case 'nomineeName':
+        if (v && v.length < 2) return 'Nominee Name must be at least 2 characters'
+        if (v && v.length > 60) return 'Nominee Name must not exceed 60 characters'
+        if (v && !/^[A-Za-z ]+$/.test(v)) return 'Nominee Name must contain only letters'
+        break
+      case 'nomineeRelation':
+        if (v && v.length > 60) return 'Relation must not exceed 60 characters'
+        if (v && !/^[A-Za-z ]+$/.test(v)) return 'Relation must contain only letters'
+        break
+      case 'nomineeMobile':
+        if (v && !/^[6-9][0-9]{9}$/.test(v)) return 'Nominee Mobile must be a valid 10-digit number starting with 6-9'
+        break
+      case 'permanentAddress':
+      case 'presentAddress':
+        if (v && v.length > 200) return `${label} must not exceed 200 characters`
+        break
+      default:
+        return ''
+    }
+    return ''
+  }
+
+  // Sanitized change handler for edit modal
+  const handleChange = (e) => {
+    const { name } = e.target
+    let value = e.target.value
+    const cfg = FIELD_CONFIG[name]
+
+    if (cfg) {
+      if (cfg.upper) value = value.toUpperCase()
+      if (cfg.filter) value = value.replace(cfg.filter, '')
+      if (cfg.max) value = value.slice(0, cfg.max)
+    }
+
+    setSelectedAgent({ ...selectedAgent, [name]: value })
+    // Run real-time validation on change
+    const err = validateEditField(name, value)
+    setEditErrors(prev => ({ ...prev, [name]: err }))
+  }
+
+  // Validate on blur
+  const handleEditBlur = (e) => {
+    const { name, value } = e.target
+    const err = validateEditField(name, value)
+    if (err) setEditErrors(prev => ({ ...prev, [name]: err }))
+  }
+
+  const renderEditError = (field) => editErrors[field] && (
+    <small className="text-danger d-block mt-1">{editErrors[field]}</small>
+  )
+
+  // Validate all edit fields before save
+  const validateEditAll = () => {
+    const allFields = [...personalFields, ...contactFields, ...professionalFields, ...bankFields, ...nomineeFields]
+    const newErrors = {}
+    allFields.forEach(f => {
+      if (f === 'agentId') return // read-only
+      const err = validateEditField(f, selectedAgent[f])
+      if (err) newErrors[f] = err
+    })
+    setEditErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  const buildAgentPayload = (agent) => ({
+    first_name: agent.firstName || '',
+    last_name: agent.lastName || '',
+    father_name: agent.fatherName || '',
+    dob: agent.dob || '',
+    gender: agent.gender || '',
+    marital_status: agent.maritalStatus || '',
+    email: agent.email || '',
+    mobile: agent.phone || '',
+    occupation: agent.occupation || '',
+    education: agent.education || '',
+    designation: agent.designation || '',
+    reference_agent: agent.referenceAgent || '',
+    agent_team: agent.agentTeam || '',
+    work_location: agent.workLocation || '',
+    bank_name: agent.bankName || '',
+    branch: agent.branch || '',
+    account_number: agent.accountNumber || '',
+    ifsc_code: agent.ifscCode || '',
+    nominiee: agent.nomineeName || '',
+    relationship: agent.nomineeRelation || '',
+    nominee_mobile: agent.nomineeMobile || '',
+    address: agent.permanentAddress || agent.presentAddress || '',
+  })
+
+  const [errorModalVisible, setErrorModalVisible] = useState(false)
+  const [errorModalMsg, setErrorModalMsg] = useState('')
+  const [errorModalTitle, setErrorModalTitle] = useState('')
+
+  const triggerErrorModal = (msg, title = 'Agent Operation Failed') => {
+    setErrorModalTitle(title)
+    setErrorModalMsg(msg)
+    setErrorModalVisible(true)
+  }
+
+  const handleSave = async () => {
+    if (!selectedAgent) return
+
+    // Validate before saving
+    const isValid = validateEditAll()
+    if (!isValid) {
+      triggerErrorModal('Please fix the validation errors before saving.', 'Validation Error')
+      return
+    }
+
+    setSavingAgent(true)
+    const payload = buildAgentPayload(selectedAgent)
+
+    try {
+      const uId = selectedAgent.agentId
+      const url = `${globalThis.apiBaseUrl}/users/${uId}`
+      const res = await fetch(url, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+
+      if (res.ok) {
+        const updatedFromApi = await res.json().catch(() => null)
+        setAgents((prev) => prev.map((a) => (a.id === selectedAgent.id ? selectedAgent : a)))
+        setMessage({ visible: true, color: 'success', text: 'Agent updated successfully.' })
+        setEditModalVisible(false)
+        setSelectedAgent(null)
+      } else {
+        const errDetail = await getResponseErrorMessage(res, 'Failed to update agent.')
+        triggerErrorModal(errDetail, 'Update Agent Failed')
+      }
+    } catch (error) {
+      triggerErrorModal(extractErrorMessage(error), 'Update Agent Error')
+    } finally {
+      setSavingAgent(false)
     }
   }
 
@@ -350,17 +601,38 @@ const GetAgents = () => {
     setAgentToDelete(agent)
     setDeleteModalVisible(true)
   }
-  const confirmDelete = () => {
-    if (agentToDelete) {
-      setAgents(agents.filter((a) => a.id !== agentToDelete.id))
-      setDeleteModalVisible(false)
-      setAgentToDelete(null)
+  const confirmDelete = async () => {
+    if (!agentToDelete) return
+    try {
+      const url = `${globalThis.apiBaseUrl}/users/${agentToDelete.agentId}`
+      const res = await fetch(url, { method: 'DELETE' })
+      if (res.ok) {
+        setAgents((prev) => prev.filter((a) => a.id !== agentToDelete.id))
+        setMessage({ visible: true, color: 'success', text: 'Agent deleted successfully.' })
+        setDeleteModalVisible(false)
+        setAgentToDelete(null)
+      } else {
+        const errDetail = await getResponseErrorMessage(res, 'Failed to delete agent.')
+        triggerErrorModal(errDetail, 'Delete Agent Failed')
+      }
+    } catch (error) {
+      triggerErrorModal(extractErrorMessage(error), 'Delete Agent Error')
     }
   }
 
   return (
     <>
       <CCard className="shadow border-0">
+        {message.visible && (
+          <CAlert
+            color={message.color}
+            dismissible
+            className="m-3 mb-0"
+            onClose={() => setMessage((prev) => ({ ...prev, visible: false }))}
+          >
+            {message.text}
+          </CAlert>
+        )}
         <CCardHeader style={gradientHeaderStyle} className="text-white p-3">
           <div className="text-center mb-4">
             <h3 className="fw-bold mb-0">Agent Management</h3>
@@ -573,12 +845,67 @@ const GetAgents = () => {
                 <CRow className="g-3">
                   {personalFields.map((key) => (
                     <CCol md={6} key={key}>
-                      <CFormInput
-                        label={formatLabel(key)}
-                        name={key}
-                        value={selectedAgent[key]}
-                        onChange={handleChange}
-                      />
+                      {key === 'gender' ? (
+                        <>
+                          <CFormSelect
+                            label={formatLabel(key)}
+                            name={key}
+                            value={selectedAgent[key]}
+                            onChange={handleChange}
+                            onBlur={handleEditBlur}
+                            invalid={!!editErrors[key]}
+                          >
+                            <option value="">Select</option>
+                            <option>Male</option>
+                            <option>Female</option>
+                          </CFormSelect>
+                          {renderEditError(key)}
+                        </>
+                      ) : key === 'maritalStatus' ? (
+                        <>
+                          <CFormSelect
+                            label={formatLabel(key)}
+                            name={key}
+                            value={selectedAgent[key]}
+                            onChange={handleChange}
+                            onBlur={handleEditBlur}
+                            invalid={!!editErrors[key]}
+                          >
+                            <option value="">Select</option>
+                            <option>Single</option>
+                            <option>Married</option>
+                          </CFormSelect>
+                          {renderEditError(key)}
+                        </>
+                      ) : key === 'dob' ? (
+                        <>
+                          <CFormInput
+                            type="date"
+                            label={formatLabel(key)}
+                            name={key}
+                            value={selectedAgent[key]}
+                            onChange={handleChange}
+                            onBlur={handleEditBlur}
+                            invalid={!!editErrors[key]}
+                            min={minDate}
+                            max={maxDate}
+                          />
+                          {renderEditError(key)}
+                        </>
+                      ) : (
+                        <>
+                          <CFormInput
+                            label={formatLabel(key)}
+                            name={key}
+                            value={selectedAgent[key]}
+                            onChange={handleChange}
+                            onBlur={handleEditBlur}
+                            maxLength={FIELD_CONFIG[key]?.max}
+                            invalid={!!editErrors[key]}
+                          />
+                          {renderEditError(key)}
+                        </>
+                      )}
                     </CCol>
                   ))}
                 </CRow>
@@ -595,7 +922,12 @@ const GetAgents = () => {
                         name={key}
                         value={selectedAgent[key]}
                         onChange={handleChange}
+                        onBlur={handleEditBlur}
+                        maxLength={FIELD_CONFIG[key]?.max}
+                        type={key === 'email' ? 'email' : 'text'}
+                        invalid={!!editErrors[key]}
                       />
+                      {renderEditError(key)}
                     </CCol>
                   ))}
                 </CRow>
@@ -607,13 +939,46 @@ const GetAgents = () => {
                 <CRow className="g-3">
                   {professionalFields.map((key) => (
                     <CCol md={6} key={key}>
-                      <CFormInput
-                        label={formatLabel(key)}
-                        name={key}
-                        value={selectedAgent[key]}
-                        onChange={handleChange}
-                        disabled={key === 'agentId'}
-                      />
+                      {key === 'designation' ? (
+                        <>
+                          <CFormSelect
+                            label={formatLabel(key)}
+                            name={key}
+                            value={selectedAgent[key] || ''}
+                            onChange={handleChange}
+                            onBlur={handleEditBlur}
+                            disabled={loadingDesignations}
+                            invalid={!!editErrors[key]}
+                          >
+                            <option value="">Select Designation</option>
+                            {!loadingDesignations &&
+                              !designationError &&
+                              designations.map((d, idx) => (
+                                <option key={idx} value={d.id || d.name}>
+                                  {d.name}
+                                </option>
+                              ))}
+                          </CFormSelect>
+                          {designationError && (
+                            <small className="text-danger">{designationError}</small>
+                          )}
+                          {renderEditError(key)}
+                        </>
+                      ) : (
+                        <>
+                          <CFormInput
+                            label={formatLabel(key)}
+                            name={key}
+                            value={selectedAgent[key]}
+                            onChange={handleChange}
+                            onBlur={handleEditBlur}
+                            disabled={key === 'agentId'}
+                            maxLength={FIELD_CONFIG[key]?.max}
+                            invalid={!!editErrors[key]}
+                          />
+                          {renderEditError(key)}
+                        </>
+                      )}
                     </CCol>
                   ))}
                 </CRow>
@@ -630,7 +995,11 @@ const GetAgents = () => {
                         name={key}
                         value={selectedAgent[key]}
                         onChange={handleChange}
+                        onBlur={handleEditBlur}
+                        maxLength={FIELD_CONFIG[key]?.max}
+                        invalid={!!editErrors[key]}
                       />
+                      {renderEditError(key)}
                     </CCol>
                   ))}
                   {nomineeFields.map((key) => (
@@ -640,7 +1009,11 @@ const GetAgents = () => {
                         name={key}
                         value={selectedAgent[key]}
                         onChange={handleChange}
+                        onBlur={handleEditBlur}
+                        maxLength={FIELD_CONFIG[key]?.max}
+                        invalid={!!editErrors[key]}
                       />
+                      {renderEditError(key)}
                     </CCol>
                   ))}
                 </CRow>
@@ -656,7 +1029,7 @@ const GetAgents = () => {
               Cancel
             </CButton>
             <CButton color="primary" onClick={handleSave}>
-              Save Changes
+              {savingAgent ? 'Saving...' : 'Save Changes'}
             </CButton>
           </CModalFooter>
         </CModal>
@@ -687,6 +1060,14 @@ const GetAgents = () => {
           </CButton>
         </CModalFooter>
       </CModal>
+
+      {/* Designated Error Modal */}
+      <ErrorModal
+        visible={errorModalVisible}
+        title={errorModalTitle}
+        errorMessage={errorModalMsg}
+        onClose={() => setErrorModalVisible(false)}
+      />
     </>
   )
 }

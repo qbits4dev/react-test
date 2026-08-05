@@ -1,6 +1,7 @@
 import React from 'react'
 import CIcon from '@coreui/icons-react'
 import {
+  cilBullhorn,
   cilSpeedometer,
   cilUser,
   cilPeople,
@@ -11,6 +12,8 @@ import {
   cilSettings,
   cilLockLocked,
   cilStar,
+  cilBell,
+  cilCalendar,
 } from '@coreui/icons'
 import { CNavGroup, CNavItem, CNavTitle } from '@coreui/react'
 
@@ -23,6 +26,21 @@ export const ROLES = {
 
 // ==================== NAVIGATION CONFIGURATION ====================
 const navigationConfig = [
+  {
+    component: CNavItem,
+    name: 'Announcements & Updates',
+    to: '/announcements',
+    icon: <CIcon icon={cilBullhorn} customClassName="nav-icon" />,
+    allowedRoles: [ROLES.ADMIN, ROLES.AGENT, ROLES.CLIENT],
+  },
+  {
+    component: CNavItem,
+    name: 'Send Notification',
+    to: '/notifications/send',
+    icon: <CIcon icon={cilBell} customClassName="nav-icon" />,
+    allowedRoles: [ROLES.ADMIN],
+  },
+
   // CATEGORY 2: USER MANAGEMENT (ADMIN ONLY)
   {
     component: CNavTitle,
@@ -43,10 +61,20 @@ const navigationConfig = [
     component: CNavGroup,
     name: 'Clients',
     icon: <CIcon icon={cilPeople} customClassName="nav-icon" />,
-    allowedRoles: [ROLES.ADMIN,,ROLES.AGENT],
+    allowedRoles: [ROLES.ADMIN, ROLES.AGENT],
     items: [
-      { component: CNavItem, name: 'Client Register', to: '/register_cilent', allowedRoles: [ROLES.ADMIN,ROLES.AGENT] },
-      { component: CNavItem, name: 'Register Client', to: '/register_client', allowedRoles: [ROLES.ADMIN] },
+      { component: CNavItem, name: 'View Clients', to: '/GetClients?type=leads', allowedRoles: [ROLES.ADMIN, ROLES.AGENT] },
+      { component: CNavItem, name: 'Add Clients', to: '/register_cilent', allowedRoles: [ROLES.ADMIN, ROLES.AGENT] },
+    ],
+  },
+  {
+    component: CNavGroup,
+    name: 'Customers',
+    icon: <CIcon icon={cilUser} customClassName="nav-icon" />,
+    allowedRoles: [ROLES.ADMIN, ROLES.AGENT],
+    items: [
+      { component: CNavItem, name: 'View Customers', to: '/GetClients?type=clients', allowedRoles: [ROLES.ADMIN, ROLES.AGENT] },
+      { component: CNavItem, name: 'Add Customer', to: '/register_client', allowedRoles: [ROLES.ADMIN, ROLES.AGENT] },
     ],
   },
 
@@ -57,26 +85,25 @@ const navigationConfig = [
     allowedRoles: [ROLES.ADMIN, ROLES.AGENT],
   },
   {
-    component: CNavGroup,
+    component: CNavItem,
     name: 'Projects',
+    to: '/newProjects',
     icon: <CIcon icon={cilBuilding} customClassName="nav-icon" />,
-    allowedRoles: [ROLES.ADMIN, ROLES.AGENT],
-    items: [
-      { component: CNavItem, name: 'View All Projects', to: '/newProjects', allowedRoles: [ROLES.ADMIN, ROLES.AGENT, ROLES.CLIENT] },
-      { component: CNavItem, name: 'Get Projects', to: '/GetProjects', allowedRoles: [ROLES.ADMIN, ROLES.AGENT] },
-      { component: CNavItem, name: 'Add Project', to: '/PostProjects', allowedRoles: [ROLES.ADMIN] },
-    ],
+    allowedRoles: [ROLES.ADMIN, ROLES.AGENT, ROLES.CLIENT],
   },
   {
-    component: CNavGroup,
-    name: 'Plots',
-    icon: <CIcon icon={cilLocationPin} customClassName="nav-icon" />,
+    component: CNavItem,
+    name: 'Site Visits',
+    to: '/GetBookVisit',
+    icon: <CIcon icon={cilCalendar} customClassName="nav-icon" />,
     allowedRoles: [ROLES.ADMIN, ROLES.AGENT],
-    items: [
-      { component: CNavItem, name: 'View All Plots', to: '/Plots', allowedRoles: [ROLES.ADMIN, ROLES.AGENT, ROLES.CLIENT] },
-      { component: CNavItem, name: 'Get Plots', to: '/GetPlots', allowedRoles: [ROLES.ADMIN, ROLES.AGENT] },
-      { component: CNavItem, name: 'Add Plot', to: '/PostPlots', allowedRoles: [ROLES.ADMIN] },
-    ],
+  },
+  {
+    component: CNavItem,
+    name: 'Bookings',
+    to: '/GetBookings',
+    icon: <CIcon icon={cilChartLine} customClassName="nav-icon" />,
+    allowedRoles: [ROLES.ADMIN, ROLES.AGENT, ROLES.CLIENT, 'client'],
   },
 
   // CATEGORY 4: TARGETS & GOALS (ADMIN & AGENT)
@@ -123,41 +150,11 @@ const navigationConfig = [
     allowedRoles: [ROLES.ADMIN, ROLES.AGENT, ROLES.CLIENT],
     items: [
       { component: CNavItem, name: 'Profile', to: '/Profile', allowedRoles: [ROLES.ADMIN, ROLES.AGENT, ROLES.CLIENT] },
-      { component: CNavItem, name: 'Client Profile', to: '/ClientProfile', allowedRoles: [ROLES.ADMIN, ROLES.AGENT, ROLES.CLIENT] },
       { component: CNavItem, name: 'Forgot User ID', to: '/ForgotUID', allowedRoles: [ROLES.ADMIN] },
       { component: CNavItem, name: 'Forgot Password', to: '/ForgotPassword', allowedRoles: [ROLES.ADMIN, ROLES.AGENT, ROLES.CLIENT] },
     ],
   },
 
-  // CATEGORY 7: AUTHENTICATION (ADMIN ONLY)
-  {
-    component: CNavTitle,
-    name: 'Authentication',
-    allowedRoles: [ROLES.ADMIN],
-  },
-  {
-    component: CNavGroup,
-    name: 'Auth Pages',
-    icon: <CIcon icon={cilLockLocked} customClassName="nav-icon" />,
-    allowedRoles: [ROLES.ADMIN],
-    items: [
-      { component: CNavItem, name: 'Login', to: '/login', allowedRoles: [ROLES.ADMIN] },
-      { component: CNavItem, name: 'Register', to: '/register', allowedRoles: [ROLES.ADMIN] },
-      { component: CNavItem, name: 'Universal Register', to: '/ARegister', allowedRoles: [ROLES.ADMIN] },
-    ],
-  },
-
-  // CATEGORY 8: ERROR PAGES (ADMIN ONLY)
-  {
-    component: CNavGroup,
-    name: 'Error Pages',
-    icon: <CIcon icon={cilStar} customClassName="nav-icon" />,
-    allowedRoles: [ROLES.ADMIN],
-    items: [
-      { component: CNavItem, name: 'Error 404', to: '/404', allowedRoles: [ROLES.ADMIN] },
-      { component: CNavItem, name: 'Error 500', to: '/500', allowedRoles: [ROLES.ADMIN] },
-    ],
-  },
 ]
 
 // ==================== FILTER NAVIGATION BASED ON ROLE ====================

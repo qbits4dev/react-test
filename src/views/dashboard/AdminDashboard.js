@@ -55,10 +55,13 @@ import WidgetsBrand from '../widgets/WidgetsBrand'
 import WidgetsDropdown from '../widgets/WidgetsCardsAd'
 import MainChart from './MainChart'
 import { color } from 'framer-motion'
+import { listAnnouncementsForUser } from '../pages/Announcements/announcementService'
+import AnnouncementCarousel from '../pages/Announcements/AnnouncementCarousel'
 
 const AdminDashboard = () => {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [updates, setUpdates] = useState([])
 
   useEffect(() => {
     // ✅ FIXED: Removed quotes around variable
@@ -81,6 +84,13 @@ const AdminDashboard = () => {
         console.error('Fetch error:', err)
         setLoading(false)
       })
+  }, [])
+
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    listAnnouncementsForUser({ role: 'admin', user })
+      .then((items) => setUpdates(items))
+      .catch(() => setUpdates([]))
   }, [])
 
   if (loading) return <div>Loading...</div>
@@ -220,15 +230,16 @@ const AdminDashboard = () => {
       buttonLink: '/register_agent',
     },
     {
-      id: 'client_register',
-      title:'Client Registration',
-      color:'info',
-      buttonLink:'/cilent_register',
+      id: 'leads',
+      title: 'Client Registration',
+      color: 'info',
+      buttonLink: '/register_cilent',
     },
   ]
 
   return (
     <>
+      <AnnouncementCarousel title="Announcements Carousel" items={updates} />
       <WidgetsDropdown widgetsData={agentWidgetsData} className="mb-4" />
 
       {/* <div>
@@ -313,14 +324,14 @@ const AdminDashboard = () => {
                   <CRow>
                     <CCol xs={6}>
                       <div className="border-start border-start-4 border-start-info py-1 px-3">
-                        <div className="text-body-secondary text-truncate small">New Clients</div>
+                        <div className="text-body-secondary text-truncate small">New Customers</div>
                         <div className="fs-5 fw-semibold">9,123</div>
                       </div>
                     </CCol>
                     <CCol xs={6}>
                       <div className="border-start border-start-4 border-start-danger py-1 px-3 mb-3">
                         <div className="text-body-secondary text-truncate small">
-                          Recurring Clients
+                          Recurring Customers
                         </div>
                         <div className="fs-5 fw-semibold">22,643</div>
                       </div>

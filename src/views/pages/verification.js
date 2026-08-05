@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import {
   CContainer, CRow, CCol, CButton, CCard, CCardBody, CForm, CInputGroup, CFormInput, CSpinner, CAlert
 } from '@coreui/react'
+import { sanitizeNumeric } from '../../utils/validation'
 
 const Verification = () => {
   const { state } = useLocation()
@@ -84,7 +85,7 @@ const Verification = () => {
                   <CInputGroup className="mb-4">
                     <CFormInput
                       value={otp}
-                      onChange={(e) => setOtp(e.target.value)}
+                      onChange={(e) => setOtp(sanitizeNumeric(e.target.value, 6))}
                       placeholder="Enter OTP"
                       maxLength={6}
                       autoComplete="off"

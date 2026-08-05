@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   CButton,
@@ -16,6 +16,7 @@ import {
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilLockLocked, cilUser } from '@coreui/icons'
+import { sanitizeUsername } from '../../../utils/validation'
 
 import { AppFooter } from '../../../components'
 import Logo from '../../../assets/images/siradithya.jpg'
@@ -27,14 +28,14 @@ const Login = () => {
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
 
-  useEffect(() => {
-    localStorage.clear()
-  }, [])
 
 
   const validateForm = () => {
     const newErrors = {}
     if (!username.trim()) newErrors.username = 'Username is required.'
+    if (username && !/^[A-Za-z0-9._]{3,30}$/.test(username.trim())) {
+      newErrors.username = 'Username must be 3-30 characters and use letters, numbers, dot, or underscore.'
+    }
     if (!password.trim()) newErrors.password = 'Password is required.'
     return newErrors
   }
@@ -75,7 +76,7 @@ const Login = () => {
         localStorage.setItem('access_token', data.access_token)
         localStorage.setItem('refresh_token', data.refresh_token || '')
         localStorage.setItem('user', JSON.stringify(data)); // Store the whole user object
-        console.log('LocalStorage values:', JSON.stringify(localStorage));
+        //console.log('LocalStorage values:', JSON.stringify(localStorage));
 
         // Role-based navigation
         switch (data.role) {
@@ -172,7 +173,7 @@ const Login = () => {
                           placeholder="Username"
                           autoComplete="username"
                           value={username}
-                          onChange={(e) => setUsername(e.target.value)}
+                          onChange={(e) => setUsername(sanitizeUsername(e.target.value, 30))}
                           invalid={!!errors.username}
                           required
                           style={{ fontSize: '0.95rem' }}

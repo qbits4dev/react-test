@@ -40,7 +40,7 @@ const _nav = [
   },
   {
     component: CNavItem,
-    name: 'ClientDashboard',
+    name: 'CustomerDashboard',
     to: '/Clientdashboard',
     icon: <CIcon icon={cilSpeedometer} customClassName="nav-icon" />,
     badge: {
@@ -451,33 +451,13 @@ const _nav = [
     items: [
       {
         component: CNavItem,
-        name: 'Login',
-        to: '/login',
-      },
-      {
-        component: CNavItem,
-        name: 'Register',
-        to: '/register',
-      },
-      {
-        component: CNavItem,
-        name: 'Error 404',
-        to: '/404',
-      },
-      {
-        component: CNavItem,
-        name: 'Error 500',
-        to: '/500',
-      },
-      {
-        component: CNavItem,
         name: 'Register Agent',
         to: '/register_agent',
       },
       {
         component: CNavItem,
-        name: 'Client Register',
-        to: '/client_register',
+        name: 'Add Clients',
+        to: '/register_cilent',
       },
       {
         component: CNavItem,

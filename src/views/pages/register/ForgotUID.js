@@ -13,6 +13,7 @@ import {
     CSpinner,
 } from '@coreui/react'
 import { useNavigate } from 'react-router-dom'
+import { sanitizeNumeric, validateIndianMobile } from '../../../utils/validation'
 
 const ForgotUserId = () => {
     const [mobile, setMobile] = useState('')
@@ -22,12 +23,14 @@ const ForgotUserId = () => {
     const navigate = useNavigate()
 
     const handleChange = (e) => {
-        const value = e.target.value
-        if (/^\d*$/.test(value)) {
-            setMobile(value)
+        const value = sanitizeNumeric(e.target.value, 10)
+        setMobile(value)
+        if (value && !validateIndianMobile(value)) {
+            setError('Enter a valid 10-digit mobile number starting with 6-9')
+        } else {
             setError('')
-            setAlert({ visible: false, message: '', color: 'info' })
         }
+        setAlert({ visible: false, message: '', color: 'info' })
     }
 
     const handleSubmit = async (e) => {
@@ -39,8 +42,8 @@ const ForgotUserId = () => {
             return
         }
 
-        if (mobile.length !== 10) {
-            setError('Mobile number must be exactly 10 digits')
+        if (!validateIndianMobile(mobile)) {
+            setError('Enter a valid 10-digit mobile number starting with 6-9')
             return
         }
 

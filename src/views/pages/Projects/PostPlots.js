@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   CCard,
   CCardBody,
@@ -8,12 +9,17 @@ import {
   CRow,
   CCol,
   CButton,
+  CFormFeedback,
 } from '@coreui/react';
+import { sanitizeNumeric, sanitizeText, sanitizeRestrictedText } from '../../../utils/validation';
+import ErrorModal from '../../../components/ErrorModal';
+import { extractErrorMessage, getResponseErrorMessage } from '../../../utils/errorUtils';
 
 // Options for plot status dropdown
 const plotStatusOptions = ['available', 'sold', 'reserved', 'on hold'];
 
 export default function PlotForm() {
+  const location = useLocation();
   const [form, setForm] = useState({
     project_name: '',
     plot_number: '',
@@ -22,20 +28,82 @@ export default function PlotForm() {
     status: '',
   });
 
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const projName = params.get('project_name');
+    if (projName) {
+      setForm(prev => ({ ...prev, project_name: projName }));
+    }
+  }, [location.search]);
+
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [projects, setProjects] = useState([]);
+  const [projectsLoading, setProjectsLoading] = useState(false);
+  const [errors, setErrors] = useState({});
+
+  const validateField = (name, value) => {
+    const v = String(value || '').trim();
+    if (name === 'project_name' && !v) return 'Project Name is required';
+    if (name === 'plot_number' && !v) return 'Plot Number is required';
+    if (name === 'size') {
+      if (!v) return 'Size is required';
+      if (Number(v) <= 0) return 'Size must be greater than 0';
+    }
+    if (name === 'price') {
+      if (!v) return 'Price is required';
+      if (Number(v) < 0) return 'Price cannot be negative';
+    }
+    if (name === 'status' && !v) return 'Status is required';
+    return '';
+  };
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      setProjectsLoading(true);
+      try {
+        const res = await fetch(`${globalThis.apiBaseUrl}/projects/`);
+        if (res.ok) {
+          const data = await res.json();
+          setProjects(Array.isArray(data.data) ? data.data : []);
+        }
+      } catch (err) {
+        console.error('Failed to fetch projects:', err);
+      } finally {
+        setProjectsLoading(false);
+      }
+    };
+    fetchProjects();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    let nextValue = value;
+    if (['size', 'price'].includes(name)) {
+      nextValue = sanitizeNumeric(value, 10);
+    } else if (name === 'plot_number') {
+      nextValue = sanitizeRestrictedText(value.toUpperCase(), 30);
+    }
+    setForm((prev) => ({ ...prev, [name]: nextValue }));
+    setErrors((prev) => ({ ...prev, [name]: validateField(name, nextValue) }));
   };
+
+  const [errorModalVisible, setErrorModalVisible] = useState(false);
+  const [errorModalMsg, setErrorModalMsg] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const nextErrors = {
+      project_name: validateField('project_name', form.project_name),
+      plot_number: validateField('plot_number', form.plot_number),
+      size: validateField('size', form.size),
+      price: validateField('price', form.price),
+      status: validateField('status', form.status),
+    };
+    setErrors(nextErrors);
+    if (Object.values(nextErrors).some(Boolean)) return;
     setLoading(true);
-    setModalMessage('Submitting...');
-    setShowModal(true);
 
     const payload = {
       project_name: form.project_name,
@@ -46,7 +114,9 @@ export default function PlotForm() {
     };
 
     try {
-      const response = await fetch(`${globalThis.apiBaseUrl}/projects/plots`, {
+      const postUrl = `${globalThis.apiBaseUrl}/projects/plots`;
+
+      const response = await fetch(postUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -54,24 +124,15 @@ export default function PlotForm() {
         body: JSON.stringify(payload),
       });
 
-      const responseText = await response.text();
       if (!response.ok) {
-        // Try to extract a readable error message
-        let errorMsg = responseText;
-        try {
-          const errorObj = JSON.parse(responseText);
-          errorMsg = errorObj.detail || errorObj.message || responseText;
-        } catch {
-          // If not JSON, just use the text
-          errorMsg = responseText;
-        }
-        // Remove curly braces and quotes
-        errorMsg = errorMsg.replace(/[{}"]/g, '');
-        setModalMessage(`Error: ${errorMsg}`);
-        throw new Error(errorMsg || 'Failed to submit');
+        const errorMsg = await getResponseErrorMessage(response, 'Failed to add plot.');
+        setErrorModalMsg(errorMsg);
+        setErrorModalVisible(true);
+        return;
       }
 
       setModalMessage('Success: Plot added successfully');
+      setShowModal(true);
       setForm({
         project_name: '',
         plot_number: '',
@@ -80,7 +141,8 @@ export default function PlotForm() {
         status: '',
       });
     } catch (error) {
-      setModalMessage(`Error: ${error.message.replace(/[{}"]/g, '')}`);
+      setErrorModalMsg(extractErrorMessage(error, 'Failed to submit plot.'));
+      setErrorModalVisible(true);
     } finally {
       setLoading(false);
     }
@@ -134,28 +196,39 @@ export default function PlotForm() {
           <CForm onSubmit={handleSubmit}>
             <CRow className="g-4 mb-4">
               <CCol md={6}>
-                <CFormInput
+                <CFormSelect
                   floating
-                  label="Project Name"
+                  label="Project Name *"
                   name="project_name"
                   value={form.project_name}
                   onChange={handleChange}
-                  placeholder="Project Name"
+                  invalid={!!errors.project_name}
                   required
+                  disabled={projectsLoading}
                   style={{ borderRadius: '12px', border: '1px solid #ced4da' }}
-                />
+                >
+                  <option value="">{projectsLoading ? 'Loading projects...' : 'Select Project'}</option>
+                  {projects.map((proj) => (
+                    <option key={proj.id} value={proj.name}>
+                      {proj.name}
+                    </option>
+                  ))}
+                </CFormSelect>
+                {errors.project_name && <CFormFeedback className="d-block">{errors.project_name}</CFormFeedback>}
               </CCol>
               <CCol md={6}>
                 <CFormInput
                   floating
-                  label="Plot Number"
+                  label="Plot Number *"
                   name="plot_number"
                   value={form.plot_number}
                   onChange={handleChange}
                   placeholder="Plot Number"
+                  invalid={!!errors.plot_number}
                   required
                   style={{ borderRadius: '12px', border: '1px solid #ced4da' }}
                 />
+                {errors.plot_number && <CFormFeedback className="d-block">{errors.plot_number}</CFormFeedback>}
               </CCol>
             </CRow>
 
@@ -163,28 +236,32 @@ export default function PlotForm() {
               <CCol md={6}>
                 <CFormInput
                   floating
-                  label="Size (sq. ft)"
+                  label="Size (sq. ft) *"
                   name="size"
                   type="number"
                   value={form.size}
                   onChange={handleChange}
                   placeholder="Size"
+                  invalid={!!errors.size}
                   required
                   style={{ borderRadius: '12px', border: '1px solid #ced4da' }}
                 />
+                {errors.size && <CFormFeedback className="d-block">{errors.size}</CFormFeedback>}
               </CCol>
               <CCol md={6}>
                 <CFormInput
                   floating
-                  label="Price"
+                  label="Price *"
                   name="price"
                   type="number"
                   value={form.price}
                   onChange={handleChange}
                   placeholder="Price"
+                  invalid={!!errors.price}
                   required
                   style={{ borderRadius: '12px', border: '1px solid #ced4da' }}
                 />
+                {errors.price && <CFormFeedback className="d-block">{errors.price}</CFormFeedback>}
               </CCol>
             </CRow>
 
@@ -192,10 +269,11 @@ export default function PlotForm() {
               <CCol>
                 <CFormSelect
                   floating
-                  label="Plot Status"
+                  label="Plot Status *"
                   name="status"
                   value={form.status}
                   onChange={handleChange}
+                  invalid={!!errors.status}
                   required
                   style={{ borderRadius: '12px', border: '1px solid #ced4da' }}
                 >
@@ -206,6 +284,7 @@ export default function PlotForm() {
                     </option>
                   ))}
                 </CFormSelect>
+                {errors.status && <CFormFeedback className="d-block">{errors.status}</CFormFeedback>}
               </CCol>
             </CRow>
 
@@ -282,6 +361,14 @@ export default function PlotForm() {
           </div>
         </div>
       )}
+
+      {/* Designated Error Modal */}
+      <ErrorModal
+        visible={errorModalVisible}
+        title="Plot Creation Failed"
+        errorMessage={errorModalMsg}
+        onClose={() => setErrorModalVisible(false)}
+      />
     </div>
   );
 }

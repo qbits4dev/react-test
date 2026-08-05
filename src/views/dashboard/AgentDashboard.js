@@ -14,9 +14,21 @@ import {
   CTableDataCell
 } from '@coreui/react'
 import WidgetsDropdown from '../widgets/WidgetsCardsAd'
+import { useEffect } from 'react'
+import AnnouncementCarousel from '../pages/Announcements/AnnouncementCarousel'
+import { listAnnouncementsForUser } from '../pages/Announcements/announcementService'
 //import UpcomingVisitsWidget from '../pages/register/VisitCalender'
 
 const AgentDashboard = () => {
+  const [updates, setUpdates] = useState([])
+
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    listAnnouncementsForUser({ role: 'agent', user })
+      .then((items) => setUpdates(items))
+      .catch(() => setUpdates([]))
+  }, [])
+
   // Sample widget data
   const agentWidgetsData = [
     {
@@ -51,10 +63,10 @@ const AgentDashboard = () => {
       buttonLink: '/GetTargets',
     },
     {
-      id: 'client_register',
+      id: 'leads',
       title: 'Client Registration',
       color: 'info',
-      buttonLink: '/cilent_register',
+      buttonLink: '/register_cilent',
     }, 
   ]
 
@@ -64,6 +76,7 @@ const AgentDashboard = () => {
 
   return (
     <CContainer fluid className="py-4 px-3">
+      <AnnouncementCarousel title="Agent Updates Carousel" items={updates} />
       {/* ===== Widgets Section ===== */}
       <CRow className="g-4">
         <CCol xs={12}>
@@ -76,7 +89,7 @@ const AgentDashboard = () => {
         <CCol md={4}>
           <CCard className="shadow-sm border-0 rounded-3 h-100">
             <CCardHeader className="bg-info text-white text-center fs-5 fw-semibold py-3">
-              Upcoming Client Visits
+              Upcoming Customer Visits
             </CCardHeader>
             <CCardBody className="p-3">
               <UpcomingVisitsWidget />

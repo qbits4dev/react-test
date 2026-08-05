@@ -7,6 +7,7 @@ const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
 const ClientDashboard = React.lazy(() => import('./views/dashboard/ClientDashboard'))
 const AdminDashboard = React.lazy(() => import('./views/dashboard/AdminDashboard'))
 const AgentDashboard = React.lazy(() => import('./views/dashboard/AgentDashboard'))
+const AnnouncementsHub = React.lazy(() => import('./views/pages/Announcements/AnnouncementsHub'))
 const Plots = React.lazy(() => import('./views/pages/Plots'))
 const Reports = React.lazy(() => import('./views/pages/Reports'))
 const Invoice = React.lazy(() => import('./views/pages/Invoice'))
@@ -95,13 +96,17 @@ const PostPlots = React.lazy(() => import('./views/pages/Projects/PostPlots'))
 const GetTargets = React.lazy(() => import('./views/pages/API/GetTargets'))
 const PostTargets = React.lazy(() => import('./views/pages/API/PostTargets'))
 const GetAgents = React.lazy(() => import('./views/pages/API/GetAgents'))
+const GetClients = React.lazy(() => import('./views/pages/API/GetClients'))
 const GetBookVisit = React.lazy(() => import('./views/pages/register/GetBookVisit'))
+const GetBookings = React.lazy(() => import('./views/pages/register/GetBookings'))
+const SendNotification = React.lazy(() => import('./views/pages/API/SendNotification'))
 
 const Widgets = React.lazy(() => import('./views/widgets/Widgets'))
 
 const routes = [
   // { path: '/', exact: true, name: 'Home',meta:{allowedRoles:["admin","agent"]} },
   { path: '/dashboard', name: 'Dashboard', element: Dashboard ,meta:{allowedRoles:["admin","agent"]}},
+  { path: '/announcements', name: 'Announcements & Updates', element: AnnouncementsHub, meta:{allowedRoles:["admin","agent","customer","client"]}},
   { path: '/Clientdashboard', name: 'Dashboard', element: ClientDashboard ,meta:{allowedRoles:["admin","customer"]}},
   { path: '/Admindashboard', name: 'Dashboard', element: AdminDashboard,meta:{allowedRoles:["admin"]} },
   { path: '/Agentdashboard', name: 'Dashboard', element: AgentDashboard,meta:{allowedRoles:["agent"]} },
@@ -162,19 +167,22 @@ const routes = [
   { path: '/PostTargets', name: 'Post Targets', element: PostTargets,meta:{allowedRoles:["admin","agent"]} },
   { path: '/GetTargets', name: 'Get Targets', element: GetTargets,meta:{allowedRoles:["admin","agent"]} },
   { path: '/GetAgents', name: 'Get Agents', element: GetAgents,meta:{allowedRoles:["admin","agent"]} },
+  { path: '/GetClients', name: 'View Clients', element: GetClients,meta:{allowedRoles:["admin","agent"]} },
+  { path: '/notifications/send', name: 'Send Notification', element: SendNotification, meta: { allowedRoles: ["admin"] } },
   { path: '/Profile', name: 'User Profile', element: Profile ,meta:{allowedRoles:["admin","agent"]}},
-  { path: '/ClientProfile', name: 'Client Profile', element: ClientProfile ,meta:{allowedRoles:["admin","agent"]}},
+  { path: '/ClientProfile', name: 'Customer Profile', element: ClientProfile ,meta:{allowedRoles:["admin","agent"]}},
   { path: '/Reports', name: 'Reports', element: Reports,meta:{allowedRoles:["admin","agent"]} },
-  { path: '/Invoice', name: 'Invoice', element: Invoice,meta:{allowedRoles:["admin","agent"]} },
+  { path: '/Invoice', name: 'Invoice', element: Invoice,meta:{allowedRoles:["admin","agent","customer","client"]} },
   { path: '/ForgotUId', name: 'Forgot User ID', element: ForgotUserId ,meta:{allowedRoles:["admin","agent"]}},
   { path: '/ForgotPassword', name: 'Forgot Password', element: ForgotPassword ,meta:{allowedRoles:["admin","agent"]}},
   { path: '/verification', name: 'Verification', element: Verification ,meta:{allowedRoles:["admin","agent"]}},
   { path: '/ARegister', name: 'Agent Register', element: ARegister ,meta:{allowedRoles:["admin","agent"]}},
   { path: '/register_agent', name: 'Agent Register', element: AgentRegister ,meta:{allowedRoles:["admin","agent"]}},
-  { path: '/register_cilent', name: 'Client Register', element: RegisterClient ,meta:{allowedRoles:["admin","agent"]}},
-  { path: '/register_client', name: 'Client Register', element: ClientRegister ,meta:{allowedRoles:["admin","agent"]}},
+  { path: '/register_cilent', name: 'Add Clients', element: RegisterClient ,meta:{allowedRoles:["admin","agent"]}},
+  { path: '/register_client', name: 'Customer Register', element: ClientRegister ,meta:{allowedRoles:["admin","agent"]}},
   { path: '/Targets', name: 'Targets', element: Targets ,meta:{allowedRoles:["admin","agent"]}},
   { path: '/GetBookVisit', name: 'Get Book Visit', element: GetBookVisit ,meta:{allowedRoles:["admin","agent"]}},
+  { path: '/GetBookings', name: 'Bookings', element: GetBookings, meta: { allowedRoles: ["admin", "agent", "customer", "client"] } },
   { path: '/VisitCalender', name: 'Visit Calender', element: VisitCalender ,meta:{allowedRoles:["admin","agent"]}},
   { path: '/privacy', name: 'Privacy Policy', element: PrivacyStatic },
   { path: '/privacy/*', name: 'Privacy Policy (trailing slash)', element: PrivacyStatic },

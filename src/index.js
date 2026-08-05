@@ -12,7 +12,9 @@ const isRoot = pathname === '/' || pathname === '/index.html'
 
 // Allowed hash routes (HashRouter app behavior)
 const allowedHashes = ['', '#/', '#/login', '#/404']
-const isValidHash = allowedHashes.includes(hash)
+// If user has a valid token, don't block their hash — they may be reloading a protected page
+const hasToken = Boolean(localStorage.getItem('access_token'))
+const isValidHash = hasToken || allowedHashes.includes(hash)
 
 if (!isRoot) {
   document.body.innerHTML = `

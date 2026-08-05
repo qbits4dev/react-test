@@ -11,11 +11,18 @@ import {
   CButton,
   CFormLabel,
   CSpinner,
+  CFormFeedback,
 } from '@coreui/react'
+import { sanitizeNumeric, sanitizeText, sanitizeRestrictedText } from '../../../utils/validation'
+import ErrorModal from '../../../components/ErrorModal'
+import { extractErrorMessage, getResponseErrorMessage } from '../../../utils/errorUtils'
 
 const statusOptions = ['Ongoing', 'Completed', 'Planned', 'On Hold']
 
 export default function ProjectForm() {
+  const today = new Date()
+  const past10YearsDate = new Date(today.getFullYear() - 10, today.getMonth(), today.getDate()).toISOString().split('T')[0]
+
   const [form, setForm] = useState({
     name: '',
     description: '',
@@ -29,25 +36,130 @@ export default function ProjectForm() {
   const [loading, setLoading] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [modalMessage, setModalMessage] = useState('')
+  const [errors, setErrors] = useState({})
+
+  const validateField = (name, value, currentFormState = form) => {
+    const v = String(value || '').trim()
+    if (name === 'name' && !v) return 'Project Name is required'
+    if (name === 'location' && !v) return 'Location is required'
+    
+    if (name === 'description') {
+      if (!v) return 'Description is required'
+      if (v.length < 10) return 'Description must be at least 10 characters'
+      if (v.length > 500) return 'Description cannot exceed 500 characters'
+      if (/[^A-Za-z0-9 .,\-()\/]/.test(v)) {
+        return 'Description contains invalid characters. Only letters, numbers, spaces, and . , - ( ) / are allowed.'
+      }
+    }
+    
+    if (name === 'total_area') {
+      if (!v) return 'Total Area is required'
+      if (Number(v) <= 0) return 'Total Area must be greater than 0'
+    }
+    
+    if (name === 'start_date') {
+      if (!v) return 'Start Date is required'
+      const tenYearsAgo = new Date()
+      tenYearsAgo.setFullYear(tenYearsAgo.getFullYear() - 10)
+      tenYearsAgo.setHours(0, 0, 0, 0)
+      const selectedStart = new Date(v)
+      if (selectedStart < tenYearsAgo) {
+        return 'Start Date cannot be older than 10 years'
+      }
+      if (currentFormState.end_date && new Date(currentFormState.end_date) <= selectedStart) {
+        return 'Start Date must be before the End Date'
+      }
+    }
+    
+    if (name === 'end_date') {
+      if (!v) return 'End Date is required'
+      const selectedEnd = new Date(v)
+      if (currentFormState.start_date) {
+        const selectedStart = new Date(currentFormState.start_date)
+        if (selectedEnd <= selectedStart) {
+          return 'End Date must be after the Start Date'
+        }
+      } else {
+        const tenYearsAgo = new Date()
+        tenYearsAgo.setFullYear(tenYearsAgo.getFullYear() - 10)
+        tenYearsAgo.setHours(0, 0, 0, 0)
+        if (selectedEnd < tenYearsAgo) {
+          return 'End Date cannot be older than 10 years'
+        }
+      }
+    }
+    
+    if (name === 'status' && !v) return 'Status is required'
+    
+    return ''
+  }
 
   // Handle text & select input
   const handleChange = (e) => {
     const { name, value } = e.target
-    setForm((prev) => ({ ...prev, [name]: value }))
+    let nextValue = value
+    if (name === 'total_area') {
+      nextValue = sanitizeNumeric(value, 10)
+    } else if (['name', 'location'].includes(name)) {
+      nextValue = sanitizeRestrictedText(value, 120)
+    } else if (name === 'description') {
+      nextValue = value.replace(/[^A-Za-z0-9 .,\-()\/]/g, '').slice(0, 500)
+    } else {
+      nextValue = sanitizeText(value, 120)
+    }
+
+    setForm((prev) => {
+      const updatedForm = { ...prev, [name]: nextValue }
+      
+      setErrors((prevErrors) => {
+        const newErrors = { ...prevErrors }
+        newErrors[name] = validateField(name, nextValue, updatedForm)
+        
+        if (name === 'start_date' && updatedForm.end_date) {
+          newErrors.end_date = validateField('end_date', updatedForm.end_date, updatedForm)
+        }
+        if (name === 'end_date' && updatedForm.start_date) {
+          newErrors.start_date = validateField('start_date', updatedForm.start_date, updatedForm)
+        }
+        
+        return newErrors
+      })
+      
+      return updatedForm
+    })
   }
 
   // Handle multiple photo uploads
   const handlePhotoChange = (e) => {
     const files = Array.from(e.target.files)
-    setPhotos((prev) => [...prev, ...files])
+    const validFiles = files.filter((f) => /^image\/(jpeg|jpg|png|webp)$/i.test(f.type) && f.size <= 5 * 1024 * 1024)
+    if (validFiles.length !== files.length) {
+      setModalMessage('Error: Some files were ignored. Only JPG/PNG/WEBP up to 5MB are allowed.')
+      setShowModal(true)
+    }
+    setPhotos((prev) => [...prev, ...validFiles])
   }
 
   const removePhoto = (index) => {
     setPhotos((prev) => prev.filter((_, i) => i !== index))
   }
 
+  const [errorModalVisible, setErrorModalVisible] = useState(false)
+  const [errorModalMsg, setErrorModalMsg] = useState('')
+
   const handleSubmit = async (e) => {
     e.preventDefault()
+    const nextErrors = {
+      name: validateField('name', form.name),
+      description: validateField('description', form.description),
+      location: validateField('location', form.location),
+      start_date: validateField('start_date', form.start_date),
+      end_date: validateField('end_date', form.end_date),
+      status: validateField('status', form.status),
+      total_area: validateField('total_area', form.total_area),
+    }
+    setErrors(nextErrors)
+    if (Object.values(nextErrors).some(Boolean)) return
     setLoading(true)
 
     // Prepare data as per API requirements
@@ -59,7 +171,6 @@ export default function ProjectForm() {
 
     try {
       const apiUrl = `${globalThis.apiBaseUrl}/projects/`
-      // console.log('API:', apiUrl, '\nData:', payload)
 
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -67,20 +178,11 @@ export default function ProjectForm() {
         body: JSON.stringify(payload),
       })
 
-      const responseText = await response.text()
       if (!response.ok) {
-        // Try to extract a readable error message
-        let errorMsg = responseText
-        try {
-          const errorObj = JSON.parse(responseText)
-          errorMsg = errorObj.detail || errorObj.message || responseText
-        } catch {
-          errorMsg = responseText
-        }
-        errorMsg = errorMsg.replace(/[{}"]/g, '')
-        setModalMessage(`Error: ${errorMsg}`)
-        setShowModal(true)
-        throw new Error(errorMsg || 'Failed to submit')
+        const errorMsg = await getResponseErrorMessage(response, 'Failed to add project.')
+        setErrorModalMsg(errorMsg)
+        setErrorModalVisible(true)
+        return
       }
 
       setModalMessage('Success: Project added successfully')
@@ -96,8 +198,8 @@ export default function ProjectForm() {
       })
       setPhotos([])
     } catch (err) {
-      setModalMessage(`Error: ${err.message.replace(/[{}"]/g, '')}`)
-      setShowModal(true)
+      setErrorModalMsg(extractErrorMessage(err, 'Failed to submit project.'))
+      setErrorModalVisible(true)
     } finally {
       setLoading(false)
     }
@@ -148,101 +250,131 @@ export default function ProjectForm() {
             {/* Project Name + Location */}
             <CRow className="g-3 mb-3">
               <CCol md={6}>
-                <CFormInput
-                  floating
-                  label="Project Name"
-                  name="name"
-                  value={form.name}
-                  onChange={handleChange}
-                  placeholder="Project Name"
-                  required
-                />
+                <div style={{ minHeight: '90px' }}>
+                  <CFormInput
+                    floating
+                    label="Project Name *"
+                    name="name"
+                    value={form.name}
+                    onChange={handleChange}
+                    placeholder="Project Name"
+                    invalid={!!errors.name}
+                    required
+                  />
+                  {errors.name && <CFormFeedback className="d-block">{errors.name}</CFormFeedback>}
+                </div>
               </CCol>
               <CCol md={6}>
-                <CFormInput
-                  floating
-                  label="Location"
-                  name="location"
-                  value={form.location}
-                  onChange={handleChange}
-                  placeholder="Location"
-                  required
-                />
+                <div style={{ minHeight: '90px' }}>
+                  <CFormInput
+                    floating
+                    label="Location *"
+                    name="location"
+                    value={form.location}
+                    onChange={handleChange}
+                    placeholder="Location"
+                    invalid={!!errors.location}
+                    required
+                  />
+                  {errors.location && <CFormFeedback className="d-block">{errors.location}</CFormFeedback>}
+                </div>
               </CCol>
             </CRow>
 
             {/* Total Area */}
             <CRow className="g-3 mb-3">
               <CCol md={6}>
-                <CFormInput
-                  floating
-                  type="number"
-                  label="Total Area (sq. ft)"
-                  name="total_area"
-                  value={form.total_area}
-                  onChange={handleChange}
-                  placeholder="Total Area (sq. ft)"
-                  required
-                />
+                <div style={{ minHeight: '90px' }}>
+                  <CFormInput
+                    floating
+                    type="number"
+                    label="Total Area (sq. ft) *"
+                    name="total_area"
+                    value={form.total_area}
+                    onChange={handleChange}
+                    placeholder="Total Area (sq. ft)"
+                    invalid={!!errors.total_area}
+                    required
+                  />
+                  {errors.total_area && <CFormFeedback className="d-block">{errors.total_area}</CFormFeedback>}
+                </div>
               </CCol>
               <CCol md={6}>
-                <CFormSelect
-                  floating
-                  label="Project Status"
-                  name="status"
-                  value={form.status}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="">Select a status</option>
-                  {statusOptions.map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </CFormSelect>
+                <div style={{ minHeight: '90px' }}>
+                  <CFormSelect
+                    floating
+                    label="Project Status *"
+                    name="status"
+                    value={form.status}
+                    onChange={handleChange}
+                    invalid={!!errors.status}
+                    required
+                  >
+                    <option value="">Select a status</option>
+                    {statusOptions.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </CFormSelect>
+                  {errors.status && <CFormFeedback className="d-block">{errors.status}</CFormFeedback>}
+                </div>
               </CCol>
             </CRow>
 
             {/* Dates */}
             <CRow className="g-3 mb-3">
               <CCol md={6}>
-                <CFormInput
-                  floating
-                  type="date"
-                  label="Start Date"
-                  name="start_date"
-                  value={form.start_date}
-                  onChange={handleChange}
-                  required
-                />
+                <div style={{ minHeight: '90px' }}>
+                  <CFormInput
+                    floating
+                    type="date"
+                    label="Start Date *"
+                    name="start_date"
+                    value={form.start_date}
+                    onChange={handleChange}
+                    invalid={!!errors.start_date}
+                    required
+                    min={past10YearsDate}
+                  />
+                  {errors.start_date && <CFormFeedback className="d-block">{errors.start_date}</CFormFeedback>}
+                </div>
               </CCol>
               <CCol md={6}>
-                <CFormInput
-                  floating
-                  type="date"
-                  label="End Date"
-                  name="end_date"
-                  value={form.end_date}
-                  onChange={handleChange}
-                  required
-                />
+                <div style={{ minHeight: '90px' }}>
+                  <CFormInput
+                    floating
+                    type="date"
+                    label="End Date *"
+                    name="end_date"
+                    value={form.end_date}
+                    onChange={handleChange}
+                    invalid={!!errors.end_date}
+                    required
+                    min={form.start_date || past10YearsDate}
+                  />
+                  {errors.end_date && <CFormFeedback className="d-block">{errors.end_date}</CFormFeedback>}
+                </div>
               </CCol>
             </CRow>
 
             {/* Description */}
             <CRow className="g-3 mb-4">
               <CCol>
-                <CFormTextarea
-                  floating
-                  label="Project Description"
-                  name="description"
-                  value={form.description}
-                  onChange={handleChange}
-                  placeholder="Project Description"
-                  rows={3}
-                  required
-                />
+                <div style={{ minHeight: '120px' }}>
+                  <CFormTextarea
+                    floating
+                    label="Project Description *"
+                    name="description"
+                    value={form.description}
+                    onChange={handleChange}
+                    placeholder="Project Description"
+                    rows={3}
+                    invalid={!!errors.description}
+                    required
+                  />
+                  {errors.description && <CFormFeedback className="d-block">{errors.description}</CFormFeedback>}
+                </div>
               </CCol>
             </CRow>
 
@@ -387,6 +519,14 @@ export default function ProjectForm() {
           </div>
         </div>
       )}
+
+      {/* Designated Error Modal */}
+      <ErrorModal
+        visible={errorModalVisible}
+        title="Project Creation Failed"
+        errorMessage={errorModalMsg}
+        onClose={() => setErrorModalVisible(false)}
+      />
     </div>
   )
 }
